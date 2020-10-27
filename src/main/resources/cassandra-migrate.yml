@@ -1,0 +1,7 @@
+keyspace: token_system
+profiles:
+  prod:
+    replication:
+      class: SimpleStrategy
+      replication_factor: 3
+migrations_path: db/migrations
