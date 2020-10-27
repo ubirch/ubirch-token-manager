@@ -8,19 +8,21 @@ import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.crypto.PrivKey
 import com.ubirch.models.TokenClaim
 import com.ubirch.util.TaskHelpers
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 import monix.eval.Task
-import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
+import pdi.jwt.{ Jwt, JwtAlgorithm, JwtClaim }
 
 import scala.util.Try
 
 trait TokenCreation {
-  def create[T <: Any](by: String,
-                       to: String,
-                       about: String,
-                       expiresIn: Option[Long],
-                       notBefore: Option[Long],
-                       fields: (Symbol, T)*): Try[JwtClaim]
+  def create[T <: Any](
+      by: String,
+      to: String,
+      about: String,
+      expiresIn: Option[Long],
+      notBefore: Option[Long],
+      fields: (Symbol, T)*
+  ): Try[JwtClaim]
   def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String]
   def encode(tokenClaim: TokenClaim, privKey: PrivKey): Try[String]
   def encode(tokenClaim: TokenClaim): Task[String]
@@ -33,12 +35,14 @@ class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with
 
   private val privKeyInHex = config.getString("tokenSystem.tokenGen.privKeyInHex")
 
-  override def create[T <: Any](by: String,
-                                to: String,
-                                about: String,
-                                expiresIn: Option[Long],
-                                notBefore: Option[Long],
-                                fields: (Symbol, T)*): Try[JwtClaim] = {
+  override def create[T <: Any](
+      by: String,
+      to: String,
+      about: String,
+      expiresIn: Option[Long],
+      notBefore: Option[Long],
+      fields: (Symbol, T)*
+  ): Try[JwtClaim] = {
 
     for {
       jwtClaim <- Try {
@@ -52,7 +56,7 @@ class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with
         .map { x => expiresIn.map(x.expiresIn(_)).getOrElse(x) }
         .map { x => notBefore.map(x.startsIn(_)).getOrElse(x) }
 
-      jwtClaimWithFields = jwtClaim ++ (fields.map(x => (x._1.name, x._2)) :_*)
+      jwtClaimWithFields = jwtClaim ++ (fields.map(x => (x._1.name, x._2)): _*)
 
     } yield {
       jwtClaimWithFields
@@ -77,7 +81,8 @@ class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with
         about = tokenClaim.subject,
         expiresIn = tokenClaim.expiration,
         notBefore = tokenClaim.notBefore,
-        fields = tokenClaim.content.toList:_*)
+        fields = tokenClaim.content.toList: _*
+      )
 
       jwtClaim <- encode(claims, privKey)
 
@@ -89,16 +94,15 @@ class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with
 
   override def encode(tokenClaim: TokenClaim): Task[String] = {
 
-//    for {
-//      privKey <- lift(GeneratorKeyFactory.getPrivKey(privKeyInHex, Curve.PRIME256V1))
-//      jwtClaim <- liftTry(encode(tokenClaim, privKey))
-//    } yield {
-//      jwtClaim
-//    }
+    //    for {
+    //      privKey <- lift(GeneratorKeyFactory.getPrivKey(privKeyInHex, Curve.PRIME256V1))
+    //      jwtClaim <- liftTry(encode(tokenClaim, privKey))
+    //    } yield {
+    //      jwtClaim
+    //    }
 
     ???
 
   }
-
 
 }

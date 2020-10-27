@@ -1,7 +1,7 @@
 package com.ubirch.util
 
-import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
-import org.joda.time.{DateTime, DateTimeZone, LocalTime, Period}
+import org.joda.time.format.{ DateTimeFormatter, ISODateTimeFormat }
+import org.joda.time.{ DateTime, DateTimeZone, LocalTime, Period }
 
 /**
   * Convenience for Dates

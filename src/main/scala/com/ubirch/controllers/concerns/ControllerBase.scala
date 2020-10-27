@@ -1,15 +1,15 @@
 package com.ubirch.controllers.concerns
 
-import java.io.{ByteArrayInputStream, FileOutputStream}
+import java.io.{ ByteArrayInputStream, FileOutputStream }
 import java.util.Date
 
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.models.NOK
 import com.ubirch.util.ServiceMetrics
-import javax.servlet.http.{HttpServletRequest, HttpServletRequestWrapper, HttpServletResponse}
-import javax.servlet.{ReadListener, ServletInputStream}
+import javax.servlet.http.{ HttpServletRequest, HttpServletRequestWrapper, HttpServletResponse }
+import javax.servlet.{ ReadListener, ServletInputStream }
 import monix.eval.Task
-import monix.execution.{CancelableFuture, Scheduler}
+import monix.execution.{ CancelableFuture, Scheduler }
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.compress.utils.IOUtils
 import org.json4s.JsonAST.JValue

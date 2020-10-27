@@ -1,7 +1,7 @@
 package com.ubirch.models
 
 import io.getquill.context.cassandra.CassandraContext
-import io.getquill.context.cassandra.encoding.{Decoders, Encoders}
+import io.getquill.context.cassandra.encoding.{ Decoders, Encoders }
 
 /**
   * Cassandra Context DB value.
@@ -22,6 +22,6 @@ trait TablePointer[T] extends CassandraBase {
 
   import db._
 
-  implicit val eventSchemaMeta: SchemaMeta[T]
+  implicit val pointingAt: SchemaMeta[T]
 
 }

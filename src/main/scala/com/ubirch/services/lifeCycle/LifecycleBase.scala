@@ -1,13 +1,13 @@
 package com.ubirch.services.lifeCycle
 
-import java.util.concurrent.{ConcurrentLinkedDeque, CountDownLatch, TimeUnit}
+import java.util.concurrent.{ ConcurrentLinkedDeque, CountDownLatch, TimeUnit }
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject._
 
 import scala.annotation.tailrec
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
   * Basic definition for a Life CyCle Component.

@@ -4,13 +4,13 @@ import java.util.concurrent.CountDownLatch
 
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.services.rest.RestService
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 
 /**
   * Represents a bootable service object that starts the system
   */
 @Singleton
-class Service @Inject()(restService: RestService) extends LazyLogging {
+class Service @Inject() (restService: RestService) extends LazyLogging {
 
   def start: Unit = {
 
@@ -21,7 +21,6 @@ class Service @Inject()(restService: RestService) extends LazyLogging {
   }
 
 }
-
 
 object Service extends Boot(List(new Binder)) {
   def main(args: Array[String]): Unit = * {

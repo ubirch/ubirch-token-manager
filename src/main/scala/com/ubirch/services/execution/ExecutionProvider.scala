@@ -7,7 +7,7 @@ import com.ubirch.ConfPaths.ExecutionContextConfPaths
 import javax.inject._
 import monix.execution.Scheduler
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ ExecutionContext, ExecutionContextExecutor }
 
 /**
   * Represents the Execution Context Component used in the system

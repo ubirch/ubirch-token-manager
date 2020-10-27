@@ -2,7 +2,7 @@ package com.ubirch
 
 import com.github.nosan.embedded.cassandra.EmbeddedCassandraFactory
 import com.github.nosan.embedded.cassandra.api.Cassandra
-import com.github.nosan.embedded.cassandra.api.connection.{CassandraConnection, DefaultCassandraConnectionFactory}
+import com.github.nosan.embedded.cassandra.api.connection.{ CassandraConnection, DefaultCassandraConnectionFactory }
 import com.github.nosan.embedded.cassandra.api.cql.CqlScript
 import com.typesafe.scalalogging.LazyLogging
 
