@@ -1,5 +1,7 @@
 package com
 
+import com.ubirch.models.TokenClaim
+
 import scala.util.control.NoStackTrace
 
 package object ubirch {
@@ -18,5 +20,7 @@ package object ubirch {
   case class InvalidConsistencyLevel(message: String) extends ServiceException(message)
   case class InvalidContactPointsException(message: String) extends ServiceException(message)
   case class StoringException(message: String, reason: String) extends ServiceException(message)
+
+  case class TokenEncodingException(message: String, tokenClaim: TokenClaim) extends ServiceException(message)
 
 }

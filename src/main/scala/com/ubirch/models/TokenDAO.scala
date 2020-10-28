@@ -28,4 +28,6 @@ class TokensDAO @Inject() (val connectionService: ConnectionService) extends Tok
 
   def selectAll: Observable[TokenRow] = run(selectAllQ)
 
+  def insert(tokenRow: TokenRow): Observable[Unit] = run(insertQ(tokenRow))
+
 }

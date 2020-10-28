@@ -33,7 +33,12 @@ object ConfPaths {
     final val PORT = "tokenSystem.metrics.prometheus.port"
   }
 
+  trait TokenVerificationPaths {
+    final val configURL = "tokenSystem.tokenVerification.configURL"
+  }
+
   object GenericConfPaths extends GenericConfPaths
   object HttpServerConfPaths extends HttpServerConfPaths
+  object TokenVerificationPaths extends TokenVerificationPaths
 
 }

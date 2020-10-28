@@ -9,13 +9,13 @@ import com.ubirch.crypto.PrivKey
 import com.ubirch.models.TokenClaim
 import com.ubirch.util.TaskHelpers
 import javax.inject.{ Inject, Singleton }
-import monix.eval.Task
 import pdi.jwt.{ Jwt, JwtAlgorithm, JwtClaim }
 
 import scala.util.Try
 
-trait TokenCreation {
+trait TokenCreationService {
   def create[T <: Any](
+      id: UUID,
       by: String,
       to: String,
       about: String,
@@ -24,18 +24,16 @@ trait TokenCreation {
       fields: (Symbol, T)*
   ): Try[JwtClaim]
   def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String]
-  def encode(tokenClaim: TokenClaim, privKey: PrivKey): Try[String]
-  def encode(tokenClaim: TokenClaim): Task[String]
+  def encode(id: UUID, tokenClaim: TokenClaim, privKey: PrivKey): Try[(String, JwtClaim)]
 }
 
 @Singleton
-class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with TaskHelpers with LazyLogging {
+class DefaultTokenCreationService @Inject() (config: Config) extends TokenCreationService with TaskHelpers with LazyLogging {
 
   implicit private val clock: Clock = Clock.systemUTC
 
-  private val privKeyInHex = config.getString("tokenSystem.tokenGen.privKeyInHex")
-
   override def create[T <: Any](
+      id: UUID,
       by: String,
       to: String,
       about: String,
@@ -51,7 +49,7 @@ class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with
           .to(to)
           .about(about)
           .issuedNow
-          .withId(UUID.randomUUID().toString)
+          .withId(id.toString)
       }
         .map { x => expiresIn.map(x.expiresIn(_)).getOrElse(x) }
         .map { x => notBefore.map(x.startsIn(_)).getOrElse(x) }
@@ -72,10 +70,11 @@ class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with
     )
   }
 
-  override def encode(tokenClaim: TokenClaim, privKey: PrivKey): Try[String] = {
+  override def encode(id: UUID, tokenClaim: TokenClaim, privKey: PrivKey): Try[(String, JwtClaim)] = {
 
     for {
       claims <- create(
+        id = id,
         by = tokenClaim.issuer,
         to = tokenClaim.audience,
         about = tokenClaim.subject,
@@ -87,21 +86,8 @@ class DefaultTokenCreation @Inject() (config: Config) extends TokenCreation with
       jwtClaim <- encode(claims, privKey)
 
     } yield {
-      jwtClaim
+      (jwtClaim, claims)
     }
-
-  }
-
-  override def encode(tokenClaim: TokenClaim): Task[String] = {
-
-    //    for {
-    //      privKey <- lift(GeneratorKeyFactory.getPrivKey(privKeyInHex, Curve.PRIME256V1))
-    //      jwtClaim <- liftTry(encode(tokenClaim, privKey))
-    //    } yield {
-    //      jwtClaim
-    //    }
-
-    ???
 
   }
 

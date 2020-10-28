@@ -346,6 +346,13 @@
             <version>${jwt-core.version}</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.bitbucket.b_c/jose4j -->
+        <dependency>
+            <groupId>org.bitbucket.b_c</groupId>
+            <artifactId>jose4j</artifactId>
+            <version>0.7.2</version>
+        </dependency>
+
         <!-- test dependencies -->
         <dependency>
             <groupId>org.scalatest</groupId>
@@ -411,7 +418,7 @@
                             <args>
                                 <arg>-deprecation</arg>
                                 <arg>-dependencyfile</arg>
-                                <arg>${project.build.directory}/.scala_dependencies</arg>
+                                <arg>-Ypartial-unification</arg>
                             </args>
                         </configuration>
                     </execution>
