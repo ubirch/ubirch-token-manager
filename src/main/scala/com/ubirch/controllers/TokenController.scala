@@ -64,22 +64,24 @@ class TokenController @Inject() (
   }
 
   post("/v1", operation(getSimpleCheck)) {
-    asyncResult("create_token") { _ =>
-      for {
-        readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
-        res <- tokenStoreService.create(readBody.extracted)
-          .map { tkc => Ok(tkc) }
-          .onErrorHandle {
-            case e: ServiceException =>
-              logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              BadRequest(NOK.tokenCreationError("Error creating pub key"))
-            case e: Exception =>
-              logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
-          }
+    authenticated { _ =>
+      asyncResult("create_token") { _ =>
+        for {
+          readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
+          res <- tokenStoreService.create(readBody.extracted)
+            .map { tkc => Ok(tkc) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                BadRequest(NOK.tokenCreationError("Error creating pub key"))
+              case e: Exception =>
+                logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
 
-      } yield {
-        res
+        } yield {
+          res
+        }
       }
     }
   }
