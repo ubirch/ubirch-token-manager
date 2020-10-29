@@ -23,4 +23,8 @@ package object ubirch {
 
   case class TokenEncodingException(message: String, tokenClaim: TokenClaim) extends ServiceException(message)
 
+  case class InvalidOtherClaims(message: String, value: String) extends ServiceException(message)
+  case class InvalidAllClaims(message: String, value: String) extends ServiceException(message)
+  case class InvalidSpecificClaim(message: String, value: String) extends ServiceException(message)
+
 }

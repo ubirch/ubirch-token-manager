@@ -34,7 +34,9 @@ class Binder
   def ConnectionService: ScopedBindingBuilder = bind(classOf[ConnectionService]).to(classOf[DefaultConnectionService])
   def TokenStoreService: ScopedBindingBuilder = bind(classOf[TokenStoreService]).to(classOf[DefaultTokenStoreService])
   def TokenCreationService: ScopedBindingBuilder = bind(classOf[TokenCreationService]).to(classOf[DefaultTokenCreationService])
+  def TokenVerificationService: ScopedBindingBuilder = bind(classOf[TokenVerificationService]).to(classOf[DefaultTokenVerificationService])
   def PublicKeyDiscoveryService: ScopedBindingBuilder = bind(classOf[PublicKeyDiscoveryService]).to(classOf[DefaultPublicKeyDiscoveryService])
+  def PublicKeyPoolService: ScopedBindingBuilder = bind(classOf[PublicKeyPoolService]).to(classOf[DefaultPublicKeyPoolService])
 
   def configure(): Unit = {
     Config
@@ -49,7 +51,9 @@ class Binder
     ConnectionService
     TokenStoreService
     TokenCreationService
+    TokenVerificationService
     PublicKeyDiscoveryService
+    PublicKeyPoolService
   }
 
 }

@@ -24,7 +24,7 @@ trait PublicKeyDiscoveryService {
 @Singleton
 class DefaultPublicKeyDiscoveryService @Inject() (config: Config, jsonConverterService: JsonConverterService) extends PublicKeyDiscoveryService {
 
-  final val configURLString = config.getString(TokenVerificationPaths.configURL)
+  final val configURLString = config.getString(TokenVerificationPaths.CONFIG_URL)
 
   final val JWKS_URI = "jwks_uri"
   final val KEYS = "keys"

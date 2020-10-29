@@ -3,11 +3,12 @@ package com.ubirch.controllers
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.ServiceException
-import com.ubirch.controllers.concerns.{ ControllerBase, SwaggerElements }
+import com.ubirch.controllers.concerns.{ BearerAuthStrategy, BearerAuthenticationSupport, ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models.{ NOK, TokenClaim }
-import com.ubirch.services.jwt.TokenStoreService
+import com.ubirch.services.jwt.{ PublicKeyDiscoveryService, PublicKeyPoolService, TokenStoreService, TokenVerificationService }
 import io.prometheus.client.Counter
 import javax.inject._
+import javax.servlet.http.HttpServletRequest
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.json4s.Formats
@@ -17,8 +18,17 @@ import org.scalatra.swagger.{ Swagger, SwaggerSupportSyntax }
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class TokenController @Inject() (config: Config, val swagger: Swagger, jFormats: Formats, tokenStoreService: TokenStoreService)(implicit val executor: ExecutionContext, scheduler: Scheduler)
-  extends ControllerBase {
+class TokenController @Inject() (
+    config: Config,
+    val swagger: Swagger,
+    jFormats: Formats,
+    publicKeyPoolService: PublicKeyPoolService,
+    tokenVerificationService: TokenVerificationService,
+    tokenStoreService: TokenStoreService
+)(implicit val executor: ExecutionContext, scheduler: Scheduler)
+  extends ControllerBase with KeycloakBearerAuthenticationSupport {
+
+  import BearerAuthStrategy.request2BearerAuthRequest
 
   override protected val applicationDescription = "Token Controller"
   override protected implicit def jsonFormats: Formats = jFormats
@@ -43,7 +53,17 @@ class TokenController @Inject() (config: Config, val swagger: Swagger, jFormats:
       description "Getting a hello from the system"
       tags SwaggerElements.TAG_WELCOME)
 
-  get("/v1", operation(getSimpleCheck)) {
+  before() {
+    contentType = "application/json"
+  }
+
+  get("/v1/test") {
+    authenticated { token =>
+      Ok(token)
+    }
+  }
+
+  post("/v1", operation(getSimpleCheck)) {
     asyncResult("create_token") { _ =>
       for {
         readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
@@ -64,4 +84,7 @@ class TokenController @Inject() (config: Config, val swagger: Swagger, jFormats:
     }
   }
 
+  override protected def createStrategy(app: ScalatraBase): KeycloakBearerAuthStrategy = {
+    new KeycloakBearerAuthStrategy(app, tokenVerificationService, publicKeyPoolService)
+  }
 }
