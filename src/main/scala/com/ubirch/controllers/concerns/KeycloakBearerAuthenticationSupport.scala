@@ -4,6 +4,7 @@ import java.security.PublicKey
 
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenVerificationService }
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
+import org.json4s.JsonAST
 import org.scalatra.ScalatraBase
 
 class KeycloakBearerAuthStrategy(
@@ -15,16 +16,30 @@ class KeycloakBearerAuthStrategy(
   override def name: String = "Keycloak Strategy"
 
   override protected def validate(token: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[Token] = {
-    val res = for {
+    for {
       key <- publicKeyPoolService.getDefaultKey
       claims <- tokenVerificationService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
+      sub <- claims.findField(_._1 == "sub").map(_._2).collect {
+        case JsonAST.JString(s) => s
+        case _ => ""
+      }
+
+      name <- claims.findField(_._1 == "name").map(_._2).collect {
+        case JsonAST.JString(s) => s
+        case _ => ""
+      }
+
+      email <- claims.findField(_._1 == "email").map(_._2).collect {
+        case JsonAST.JString(s) => s
+        case _ => ""
+      }
+
     } yield {
-      claims
+      Token(token, claims, sub, name, email)
     }
 
-    res.map(x => Token(token, x))
-
   }
+
 }
 
 trait KeycloakBearerAuthenticationSupport extends BearerAuthenticationSupport {

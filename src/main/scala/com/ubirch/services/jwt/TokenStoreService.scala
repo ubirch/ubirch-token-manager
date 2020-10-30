@@ -4,7 +4,8 @@ import java.util.{ Date, UUID }
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import com.ubirch.TokenEncodingException
+import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
+import com.ubirch.controllers.concerns.Token
 import com.ubirch.crypto.GeneratorKeyFactory
 import com.ubirch.crypto.utils.Curve
 import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokensDAO }
@@ -13,7 +14,7 @@ import javax.inject.{ Inject, Singleton }
 import monix.eval.Task
 
 trait TokenStoreService {
-  def create(tokenClaim: TokenClaim): Task[TokenCreationData]
+  def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData]
 }
 
 @Singleton
@@ -21,11 +22,11 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
 
   private final val privKey = GeneratorKeyFactory.getPrivKey(config.getString("tokenSystem.tokenGen.privKeyInHex"), Curve.PRIME256V1)
 
-  override def create(tokenClaim: TokenClaim): Task[TokenCreationData] = {
+  override def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData] = {
 
     for {
+      _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidSpecificClaim(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
 
-      _ <- Task.unit // Needed to make the compiler happy
       jwtID = UUID.randomUUID()
 
       res <- liftTry(tokenCreation.encode(jwtID, tokenClaim, privKey))(TokenEncodingException("Error creating token", tokenClaim))

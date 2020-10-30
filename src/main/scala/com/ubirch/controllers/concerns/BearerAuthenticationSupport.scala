@@ -75,14 +75,16 @@ abstract class BearerAuthStrategy[TokenType <: AnyRef](protected override val ap
 
 }
 
-case class Token(value: String, json: JValue)
+case class Token(value: String, json: JValue = JNull, sub: String = "", name: String = "", email: String = "") {
+  def id: String = sub
+}
 
 trait BearerAuthenticationSupport extends ScentrySupport[Token] with BearerAuthSupport[Token] {
 
   self: ScalatraBase =>
 
   override protected def fromSession: PartialFunction[String, Token] = {
-    case a => Token(a, JNull)
+    case a => Token(a)
   }
 
   override protected def toSession: PartialFunction[Token, String] = {
