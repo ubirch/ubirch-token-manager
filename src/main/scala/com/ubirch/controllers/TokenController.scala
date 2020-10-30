@@ -12,7 +12,7 @@ import monix.eval.Task
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra._
-import org.scalatra.swagger.{ Swagger, SwaggerSupportSyntax }
+import org.scalatra.swagger.{ ResponseMessage, Swagger, SwaggerSupportSyntax }
 
 import scala.concurrent.ExecutionContext
 
@@ -44,23 +44,22 @@ class TokenController @Inject() (
     .labelNames("service", "method")
     .register()
 
-  val getSimpleCheck: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[String]("simpleCheck")
-      summary "Welcome"
-      description "Getting a hello from the system"
-      tags SwaggerElements.TAG_WELCOME)
-
   before() {
     contentType = "application/json"
   }
 
-  get("/v1/test") {
-    authenticated { token =>
-      Ok(token)
-    }
-  }
+  val postV1TokenCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[TokenClaim]("postV1TokenCreate")
+      summary "Creates an Access Token"
+      description "Creates Access Tokens for particular users"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters bodyParam[String]("tokeClaim").description("The token claims")
+      responseMessages (
+        ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Error creating token"),
+        ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+      ))
 
-  post("/v1/create", operation(getSimpleCheck)) {
+  post("/v1/create", operation(postV1TokenCreate)) {
 
     authenticated { token =>
       asyncResult("create_token") { _ =>
