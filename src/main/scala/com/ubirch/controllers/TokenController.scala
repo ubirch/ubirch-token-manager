@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.ServiceException
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
-import com.ubirch.models.{ NOK, TokenClaim }
+import com.ubirch.models.{ NOK, TokenClaim, TokenRow }
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
 import io.prometheus.client.Counter
 import javax.inject._
@@ -79,6 +79,44 @@ class TokenController @Inject() (
         } yield {
           res
         }
+      }
+    }
+  }
+
+  val getV1TokenList: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Seq[TokenRow]]("getV1TokenList")
+      summary "Queries all currently valid tokens for a particular user."
+      description "queries all currently valid tokens based on an access token"
+      tags SwaggerElements.TAG_TOKEN_SERVICE)
+
+  get("/v1", operation(getV1TokenList)) {
+
+    authenticated { token =>
+      asyncResult("list_tokens") { _ =>
+        for {
+          res <- tokenStoreService.list(token)
+            .map { tks => Ok(tks) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                BadRequest(NOK.tokenListingError("Error creating token"))
+              case e: Exception =>
+                logger.error("1.2 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+      }
+    }
+  }
+
+  notFound {
+    asyncResult("not_found") { _ =>
+      Task {
+        logger.info("controller=TokenController route_not_found={} query_string={}", requestPath, request.getQueryString)
+        NotFound(NOK.noRouteFound(requestPath + " might exist in another universe"))
       }
     }
   }

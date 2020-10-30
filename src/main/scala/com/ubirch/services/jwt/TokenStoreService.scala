@@ -15,6 +15,7 @@ import monix.eval.Task
 
 trait TokenStoreService {
   def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData]
+  def list(accessToken: Token): Task[List[TokenRow]]
 }
 
 @Singleton
@@ -46,4 +47,12 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
 
   }
 
+  override def list(accessToken: Token): Task[List[TokenRow]] = {
+    for {
+      ownerId <- Task(UUID.fromString(accessToken.id))
+      rows <- tokensDAO.byOwnerId(ownerId).toListL
+    } yield {
+      rows
+    }
+  }
 }

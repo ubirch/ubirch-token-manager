@@ -1,5 +1,7 @@
 package com.ubirch.models
 
+import java.util.UUID
+
 import com.ubirch.services.cluster.ConnectionService
 import io.getquill.{ CassandraStreamContext, SnakeCase }
 import javax.inject.Inject
@@ -19,6 +21,12 @@ trait TokenRowsQueries extends TablePointer[TokenRow] {
 
   def selectAllQ: db.Quoted[db.EntityQuery[TokenRow]] = quote(query[TokenRow])
 
+  def byOwnerIdQ(ownerId: UUID): db.Quoted[db.EntityQuery[TokenRow]] = quote {
+    query[TokenRow]
+      .filter(_.ownerId == lift(ownerId))
+      .map(x => x)
+  }
+
 }
 
 class TokensDAO @Inject() (val connectionService: ConnectionService) extends TokenRowsQueries {
@@ -29,5 +37,7 @@ class TokensDAO @Inject() (val connectionService: ConnectionService) extends Tok
   def selectAll: Observable[TokenRow] = run(selectAllQ)
 
   def insert(tokenRow: TokenRow): Observable[Unit] = run(insertQ(tokenRow))
+
+  def byOwnerId(ownerId: UUID): Observable[TokenRow] = run(byOwnerIdQ(ownerId))
 
 }

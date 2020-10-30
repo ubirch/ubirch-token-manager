@@ -77,6 +77,7 @@ abstract class BearerAuthStrategy[TokenType <: AnyRef](protected override val ap
 
 case class Token(value: String, json: JValue = JNull, sub: String = "", name: String = "", email: String = "") {
   def id: String = sub
+  def ownerId: String = id
 }
 
 trait BearerAuthenticationSupport extends ScentrySupport[Token] with BearerAuthSupport[Token] {
