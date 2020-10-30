@@ -2,10 +2,11 @@ package com.ubirch.controllers.concerns
 
 import java.util.Locale
 
+import com.ubirch.models.NOK
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import org.json4s.JNull
 import org.json4s.JsonAST.JValue
-import org.scalatra.{ ActionResult, AsyncResult, ScalatraBase }
+import org.scalatra.ScalatraBase
 import org.scalatra.auth.{ ScentryConfig, ScentryStrategy, ScentrySupport }
 
 import scala.language.implicitConversions
@@ -18,10 +19,10 @@ trait BearerAuthSupport[TokenType <: AnyRef] { self: ScalatraBase with ScentrySu
     val beReq = new BearerAuthStrategy.BearerAuthRequest(request)
     if (!beReq.providesAuth) {
       response.setHeader("WWW-Authenticate", "Bearer realm=\"%s\"" format realm)
-      halt(401, "Unauthenticated")
+      halt(401, NOK.authenticationError("Unauthenticated"))
     }
     if (!beReq.isBearerAuth) {
-      halt(400, "Bad Request")
+      halt(400, NOK.authenticationError("Bad Request"))
     }
 
     scentry.authenticate("Bearer")
@@ -31,7 +32,7 @@ trait BearerAuthSupport[TokenType <: AnyRef] { self: ScalatraBase with ScentrySu
   protected def authenticated(action: TokenType => Any)(implicit request: HttpServletRequest, response: HttpServletResponse): Any = {
     bearerAuth() match {
       case Some(value) => action(value)
-      case None => halt(403, "Forbidden")
+      case None => halt(403, NOK.authenticationError("Forbidden"))
     }
   }
 

@@ -45,6 +45,7 @@ object NOK {
   final val NO_ROUTE_FOUND_ERROR = 'NoRouteFound
   final val DELETE_ERROR = 'DeleteError
   final val TOKEN_CREATION_ERROR = 'TokenCreationError
+  final val AUTHENTICATION_ERROR = 'AuthenticationError
 
   def apply(errorType: Symbol, errorMessage: String): NOK = new NOK(Response.version, 'NOK, errorType, errorMessage)
 
@@ -53,6 +54,7 @@ object NOK {
   def noRouteFound(errorMessage: String): NOK = NOK(NO_ROUTE_FOUND_ERROR, errorMessage)
   def deleteKeyError(errorMessage: String): NOK = NOK(DELETE_ERROR, errorMessage)
   def tokenCreationError(errorMessage: String): NOK = NOK(TOKEN_CREATION_ERROR, errorMessage)
+  def authenticationError(errorMessage: String): NOK = NOK(AUTHENTICATION_ERROR, errorMessage)
 
 }
 

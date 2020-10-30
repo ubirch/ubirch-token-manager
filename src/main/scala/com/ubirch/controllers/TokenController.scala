@@ -3,12 +3,11 @@ package com.ubirch.controllers
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.ServiceException
-import com.ubirch.controllers.concerns.{ BearerAuthStrategy, BearerAuthenticationSupport, ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
+import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models.{ NOK, TokenClaim }
-import com.ubirch.services.jwt.{ PublicKeyDiscoveryService, PublicKeyPoolService, TokenStoreService, TokenVerificationService }
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
 import io.prometheus.client.Counter
 import javax.inject._
-import javax.servlet.http.HttpServletRequest
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.json4s.Formats
@@ -27,8 +26,6 @@ class TokenController @Inject() (
     tokenStoreService: TokenStoreService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
   extends ControllerBase with KeycloakBearerAuthenticationSupport {
-
-  import BearerAuthStrategy.request2BearerAuthRequest
 
   override protected val applicationDescription = "Token Controller"
   override protected implicit def jsonFormats: Formats = jFormats
