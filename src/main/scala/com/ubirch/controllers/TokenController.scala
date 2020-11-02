@@ -114,7 +114,18 @@ class TokenController @Inject() (
     }
   }
 
-  delete("/v1/:tokenId") {
+  val deleteV1TokenId: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Nothing]("deleteV1TokenId")
+      summary "Deletes a token"
+      description "deletes a token"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters bodyParam[String]("tokenId").description("the token to delete")
+      responseMessages (
+        ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Failed to delete token"),
+        ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+      ))
+
+  delete("/v1/:tokenId", operation(deleteV1TokenId)) {
     authenticated { accessToken =>
 
       asyncResult("delete") { implicit request =>
