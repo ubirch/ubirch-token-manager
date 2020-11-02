@@ -4,18 +4,19 @@ import java.util.{ Date, UUID }
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
 import com.ubirch.controllers.concerns.Token
 import com.ubirch.crypto.GeneratorKeyFactory
 import com.ubirch.crypto.utils.Curve
 import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokensDAO }
 import com.ubirch.util.TaskHelpers
+import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
 import javax.inject.{ Inject, Singleton }
 import monix.eval.Task
 
 trait TokenStoreService {
   def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData]
   def list(accessToken: Token): Task[List[TokenRow]]
+  def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
 }
 
 @Singleton
@@ -55,4 +56,17 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
       rows
     }
   }
+
+  override def delete(accessToken: Token, tokenId: UUID): Task[Boolean] = {
+    for {
+      ownerId <- Task(UUID.fromString(accessToken.id))
+      deletion <- tokensDAO.delete(ownerId, tokenId).headOptionL
+
+      _ = if (deletion.isEmpty) logger.error("failed_token_deletion={}", tokenId.toString)
+      _ = if (deletion.isDefined) logger.info("token_deletion_succeeded={}", tokenId.toString)
+    } yield {
+      deletion.isDefined
+    }
+  }
+
 }

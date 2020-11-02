@@ -1,11 +1,13 @@
 package com.ubirch.controllers
 
+import java.util.UUID
+
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
-import com.ubirch.ServiceException
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
-import com.ubirch.models.{ NOK, TokenClaim, TokenRow }
+import com.ubirch.models.{ NOK, Simple, TokenClaim, TokenRow }
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
+import com.ubirch.{ DeletingException, ServiceException }
 import io.prometheus.client.Counter
 import javax.inject._
 import monix.eval.Task
@@ -109,6 +111,37 @@ class TokenController @Inject() (
           res
         }
       }
+    }
+  }
+
+  delete("/v1/:tokenId") {
+    authenticated { accessToken =>
+
+      asyncResult("delete") { implicit request =>
+
+        for {
+          tokenIdAsString <- Task(params.getOrElse("tokenId", throw DeletingException("Invalid Token", "No tokenId parameter found in path")))
+          tokenId <- Task(UUID.fromString(tokenIdAsString))
+          res <- tokenStoreService.delete(accessToken, tokenId)
+            .map { dr =>
+              if (dr) Ok(Simple("Token deleted"))
+              else BadRequest(NOK.tokenDeleteError("Failed to delete public key"))
+            }
+            .onErrorRecover {
+              case e: ServiceException =>
+                logger.error("1.1 Error deleting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                BadRequest(NOK.tokenDeleteError("Error deleting token"))
+              case e: Exception =>
+                logger.error("1.1 Error deleting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+
+      }
+
     }
   }
 

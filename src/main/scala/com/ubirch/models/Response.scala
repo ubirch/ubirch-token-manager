@@ -43,7 +43,7 @@ object NOK {
   final val SERVER_ERROR = 'ServerError
   final val PARSING_ERROR = 'ParsingError
   final val NO_ROUTE_FOUND_ERROR = 'NoRouteFound
-  final val DELETE_ERROR = 'DeleteError
+  final val DELETE_ERROR = 'TokenDeleteError
   final val TOKEN_CREATION_ERROR = 'TokenCreationError
   final val TOKEN_LISTING_ERROR = 'TokenListingError
   final val AUTHENTICATION_ERROR = 'AuthenticationError
@@ -53,7 +53,7 @@ object NOK {
   def serverError(errorMessage: String): NOK = NOK(SERVER_ERROR, errorMessage)
   def parsingError(errorMessage: String): NOK = NOK(PARSING_ERROR, errorMessage)
   def noRouteFound(errorMessage: String): NOK = NOK(NO_ROUTE_FOUND_ERROR, errorMessage)
-  def deleteKeyError(errorMessage: String): NOK = NOK(DELETE_ERROR, errorMessage)
+  def tokenDeleteError(errorMessage: String): NOK = NOK(DELETE_ERROR, errorMessage)
   def tokenCreationError(errorMessage: String): NOK = NOK(TOKEN_CREATION_ERROR, errorMessage)
   def tokenListingError(errorMessage: String): NOK = NOK(TOKEN_LISTING_ERROR, errorMessage)
   def authenticationError(errorMessage: String): NOK = NOK(AUTHENTICATION_ERROR, errorMessage)

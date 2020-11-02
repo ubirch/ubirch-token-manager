@@ -89,11 +89,10 @@ abstract class ControllerBase extends ScalatraServlet
             BadRequest(NOK.parsingError(msg))
         }
         .onErrorHandle { e =>
-
           val name = e.getClass.getCanonicalName
           val cause = Try(e.getCause.getMessage).getOrElse(e.getMessage)
           logger.error("Error 0.1 ", e)
-          logger.error(s"Error 0.1 exception={} message={}", name, cause)
+          logger.error("Error 0.1 exception={} message={}", name, cause)
           InternalServerError(NOK.serverError("Sorry, something happened"))
 
         }

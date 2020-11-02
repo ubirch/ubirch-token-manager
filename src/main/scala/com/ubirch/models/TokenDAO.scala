@@ -27,6 +27,10 @@ trait TokenRowsQueries extends TablePointer[TokenRow] {
       .map(x => x)
   }
 
+  def deleteQ(ownerId: UUID, tokenId: UUID): db.Quoted[db.Delete[TokenRow]] = quote {
+    query[TokenRow].filter(x => x.ownerId == lift(ownerId) && x.id == lift(tokenId)).delete
+  }
+
 }
 
 class TokensDAO @Inject() (val connectionService: ConnectionService) extends TokenRowsQueries {
@@ -39,5 +43,7 @@ class TokensDAO @Inject() (val connectionService: ConnectionService) extends Tok
   def insert(tokenRow: TokenRow): Observable[Unit] = run(insertQ(tokenRow))
 
   def byOwnerId(ownerId: UUID): Observable[TokenRow] = run(byOwnerIdQ(ownerId))
+
+  def delete(ownerId: UUID, tokenId: UUID): Observable[Unit] = run(deleteQ(ownerId, tokenId))
 
 }
