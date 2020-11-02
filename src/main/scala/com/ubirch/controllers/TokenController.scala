@@ -55,11 +55,14 @@ class TokenController @Inject() (
       summary "Creates an Access Token"
       description "Creates Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
-      parameters bodyParam[String]("tokeClaim").description("The token claims")
-      responseMessages (
-        ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Error creating token"),
-        ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
-      ))
+      parameters (
+        bodyParam[String]("tokeClaim").description("The token claims"),
+        swaggerTokenAsHeader
+      )
+        responseMessages (
+          ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Error creating token"),
+          ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+        ))
 
   post("/v1/create", operation(postV1TokenCreate)) {
 
@@ -89,7 +92,8 @@ class TokenController @Inject() (
     (apiOperation[Seq[TokenRow]]("getV1TokenList")
       summary "Queries all currently valid tokens for a particular user."
       description "queries all currently valid tokens based on an access token"
-      tags SwaggerElements.TAG_TOKEN_SERVICE)
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters swaggerTokenAsHeader)
 
   get("/v1", operation(getV1TokenList)) {
 
@@ -119,11 +123,14 @@ class TokenController @Inject() (
       summary "Deletes a token"
       description "deletes a token"
       tags SwaggerElements.TAG_TOKEN_SERVICE
-      parameters bodyParam[String]("tokenId").description("the token to delete")
-      responseMessages (
-        ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Failed to delete token"),
-        ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
-      ))
+      parameters (
+        swaggerTokenAsHeader,
+        bodyParam[String]("tokenId").description("the token to delete")
+      )
+        responseMessages (
+          ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Failed to delete token"),
+          ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+        ))
 
   delete("/v1/:tokenId", operation(deleteV1TokenId)) {
     authenticated { accessToken =>
@@ -168,4 +175,8 @@ class TokenController @Inject() (
   override protected def createStrategy(app: ScalatraBase): KeycloakBearerAuthStrategy = {
     new KeycloakBearerAuthStrategy(app, tokenVerificationService, publicKeyPoolService)
   }
+
+  def swaggerTokenAsHeader: SwaggerSupportSyntax.ParameterBuilder[String] = headerParam[String]("Authorization")
+    .description("Token of the user. ADD \"bearer \" followed by a space) BEFORE THE TOKEN OTHERWISE IT WON'T WORK")
+
 }
