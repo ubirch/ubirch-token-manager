@@ -1,0 +1,12 @@
+{
+  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+  "issuer":"",
+  "subject":"",
+  "audience":"",
+  "expiration":null,
+  "notBefore":null,
+  "issuedAt":null,
+  "content":{
+    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
+  }
+}
