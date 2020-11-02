@@ -25,6 +25,7 @@ trait TokenCreationService {
   ): Try[JwtClaim]
   def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String]
   def encode(id: UUID, tokenClaim: TokenClaim, privKey: PrivKey): Try[(String, JwtClaim)]
+  def encode(header: String, jwtClaim: String, privKey: PrivKey): Try[String]
 }
 
 @Singleton
@@ -64,6 +65,15 @@ class DefaultTokenCreationService @Inject() (config: Config) extends TokenCreati
 
   override def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String] = Try {
     Jwt.encode(
+      jwtClaim,
+      privKey.getPrivateKey,
+      JwtAlgorithm.ES256
+    )
+  }
+
+  override def encode(header: String, jwtClaim: String, privKey: PrivKey): Try[String] = Try {
+    Jwt.encode(
+      header,
       jwtClaim,
       privKey.getPrivateKey,
       JwtAlgorithm.ES256

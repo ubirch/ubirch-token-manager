@@ -28,11 +28,13 @@ class DefaultPublicKeyPoolService @Inject() (config: Config, publicKeyDiscoveryS
 
   override def getDefaultKey: Option[Key] = acceptedKids.headOption.flatMap(x => getKey(x))
 
+  def getKeyFromDiscoveryService(kid: String): Task[Option[Key]] = publicKeyDiscoveryService.getKey(kid)
+
   override def init: Task[List[(String, Key)]] = {
     Task.sequence {
       acceptedKids.map { kid =>
         for {
-          maybeKey <- publicKeyDiscoveryService.getKey(kid)
+          maybeKey <- getKeyFromDiscoveryService(kid)
         } yield {
 
           val res = maybeKey match {

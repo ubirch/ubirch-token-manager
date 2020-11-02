@@ -2,6 +2,7 @@ package com.ubirch
 
 import java.util.concurrent.Executors
 
+import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
 import org.scalatest.concurrent.ScalaFutures
@@ -39,4 +40,10 @@ trait Awaits {
     val future = observable.foldLeftL(Nil: Seq[T])((a, b) => a ++ Seq(b)).runToFuture
     Await.result(future, atMost)
   }
+
+  def await[T](task: Task[T], atMost: Duration)(implicit scheduler: Scheduler): T = {
+    val future = task.runToFuture
+    Await.result(future, atMost)
+  }
+
 }

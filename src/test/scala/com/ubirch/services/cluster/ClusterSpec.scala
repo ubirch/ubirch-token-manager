@@ -2,7 +2,7 @@ package com.ubirch.services.cluster
 
 import com.github.nosan.embedded.cassandra.api.cql.CqlScript
 import com.google.inject.Guice
-import com.ubirch.{Binder, EmbeddedCassandra, TestBase}
+import com.ubirch.{ Binder, EmbeddedCassandra, TestBase }
 
 /**
   * Test for the cassandra cluster
