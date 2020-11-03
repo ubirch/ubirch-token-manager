@@ -3,7 +3,7 @@ package com.ubirch.controllers
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, SwaggerElements }
-import com.ubirch.models.{ NOK, Simple }
+import com.ubirch.models.{ Good, NOK }
 import io.prometheus.client.Counter
 import javax.inject._
 import monix.eval.Task
@@ -70,7 +70,7 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
   get("/", operation(getSimpleCheck)) {
     asyncResult("root") { _ =>
       Task {
-        Ok(Simple("Hallo, Hola, Hello, Salut, Hej, this is the Ubirch Token Manager."))
+        Ok(Good("Hallo, Hola, Hello, Salut, Hej, this is the Ubirch Token Manager."))
       }
     }
   }

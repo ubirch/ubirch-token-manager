@@ -14,6 +14,6 @@ token=`curl  -s  -d "client_id=ubirch-2.0-user-access"   -d "username=$TOKEN_USE
 
 echo "=> host: $host"
 
-tokenId=2fd6732d-e26a-4d7c-93b0-a6e0b154a810
+tokenId=87729510-cdbd-46f6-9ff1-da59fa73a1e8
 
 curl -s -H "authorization: bearer $token" -X DELETE -d @createToken.json $host/api/tokens/v1/$tokenId | jq .

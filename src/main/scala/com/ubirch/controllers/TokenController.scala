@@ -5,7 +5,7 @@ import java.util.UUID
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
-import com.ubirch.models.{ NOK, Simple, TokenClaim, TokenRow }
+import com.ubirch.models.{ Good, NOK, TokenClaim, TokenRow }
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
 import com.ubirch.{ DeletingException, ServiceException }
 import io.prometheus.client.Counter
@@ -71,7 +71,7 @@ class TokenController @Inject() (
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
           res <- tokenStoreService.create(token, readBody.extracted)
-            .map { tkc => Ok(tkc) }
+            .map { tkc => Ok(Good(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -101,7 +101,7 @@ class TokenController @Inject() (
       asyncResult("list_tokens") { _ =>
         for {
           res <- tokenStoreService.list(token)
-            .map { tks => Ok(tks) }
+            .map { tks => Ok(Good(tks)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -142,7 +142,7 @@ class TokenController @Inject() (
           tokenId <- Task(UUID.fromString(tokenIdAsString))
           res <- tokenStoreService.delete(accessToken, tokenId)
             .map { dr =>
-              if (dr) Ok(Simple("Token deleted"))
+              if (dr) Ok(Good("Token deleted"))
               else BadRequest(NOK.tokenDeleteError("Failed to delete public key"))
             }
             .onErrorRecover {
