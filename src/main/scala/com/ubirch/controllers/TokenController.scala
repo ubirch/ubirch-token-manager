@@ -5,7 +5,7 @@ import java.util.UUID
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
-import com.ubirch.models.{ Good, NOK, TokenClaim, TokenRow }
+import com.ubirch.models.{ Good, NOK, TokenClaim, TokenRow, TokenVerificationClaim }
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
 import com.ubirch.{ DeletingException, ServiceException }
 import io.prometheus.client.Counter
@@ -70,6 +70,44 @@ class TokenController @Inject() (
       asyncResult("create_token") { _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
+          res <- tokenStoreService.create(token, readBody.extracted)
+            .map { tkc => Ok(Good(tkc)) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                BadRequest(NOK.tokenCreationError("Error creating token"))
+              case e: Exception =>
+                logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+      }
+    }
+  }
+
+  val postV1TokenVerificationCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[TokenVerificationClaim]("postV1TokenVerificationCreate")
+      summary "Creates an Verification Access Token"
+      description "Creates Verification Access Tokens for particular users"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters (
+        bodyParam[String]("TokenVerificationClaim").description("The verification token claims"),
+        swaggerTokenAsHeader
+      )
+        responseMessages (
+          ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Error creating token"),
+          ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+        ))
+
+  post("/v1/verification/create", operation(postV1TokenCreate)) {
+
+    authenticated { token =>
+      asyncResult("create_verification_token") { _ =>
+        for {
+          readBody <- Task.delay(ReadBody.readJson[TokenVerificationClaim](t => t))
           res <- tokenStoreService.create(token, readBody.extracted)
             .map { tkc => Ok(Good(tkc)) }
             .onErrorHandle {

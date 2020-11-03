@@ -4,14 +4,15 @@ import java.util.Locale
 
 import com.ubirch.models.NOK
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
-import org.json4s.JNull
+import org.json4s.JNothing
 import org.json4s.JsonAST.JValue
 import org.scalatra.ScalatraBase
 import org.scalatra.auth.{ ScentryConfig, ScentryStrategy, ScentrySupport }
 
 import scala.language.implicitConversions
 
-trait BearerAuthSupport[TokenType <: AnyRef] { self: ScalatraBase with ScentrySupport[TokenType] =>
+trait BearerAuthSupport[TokenType <: AnyRef] {
+  self: ScalatraBase with ScentrySupport[TokenType] =>
 
   def realm: String
 
@@ -75,9 +76,17 @@ abstract class BearerAuthStrategy[TokenType <: AnyRef](protected override val ap
 
 }
 
-case class Token(value: String, json: JValue = JNull, sub: String = "", name: String = "", email: String = "") {
+case class Token(value: String, json: JValue, sub: String, name: String, email: String, roles: List[Symbol]) {
   def id: String = sub
   def ownerId: String = id
+  def isAdmin: Boolean = roles.contains(Token.ADMIN)
+  def isUser: Boolean = roles.contains(Token.USER)
+}
+
+object Token {
+  final val ADMIN = 'ADMIN
+  final val USER = 'USER
+  def apply(value: String): Token = new Token(value, JNothing, sub = "", name = "", email = "", roles = Nil)
 }
 
 trait BearerAuthenticationSupport extends ScentrySupport[Token] with BearerAuthSupport[Token] {

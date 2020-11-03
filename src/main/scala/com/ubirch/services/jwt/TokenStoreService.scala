@@ -4,10 +4,11 @@ import java.util.{ Date, UUID }
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
+import com.ubirch.ConfPaths.{ GenericConfPaths, TokenGenPaths }
 import com.ubirch.controllers.concerns.Token
 import com.ubirch.crypto.GeneratorKeyFactory
 import com.ubirch.crypto.utils.Curve
-import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokensDAO }
+import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokenVerificationClaim, TokensDAO }
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
 import javax.inject.{ Inject, Singleton }
@@ -15,6 +16,7 @@ import monix.eval.Task
 
 trait TokenStoreService {
   def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData]
+  def create(accessToken: Token, tokenClaim: TokenVerificationClaim): Task[TokenCreationData]
   def list(accessToken: Token): Task[List[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
 }
@@ -22,7 +24,8 @@ trait TokenStoreService {
 @Singleton
 class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCreationService, tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
 
-  private final val privKey = GeneratorKeyFactory.getPrivKey(config.getString("tokenSystem.tokenGen.privKeyInHex"), Curve.PRIME256V1)
+  private final val privKey = GeneratorKeyFactory.getPrivKey(config.getString(TokenGenPaths.PRIV_KEY_IN_HEX), Curve.PRIME256V1)
+  private final val ENV = config.getString(TokenGenPaths.PRIV_KEY_IN_HEX)
 
   override def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData] = {
 
@@ -46,6 +49,31 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
       TokenCreationData(jwtID, claims, token)
     }
 
+  }
+
+  override def create(accessToken: Token, tokenVerificationClaim: TokenVerificationClaim): Task[TokenCreationData] = {
+    for {
+      _ <- Task.unit
+
+      tokenClaim = TokenClaim(
+        ownerId = tokenVerificationClaim.tenantId,
+        issuer = s"https://token.$ENV.ubirch.com",
+        subject = tokenVerificationClaim.tenantId.toString,
+        audience = s"https://verify.$ENV.ubirch.com",
+        expiration = tokenVerificationClaim.expiration,
+        notBefore = tokenVerificationClaim.notBefore,
+        issuedAt = None,
+        content = Map(
+          'purpose -> tokenVerificationClaim.purpose,
+          'target_identity -> tokenVerificationClaim.target_identity.toString
+        )
+      )
+
+      tokeCreationData <- create(accessToken, tokenClaim)
+
+    } yield {
+      tokeCreationData
+    }
   }
 
   override def list(accessToken: Token): Task[List[TokenRow]] = {

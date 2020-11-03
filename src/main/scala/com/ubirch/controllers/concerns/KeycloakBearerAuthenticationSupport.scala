@@ -18,7 +18,9 @@ class KeycloakBearerAuthStrategy(
   override protected def validate(token: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[Token] = {
     for {
       key <- publicKeyPoolService.getDefaultKey
+
       claims <- tokenVerificationService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
+
       sub <- claims.findField(_._1 == "sub").map(_._2).collect {
         case JsonAST.JString(s) => s
         case _ => ""
@@ -34,8 +36,27 @@ class KeycloakBearerAuthStrategy(
         case _ => ""
       }
 
+      roles <- claims
+        .findField(_._1 == "realm_access")
+        .map(_._2)
+        .flatMap(_.findField(_._1 == "roles"))
+        .map(_._2)
+        .collect {
+          case JsonAST.JArray(arr) =>
+            arr.collect {
+              case JsonAST.JString(s) => s
+              case _ => ""
+            }
+              .filter(_.nonEmpty)
+              .map(Symbol(_))
+          case _ => Nil
+        }
+
+      t = Token(token, claims, sub, name, email, roles)
+      if t.isUser || t.isAdmin
+
     } yield {
-      Token(token, claims, sub, name, email)
+      t
     }
 
   }

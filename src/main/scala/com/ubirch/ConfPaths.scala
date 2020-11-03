@@ -7,6 +7,7 @@ object ConfPaths {
 
   trait GenericConfPaths {
     final val NAME = "tokenSystem.name"
+    final val ENV = "tokenSystem.env"
   }
 
   trait HttpServerConfPaths {
@@ -33,6 +34,10 @@ object ConfPaths {
     final val PORT = "tokenSystem.metrics.prometheus.port"
   }
 
+  trait TokenGenPaths {
+    final val PRIV_KEY_IN_HEX = "tokenSystem.tokenGen.privKeyInHex"
+  }
+
   trait TokenVerificationPaths {
     final val CONFIG_URL = "tokenSystem.tokenVerification.configURL"
     final val KID = "tokenSystem.tokenVerification.kid"
@@ -40,6 +45,7 @@ object ConfPaths {
 
   object GenericConfPaths extends GenericConfPaths
   object HttpServerConfPaths extends HttpServerConfPaths
+  object TokenGenPaths extends TokenGenPaths
   object TokenVerificationPaths extends TokenVerificationPaths
 
 }
