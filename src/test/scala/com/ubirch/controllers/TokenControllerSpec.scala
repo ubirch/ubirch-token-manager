@@ -1,5 +1,7 @@
 package com.ubirch.controllers
 
+import java.util.UUID
+
 import com.ubirch.models.{ TokenCreationData, TokenRow }
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.PublicKeyPoolService
@@ -173,6 +175,62 @@ class TokenControllerSpec
         val res = jsonConverter.as[List[TokenRow]](body)
         assert(res.isRight)
         assert(res.right.get.size == 1)
+      }
+
+    }
+
+    "fail when no access token provided: create" taggedAs Tag("mandarina") in {
+
+      val incomingBody = "{}"
+      post("/v1/create", body = incomingBody) {
+        status should equal(401)
+        assert(body == """{"version":"1.0","status":"NOK","errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+      }
+
+    }
+
+    "fail when no access token provided: list" taggedAs Tag("avocado") in {
+
+      get("/v1") {
+        status should equal(401)
+        assert(body == """{"version":"1.0","status":"NOK","errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+      }
+
+    }
+
+    "fail when no access token provided: delete" taggedAs Tag("strawberry") in {
+
+      delete("/v1/" + UUID.randomUUID().toString) {
+        status should equal(401)
+        assert(body == """{"version":"1.0","status":"NOK","errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+      }
+
+    }
+
+    "fail when invalid access token provided: create" taggedAs Tag("durian") in {
+
+      val incomingBody = "{}"
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+        status should equal(400)
+        assert(body == """{"version":"1.0","status":"NOK","errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+      }
+
+    }
+
+    "fail when invalid access token provided: list" taggedAs Tag("cherry") in {
+
+      get("/v1", headers = Map("authorization" -> UUID.randomUUID().toString)) {
+        status should equal(400)
+        assert(body == """{"version":"1.0","status":"NOK","errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+      }
+
+    }
+
+    "fail when invalid access token provided: delete" taggedAs Tag("blackberry") in {
+
+      delete("/v1/" + UUID.randomUUID().toString, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+        status should equal(400)
+        assert(body == """{"version":"1.0","status":"NOK","errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }

@@ -22,7 +22,7 @@ trait BearerAuthSupport[TokenType <: AnyRef] { self: ScalatraBase with ScentrySu
       halt(401, NOK.authenticationError("Unauthenticated"))
     }
     if (!beReq.isBearerAuth) {
-      halt(400, NOK.authenticationError("Bad Request"))
+      halt(400, NOK.authenticationError("Invalid bearer token"))
     }
 
     scentry.authenticate("Bearer")
