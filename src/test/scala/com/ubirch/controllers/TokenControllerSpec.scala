@@ -1,6 +1,6 @@
 package com.ubirch.controllers
 
-import com.ubirch.models.TokenCreationData
+import com.ubirch.models.{ TokenCreationData, TokenRow }
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.PublicKeyPoolService
 import com.ubirch.{ EmbeddedCassandra, _ }
@@ -79,6 +79,100 @@ class TokenControllerSpec
         println(body)
         status should equal(400)
 
+      }
+
+    }
+
+    "list OK" taggedAs Tag("orange") in {
+
+      val token = Injector.get[FakeToken]
+
+      val incomingBody =
+        """
+          |{
+          |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "issuer":"",
+          |  "subject":"",
+          |  "audience":"",
+          |  "expiration":null,
+          |  "notBefore":null,
+          |  "issuedAt":null,
+          |  "content":{
+          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
+          |  }
+          |}
+          |""".stripMargin
+
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        assert(jsonConverter.as[TokenCreationData](body).right.get.isInstanceOf[TokenCreationData])
+      }
+
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        assert(jsonConverter.as[TokenCreationData](body).right.get.isInstanceOf[TokenCreationData])
+      }
+
+      get("/v1", headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        val res = jsonConverter.as[List[TokenRow]](body)
+        assert(res.isRight)
+        assert(res.right.get.size == 2)
+      }
+
+    }
+
+    "delete OK" taggedAs Tag("apple") in {
+
+      val token = Injector.get[FakeToken]
+
+      val incomingBody =
+        """
+          |{
+          |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "issuer":"",
+          |  "subject":"",
+          |  "audience":"",
+          |  "expiration":null,
+          |  "notBefore":null,
+          |  "issuedAt":null,
+          |  "content":{
+          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
+          |  }
+          |}
+          |""".stripMargin
+
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        assert(jsonConverter.as[TokenCreationData](body).right.get.isInstanceOf[TokenCreationData])
+      }
+
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        assert(jsonConverter.as[TokenCreationData](body).right.get.isInstanceOf[TokenCreationData])
+      }
+
+      var current: List[TokenRow] = Nil
+      get("/v1", headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        val res = jsonConverter.as[List[TokenRow]](body)
+        assert(res.isRight)
+        assert(res.right.get.size == 2)
+        current = res.right.get
+      }
+
+      val toDelete = current.headOption.map(_.id).map(_.toString)
+      assert(toDelete.isDefined)
+      delete("/v1/" + toDelete.get, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        assert(body == """{"version":"1.0","status":"OK","message":"Token deleted"}""")
+      }
+
+      get("/v1", headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        val res = jsonConverter.as[List[TokenRow]](body)
+        assert(res.isRight)
+        assert(res.right.get.size == 1)
       }
 
     }
