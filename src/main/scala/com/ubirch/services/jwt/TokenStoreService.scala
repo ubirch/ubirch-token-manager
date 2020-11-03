@@ -25,7 +25,7 @@ trait TokenStoreService {
 class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCreationService, tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
 
   private final val privKey = GeneratorKeyFactory.getPrivKey(config.getString(TokenGenPaths.PRIV_KEY_IN_HEX), Curve.PRIME256V1)
-  private final val ENV = config.getString(TokenGenPaths.PRIV_KEY_IN_HEX)
+  private final val ENV = config.getString(GenericConfPaths.ENV)
 
   override def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData] = {
 
