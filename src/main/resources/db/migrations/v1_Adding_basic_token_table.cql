@@ -8,5 +8,6 @@ drop table if exists tokens;
 create table if not exists tokens (id UUID,
                                    owner_id UUID,
                                    token_value text,
+                                   category text,
                                    created_at timestamp,
                                    PRIMARY KEY (owner_id, id));

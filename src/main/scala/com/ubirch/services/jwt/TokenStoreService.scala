@@ -15,7 +15,7 @@ import javax.inject.{ Inject, Singleton }
 import monix.eval.Task
 
 trait TokenStoreService {
-  def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData]
+  def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
   def create(accessToken: Token, tokenClaim: TokenVerificationClaim): Task[TokenCreationData]
   def list(accessToken: Token): Task[List[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
@@ -27,7 +27,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
   private final val privKey = GeneratorKeyFactory.getPrivKey(config.getString(TokenGenPaths.PRIV_KEY_IN_HEX), Curve.PRIME256V1)
   private final val ENV = config.getString(GenericConfPaths.ENV)
 
-  override def create(accessToken: Token, tokenClaim: TokenClaim): Task[TokenCreationData] = {
+  override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
 
     for {
       _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidSpecificClaim(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
@@ -38,7 +38,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
       (token, claims) = res
 
       _ = earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
-      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, new Date())
+      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, new Date())
 
       insertion <- tokensDAO.insert(aRow).headOptionL
 
@@ -69,7 +69,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
         )
       )
 
-      tokeCreationData <- create(accessToken, tokenClaim)
+      tokeCreationData <- create(accessToken, tokenClaim, 'verification)
 
     } yield {
       tokeCreationData

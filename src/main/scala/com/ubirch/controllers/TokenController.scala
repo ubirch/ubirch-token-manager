@@ -70,7 +70,7 @@ class TokenController @Inject() (
       asyncResult("create_token") { _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
-          res <- tokenStoreService.create(token, readBody.extracted)
+          res <- tokenStoreService.create(token, readBody.extracted, 'generic)
             .map { tkc => Ok(Good(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>

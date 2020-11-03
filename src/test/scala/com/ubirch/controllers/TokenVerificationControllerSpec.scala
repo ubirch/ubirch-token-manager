@@ -2,7 +2,7 @@ package com.ubirch.controllers
 
 import java.util.UUID
 
-import com.ubirch.models.{ Good, TokenRow }
+import com.ubirch.models.Good
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.PublicKeyPoolService
 import com.ubirch.{ EmbeddedCassandra, _ }
@@ -16,7 +16,7 @@ import scala.language.postfixOps
 /**
   * Test for the Key Controller
   */
-class TokenControllerSpec
+class TokenVerificationControllerSpec
   extends ScalatraWordSpec
   with EmbeddedCassandra
   with BeforeAndAfterEach
@@ -28,7 +28,7 @@ class TokenControllerSpec
   private lazy val Injector = new InjectorHelperImpl() {}
   private val jsonConverter = Injector.get[JsonConverterService]
 
-  "Token Manager -Generic Tokens-" must {
+  "Token Manager -Verification Tokens-" must {
 
     "create OK" taggedAs Tag("plum") in {
 
@@ -37,20 +37,15 @@ class TokenControllerSpec
       val incomingBody =
         """
           |{
-          |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-          |  "issuer":"",
-          |  "subject":"",
-          |  "audience":"",
-          |  "expiration":null,
-          |  "notBefore":null,
-          |  "issuedAt":null,
-          |  "content":{
-          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
-          |  }
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "expiration": 2233738785,
+          |  "notBefore":null
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -64,20 +59,15 @@ class TokenControllerSpec
       val incomingBody =
         """
           |{
-          |  "ownerId":"863995ed-ce12-4ea5-89dc-b181701d1d7b",
-          |  "issuer":"",
-          |  "subject":"",
-          |  "audience":"",
-          |  "expiration":null,
-          |  "notBefore":null,
-          |  "issuedAt":null,
-          |  "content":{
-          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
-          |  }
+          |  "tenantId":"982995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "expiration": 2233738785,
+          |  "notBefore":null
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
@@ -91,25 +81,20 @@ class TokenControllerSpec
       val incomingBody =
         """
           |{
-          |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-          |  "issuer":"",
-          |  "subject":"",
-          |  "audience":"",
-          |  "expiration":null,
-          |  "notBefore":null,
-          |  "issuedAt":null,
-          |  "content":{
-          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
-          |  }
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "expiration": 2233738785,
+          |  "notBefore":null
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -131,25 +116,20 @@ class TokenControllerSpec
       val incomingBody =
         """
           |{
-          |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-          |  "issuer":"",
-          |  "subject":"",
-          |  "audience":"",
-          |  "expiration":null,
-          |  "notBefore":null,
-          |  "issuedAt":null,
-          |  "content":{
-          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
-          |  }
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "expiration": 2233738785,
+          |  "notBefore":null
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -184,7 +164,7 @@ class TokenControllerSpec
     "fail when no access token provided: create" taggedAs Tag("mandarina") in {
 
       val incomingBody = "{}"
-      post("/v1/create", body = incomingBody) {
+      post("/v1/verification/create", body = incomingBody) {
         status should equal(401)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
@@ -212,7 +192,7 @@ class TokenControllerSpec
     "fail when invalid access token provided: create" taggedAs Tag("durian") in {
 
       val incomingBody = "{}"
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
