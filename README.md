@@ -63,6 +63,12 @@ curl -s -X GET \
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
+### Token
+
+```json
+tokenId=UUID for the token id
+```
+
 ### Delete Request (***)
 
 ```shell script
@@ -71,3 +77,9 @@ curl -s -X DELETE \
     -H "content-type: application/json" \
     "${host}/api/tokens/v1/${tokenId}" | jq .
 ```
+
+## Swagger
+
+Visit ${host}/docs on your browser to see the swagger docs.
+
+
