@@ -16,4 +16,4 @@ echo "=> host: $host"
 
 tokenId=87729510-cdbd-46f6-9ff1-da59fa73a1e8
 
-curl -s -H "authorization: bearer $token" -X DELETE -d @createToken.json $host/api/tokens/v1/$tokenId | jq .
+curl -s -H "authorization: bearer $token" -X DELETE $host/api/tokens/v1/$tokenId | jq .

@@ -13,7 +13,7 @@ This service knows about jwt tokens.
 ### Keycloak Token (*)
 
 ```json
-token=`curl  -s  -d "client_id=ubirch-2.0-user-access"   -d "username=$TOKEN_USER"   -d "password=$TOKEN_PASS"   -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID"  $keycloak | jq -r .access_token`
+token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
 ### Data object (**)
@@ -38,5 +38,36 @@ curl -s -X POST \
     "${host}/api/tokens/v1/verification/create" | jq .
 ```
 
- 
+## List your Tokens 
 
+### Keycloak Token (*)
+
+```json
+token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
+```
+
+### Get Request (***)
+
+```shell script
+curl -s -X GET \
+    -H "authorization: bearer ${token}" \
+    -H "content-type: application/json" \
+    "${host}/api/tokens/v1" | jq .
+```
+
+## Delete a Token 
+
+### Keycloak Token (*)
+
+```json
+token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
+```
+
+### Delete Request (***)
+
+```shell script
+curl -s -X DELETE \
+    -H "authorization: bearer ${token}" \
+    -H "content-type: application/json" \
+    "${host}/api/tokens/v1/${tokenId}" | jq .
+```
