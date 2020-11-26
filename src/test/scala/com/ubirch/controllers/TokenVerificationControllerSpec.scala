@@ -39,7 +39,7 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
           |  "notBefore":null
           |}
@@ -61,7 +61,7 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"982995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
           |  "notBefore":null
           |}
@@ -83,7 +83,7 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
           |  "notBefore":null
           |}
@@ -118,7 +118,7 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "target_identity":"840b7e21-03e9-4de7-bb31-0b9524f3b500",
+          |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
           |  "notBefore":null
           |}

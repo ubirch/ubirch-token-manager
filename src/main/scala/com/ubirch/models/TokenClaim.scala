@@ -12,6 +12,6 @@ case class TokenClaim(
     expiration: Option[Long],
     notBefore: Option[Long],
     issuedAt: Option[Long],
-    content: Map[Symbol, String]
+    content: Map[Symbol, Any]
 )
 

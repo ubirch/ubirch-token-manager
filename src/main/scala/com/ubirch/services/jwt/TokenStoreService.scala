@@ -37,7 +37,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
       res <- liftTry(tokenCreation.encode(jwtID, tokenClaim, privKey))(TokenEncodingException("Error creating token", tokenClaim))
       (token, claims) = res
 
-      _ = earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
+      _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
       aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, new Date())
 
       insertion <- tokensDAO.insert(aRow).headOptionL
@@ -55,6 +55,8 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
     for {
       _ <- Task.unit
 
+      _ <- earlyResponseIf(tokenVerificationClaim.targetIdentities.isEmpty)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty"))
+
       tokenClaim = TokenClaim(
         ownerId = tokenVerificationClaim.tenantId,
         issuer = s"https://token.$ENV.ubirch.com",
@@ -65,7 +67,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
         issuedAt = None,
         content = Map(
           'purpose -> tokenVerificationClaim.purpose,
-          'target_identity -> tokenVerificationClaim.target_identity.toString,
+          'target_identities -> tokenVerificationClaim.targetIdentities.map(_.toString).distinct,
           'role -> "verifier"
         )
       )

@@ -107,7 +107,7 @@ class TokenController @Inject() (
     authenticated { token =>
       asyncResult("create_verification_token") { _ =>
         for {
-          readBody <- Task.delay(ReadBody.readJson[TokenVerificationClaim](t => t))
+          readBody <- Task.delay(ReadBody.readJson[TokenVerificationClaim](t => t.camelizeKeys))
           res <- tokenStoreService.create(token, readBody.extracted)
             .map { tkc => Ok(Good(tkc)) }
             .onErrorHandle {
