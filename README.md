@@ -2,6 +2,13 @@
 
 This service knows about jwt tokens.
 
+1. [Getting Started](#steps-to-prepare-a-request)
+2. [Create Verification Token](#create-a-verification-token)
+3. [List Your Tokens](#list-your-tokens)
+4. [Delete A Token](#delete-a-token)
+5. [Keycloak and Responses](#keycloak-token-and-responses)
+6. [Swagger](#swagger)
+
 ## Steps to prepare a request
 
 1. Get your keycloak token (*)
@@ -127,8 +134,40 @@ curl -s -X DELETE \
     "${host}/api/tokens/v1/${tokenId}" | jq .
 ```
 
+#### Keycloak Token and Responses
+ 
+In order for any request be received and executed, the initiator must provide proof it has been granted with the required permissions. 
+In order to do so, its request must contain an Authorization header. 
+
+#### The Header
+
+```
+Authorization: <type> <token>
+
+where 
+  <type> is Bearer
+  <token> is the JWT token for the current logged in user. This token originates from Keycloak.
+``` 
+  
+#### The Responses
+
+```
+The <response> codes could be:
+
+1. <200 OK>           When the system found a proper verification.
+2. <400 Badrequest>   When the incoming data has not been properly parsed or accepted.            
+3. <403 Forbidden>    When the token is invalid.
+4. <401 Unauthorized> When no Authorization header is found in the request.
+                      In this case, the response will contain the following header 
+                      WWW-Authenticate: <type> realm=<realm>
+                      
+                      where <type> is Bearer and
+                           <realm> is "Ubirch Token Service"
+5. <500 Internal Server Error> When an internal error happened from which it is not possible to recover.
+```
+
 ## Swagger
 
-Visit ${host}/docs on your browser to see the swagger docs.
+Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 
 
