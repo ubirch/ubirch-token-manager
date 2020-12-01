@@ -56,7 +56,7 @@ class TokenController @Inject() (
       description "Creates Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
-        bodyParam[String]("tokeClaim").description("The token claims"),
+        bodyParam[TokenClaim]("tokeClaim").description("The token claims"),
         swaggerTokenAsHeader
       )
         responseMessages (
@@ -94,7 +94,7 @@ class TokenController @Inject() (
       description "Creates Verification Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
-        bodyParam[String]("TokenVerificationClaim").description("The verification token claims"),
+        bodyParam[TokenVerificationClaim]("TokenVerificationClaim").description("The verification token claims"),
         swaggerTokenAsHeader
       )
         responseMessages (
