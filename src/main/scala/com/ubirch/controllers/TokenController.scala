@@ -5,7 +5,8 @@ import java.util.UUID
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
-import com.ubirch.models.{ Good, NOK, TokenClaim, TokenRow, TokenVerificationClaim }
+import com.ubirch.models._
+import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
 import com.ubirch.{ DeletingException, ServiceException }
 import io.prometheus.client.Counter
@@ -23,6 +24,7 @@ class TokenController @Inject() (
     config: Config,
     val swagger: Swagger,
     jFormats: Formats,
+    jsonConverterService: JsonConverterService,
     publicKeyPoolService: PublicKeyPoolService,
     tokenVerificationService: TokenVerificationService,
     tokenStoreService: TokenStoreService
@@ -51,17 +53,27 @@ class TokenController @Inject() (
   }
 
   val postV1TokenCreate: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[TokenClaim]("postV1TokenCreate")
+    (apiOperation[TokenCreationData]("postV1TokenCreate")
       summary "Creates an Access Token"
-      description "Creates Access Tokens for particular users"
+      description "Creates Generic Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
         bodyParam[TokenClaim]("tokeClaim").description("The token claims"),
         swaggerTokenAsHeader
       )
         responseMessages (
-          ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Error creating token"),
-          ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+          ResponseMessage(
+            SwaggerElements.ERROR_REQUEST_CODE_400,
+            jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+              .right
+              .getOrElse("Error creating token")
+          ),
+            ResponseMessage(
+              SwaggerElements.INTERNAL_ERROR_CODE_500,
+              jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+                .right
+                .getOrElse("Sorry, something went wrong on our end")
+            )
         ))
 
   post("/v1/create", operation(postV1TokenCreate)) {
@@ -89,7 +101,7 @@ class TokenController @Inject() (
   }
 
   val postV1TokenVerificationCreate: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[TokenVerificationClaim]("postV1TokenVerificationCreate")
+    (apiOperation[TokenCreationData]("postV1TokenVerificationCreate")
       summary "Creates an Verification Access Token"
       description "Creates Verification Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
@@ -98,8 +110,18 @@ class TokenController @Inject() (
         swaggerTokenAsHeader
       )
         responseMessages (
-          ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Error creating token"),
-          ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+          ResponseMessage(
+            SwaggerElements.ERROR_REQUEST_CODE_400,
+            jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+              .right
+              .getOrElse("Error creating token")
+          ),
+            ResponseMessage(
+              SwaggerElements.INTERNAL_ERROR_CODE_500,
+              jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+                .right
+                .getOrElse("Sorry, something went wrong on our end")
+            )
         ))
 
   post("/v1/verification/create", operation(postV1TokenVerificationCreate)) {
@@ -157,7 +179,7 @@ class TokenController @Inject() (
   }
 
   val deleteV1TokenId: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Nothing]("deleteV1TokenId")
+    (apiOperation[Good]("deleteV1TokenId")
       summary "Deletes a token"
       description "deletes a token"
       tags SwaggerElements.TAG_TOKEN_SERVICE
@@ -166,8 +188,18 @@ class TokenController @Inject() (
         bodyParam[String]("tokenId").description("the token to delete")
       )
         responseMessages (
-          ResponseMessage(SwaggerElements.ERROR_REQUEST_CODE_400, "Failed to delete token"),
-          ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
+          ResponseMessage(
+            SwaggerElements.ERROR_REQUEST_CODE_400,
+            jsonConverterService.toString(NOK.tokenDeleteError("Error deleting token"))
+              .right
+              .getOrElse("Error deleting token")
+          ),
+            ResponseMessage(
+              SwaggerElements.INTERNAL_ERROR_CODE_500,
+              jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+                .right
+                .getOrElse("Sorry, something went wrong on our end")
+            )
         ))
 
   delete("/v1/:tokenId", operation(deleteV1TokenId)) {
@@ -181,7 +213,7 @@ class TokenController @Inject() (
           res <- tokenStoreService.delete(accessToken, tokenId)
             .map { dr =>
               if (dr) Ok(Good("Token deleted"))
-              else BadRequest(NOK.tokenDeleteError("Failed to delete public key"))
+              else BadRequest(NOK.tokenDeleteError("Failed to delete token"))
             }
             .onErrorRecover {
               case e: ServiceException =>

@@ -14,7 +14,7 @@ class ResourcesController @Inject() (val swagger: Swagger) extends ScalatraServl
 object RestApiInfo extends ApiInfo(
   "Token Manager",
   "These are the available endpoints for querying the Token Service. For more information drop me an email at carlos.sanchez at ubirch.com",
-  "https://ubirch.de",
+  "https://github.com/ubirch/ubirch-token-manager",
   "carlos.sanchez@ubirch.com",
   "Apache License, Version 2.0",
   "https://www.apache.org/licenses/LICENSE-2.0"

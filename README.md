@@ -10,13 +10,13 @@ This service knows about jwt tokens.
 
 ## Create a Verification Token 
 
-### Keycloak Token (*)
+#### Keycloak Token (*)
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
-### Data object (**)
+#### Data object (**)
 
 ```json
 {
@@ -28,7 +28,7 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 }
 ```
 
-### Post Request (***)
+#### Post Request (***)
 
 ```shell script
 curl -s -X POST \
@@ -38,15 +38,39 @@ curl -s -X POST \
     "${host}/api/tokens/v1/verification/create" | jq .
 ```
 
+#### Post Response
+
+```json
+{
+  "version": "1.0",
+  "ok": true,
+  "data": {
+    "id": "b9107002-9a60-4230-9b8a-a43b4317de1c",
+    "jwtClaim": {
+      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":[\"840b7e21-03e9-4de7-bb31-0b9524f3b500\"],\"role\":\"verifier\"}",
+      "issuer": "https://token.dev.ubirch.com",
+      "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "audience": [
+        "https://verify.dev.ubirch.com"
+      ],
+      "expiration": 7918235892,
+      "issuedAt": 1606845492,
+      "jwtId": "b9107002-9a60-4230-9b8a-a43b4317de1c"
+    },
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MTgyMzU4OTIsImlhdCI6MTYwNjg0NTQ5MiwianRpIjoiYjkxMDcwMDItOWE2MC00MjMwLTliOGEtYTQzYjQzMTdkZTFjIiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwicm9sZSI6InZlcmlmaWVyIn0.7OiXbsoZMtNE6OaanUat7beuW3vZeKrJ8_fkW1iOwXHPXewq_p4kanDKJEmQkd-dV8dg3IfbdCndnnM6jpCQdA"
+  }
+}
+```
+
 ## List your Tokens 
 
-### Keycloak Token (*)
+#### Keycloak Token (*)
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
-### Get Request (***)
+#### Get Request (***)
 
 ```shell script
 curl -s -X GET \
@@ -55,21 +79,46 @@ curl -s -X GET \
     "${host}/api/tokens/v1" | jq .
 ```
 
+#### List Response
+
+```json
+{
+  "version":"1.0",
+  "ok":true,
+  "data":[
+    {
+      "id":"163e22a2-bbd6-4536-a8f6-db0356c67a07",
+      "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "tokenValue":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MTc4MDcwNzUsImlhdCI6MTYwNjQxNjY3NSwianRpIjoiMTYzZTIyYTItYmJkNi00NTM2LWE4ZjYtZGIwMzU2YzY3YTA3IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwicm9sZSI6InZlcmlmaWVyIn0.GIv9n3C6nEEnHZlHMZa_saaENv51MeWH1586UBQUP8GlwMcjbWU6mTXe3LRXjTLHRJXpuGrH5fcNe3fLC7MqzA",
+      "category":"verification",
+      "createdAt":"2020-11-26T18:51:15.700Z"
+    },
+    {
+      "id":"2b7df15a-e170-4e5b-be7a-d548a3330d73",
+      "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "tokenValue":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiIiLCJzdWIiOiIiLCJhdWQiOiIiLCJpYXQiOjE2MDQ0MTU1NjQsImp0aSI6IjJiN2RmMTVhLWUxNzAtNGU1Yi1iZTdhLWQ1NDhhMzMzMGQ3MyIsIm93bmVySWQiOiI5NjM5OTVlZC1jZTEyLTRlYTUtODlkYy1iMTgxNzAxZDFkN2IifQ.Fk3Cqr3QzIpbBkE8NVY_m8LVVfwxTuOtDja4F7jpWu26YlH0v2wh1hg7iv9o9_hAchK3qc7LtyI43lhUA0nkIg",
+      "category":"generic",
+      "createdAt":"2020-11-03T14:59:24.323Z"
+    }
+  ]
+}
+```
+
 ## Delete a Token 
 
-### Keycloak Token (*)
+#### Keycloak Token (*)
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
-### Token
+#### Token
 
 ```json
 tokenId=UUID for the token id
 ```
 
-### Delete Request (***)
+#### Delete Request (***)
 
 ```shell script
 curl -s -X DELETE \
