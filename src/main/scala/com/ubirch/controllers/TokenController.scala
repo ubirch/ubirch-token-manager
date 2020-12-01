@@ -102,7 +102,7 @@ class TokenController @Inject() (
           ResponseMessage(SwaggerElements.INTERNAL_ERROR_CODE_500, "Sorry, something went wrong on our end")
         ))
 
-  post("/v1/verification/create", operation(postV1TokenCreate)) {
+  post("/v1/verification/create", operation(postV1TokenVerificationCreate)) {
 
     authenticated { token =>
       asyncResult("create_verification_token") { _ =>
