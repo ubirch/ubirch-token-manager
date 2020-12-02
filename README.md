@@ -35,6 +35,31 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 }
 ```
 
+**Fields**
+
+_tenantId_: it is the keycloak id of the logged in user.
+ 
+_purpose_: it is a description for the token
+
+_targetIdentities_: it is a list of device ids that belong to the user.
+
+_expiration_: the time in milliseconds after which the token will be considered expired. If not set, it will not expire.
+
+_notBefore_: the time in milliseconds after which the token should be considered valid. 
+
+**Mandatory Fields**
+
+* tenantId (uuid as string)
+* purpose (string)
+* targetIdentities (array of uuid as string)
+
+**Option Fields** 
+
+* expiration (number or null)
+* notBefore (number of null)
+
+Set as null or don't send the fields
+
 #### Post Request (***)
 
 ```shell script
