@@ -13,9 +13,9 @@ This service knows about jwt tokens.
 
 ## Steps to prepare a request
 
-1. Get your keycloak token (*)
-2. Prepare the data object - when needed (creation) - (**)
-3. Prepare the request and send. (***)
+1. Get your keycloak token.
+2. Prepare the data object - when needed (creation).
+3. Prepare the request and send.
 
 ## Token Verification Claim Object
 
@@ -57,13 +57,13 @@ Set as null or don't send the fields
 
 ## Create a Verification Token for Specific Devices. 
 
-#### Keycloak Token (*)
+#### Keycloak Token
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
-#### Data object (**)
+#### Data object
 
 ```json
 {
@@ -75,7 +75,7 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 }
 ```
 
-#### Post Request (***)
+#### Post Request
 
 ```shell script
 curl -s -X POST \
@@ -111,13 +111,13 @@ curl -s -X POST \
 
 ## Create a Verification Token with Wildcard. 
 
-#### Keycloak Token (*)
+#### Keycloak Token
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
-#### Data object (**)
+#### Data object
 
 ```json
 {
@@ -129,7 +129,7 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 }
 ```
 
-#### Post Request (***)
+#### Post Request
 
 ```shell script
 curl -s -X POST \
@@ -166,13 +166,13 @@ curl -s -X POST \
 
 ## List your Tokens 
 
-#### Keycloak Token (*)
+#### Keycloak Token
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
-#### Get Request (***)
+#### Get Request
 
 ```shell script
 curl -s -X GET \
@@ -208,7 +208,7 @@ curl -s -X GET \
 
 ## Delete a Token 
 
-#### Keycloak Token (*)
+#### Keycloak Token
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
@@ -220,7 +220,7 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 tokenId=UUID for the token id
 ```
 
-#### Delete Request (***)
+#### Delete Request
 
 ```shell script
 curl -s -X DELETE \
