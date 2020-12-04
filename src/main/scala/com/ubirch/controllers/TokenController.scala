@@ -78,7 +78,7 @@ class TokenController @Inject() (
 
   post("/v1/create", operation(postV1TokenCreate)) {
 
-    authenticated { token =>
+    authenticated(_.isAdmin) { token =>
       asyncResult("create_token") { _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
@@ -126,7 +126,7 @@ class TokenController @Inject() (
 
   post("/v1/verification/create", operation(postV1TokenVerificationCreate)) {
 
-    authenticated { token =>
+    authenticated() { token =>
       asyncResult("create_verification_token") { _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenVerificationClaim](t => t.camelizeKeys))
@@ -157,7 +157,7 @@ class TokenController @Inject() (
 
   get("/v1", operation(getV1TokenList)) {
 
-    authenticated { token =>
+    authenticated() { token =>
       asyncResult("list_tokens") { _ =>
         for {
           res <- tokenStoreService.list(token)
@@ -203,7 +203,7 @@ class TokenController @Inject() (
         ))
 
   delete("/v1/:tokenId", operation(deleteV1TokenId)) {
-    authenticated { accessToken =>
+    authenticated() { accessToken =>
 
       asyncResult("delete") { implicit request =>
 

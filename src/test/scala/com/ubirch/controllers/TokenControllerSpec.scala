@@ -7,6 +7,7 @@ import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.PublicKeyPoolService
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
+import javax.inject.Named
 import org.scalatest.{ BeforeAndAfterEach, Tag }
 import org.scalatra.test.scalatest.ScalatraWordSpec
 
@@ -32,7 +33,7 @@ class TokenControllerSpec
 
     "create OK" taggedAs Tag("plum") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].admin
 
       val incomingBody =
         """
@@ -57,9 +58,36 @@ class TokenControllerSpec
 
     }
 
+    "create not OK for not Admins" taggedAs Tag("plum") in {
+
+      val token = Injector.get[FakeTokenCreator].user
+
+      val incomingBody =
+        """
+          |{
+          |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "issuer":"",
+          |  "subject":"",
+          |  "audience":"",
+          |  "expiration":null,
+          |  "notBefore":null,
+          |  "issuedAt":null,
+          |  "content":{
+          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
+          |  }
+          |}
+          |""".stripMargin
+
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(403)
+        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Forbidden"}""")
+      }
+
+    }
+
     "not create when owner is not the same as in accessToken" taggedAs Tag("plums") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].admin
 
       val incomingBody =
         """
@@ -86,7 +114,7 @@ class TokenControllerSpec
 
     "list OK" taggedAs Tag("orange") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].admin
 
       val incomingBody =
         """
@@ -126,7 +154,7 @@ class TokenControllerSpec
 
     "delete OK" taggedAs Tag("apple") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].admin
 
       val incomingBody =
         """

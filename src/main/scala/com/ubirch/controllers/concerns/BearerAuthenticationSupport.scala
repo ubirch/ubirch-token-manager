@@ -30,10 +30,10 @@ trait BearerAuthSupport[TokenType <: AnyRef] {
 
   }
 
-  protected def authenticated(action: TokenType => Any)(implicit request: HttpServletRequest, response: HttpServletResponse): Any = {
+  protected def authenticated(p: TokenType => Boolean = _ => true)(action: TokenType => Any)(implicit request: HttpServletRequest, response: HttpServletResponse): Any = {
     bearerAuth() match {
-      case Some(value) => action(value)
-      case None => halt(403, NOK.authenticationError("Forbidden"))
+      case Some(value) if p(value) => action(value)
+      case _ => halt(403, NOK.authenticationError("Forbidden"))
     }
   }
 

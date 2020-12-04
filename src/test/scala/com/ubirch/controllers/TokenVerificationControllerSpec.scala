@@ -32,7 +32,7 @@ class TokenVerificationControllerSpec
 
     "create OK with *" taggedAs Tag("plum") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].user
 
       val incomingBody =
         """
@@ -54,7 +54,7 @@ class TokenVerificationControllerSpec
 
     "create OK" taggedAs Tag("plum") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].user
 
       val incomingBody =
         """
@@ -76,7 +76,7 @@ class TokenVerificationControllerSpec
 
     "not create when owner is not the same as in accessToken" taggedAs Tag("plums") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].user
 
       val incomingBody =
         """
@@ -98,7 +98,7 @@ class TokenVerificationControllerSpec
 
     "list OK" taggedAs Tag("orange") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].user
 
       val incomingBody =
         """
@@ -133,7 +133,7 @@ class TokenVerificationControllerSpec
 
     "delete OK" taggedAs Tag("apple") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].user
 
       val incomingBody =
         """
@@ -241,7 +241,7 @@ class TokenVerificationControllerSpec
 
     "fail wrong *" taggedAs Tag("guava") in {
 
-      val token = Injector.get[FakeToken]
+      val token = Injector.get[FakeTokenCreator].user
 
       val incomingBody =
         """

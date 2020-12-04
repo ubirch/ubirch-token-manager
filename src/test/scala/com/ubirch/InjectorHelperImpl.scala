@@ -31,8 +31,7 @@ case class FakeToken(value: String) {
   def prepare: String = "bearer " + value
 }
 
-@Singleton
-class TokenProvider @Inject() (privKey: PrivKey, tokenCreationService: TokenCreationService) extends Provider[FakeToken] {
+object FakeToken {
 
   val header =
     """
@@ -42,7 +41,7 @@ class TokenProvider @Inject() (privKey: PrivKey, tokenCreationService: TokenCrea
       |  "kid": "PSJ-ZQWx9EPztQowhNbET0rZwTYraqi6uDbxJwy4n3E"
       |}""".stripMargin
 
-  val token =
+  val admin =
     """
       |{
       |  "exp": 1718338181,
@@ -88,10 +87,66 @@ class TokenProvider @Inject() (privKey: PrivKey, tokenCreationService: TokenCrea
       |  "email": "carlos.sanchez@ubirch.com"
       |}""".stripMargin
 
-  override def get(): FakeToken = FakeToken(
-    tokenCreationService.encode(header, token, privKey)
-      .getOrElse(throw new Exception("Error Creating Token"))
-  )
+  val user =
+    """
+      |{
+      |  "exp": 1718338181,
+      |  "iat": 1604336381,
+      |  "jti": "2fb1c61d-2113-4b8e-9432-97c28c697b98",
+      |  "iss": "https://id.dev.ubirch.com/auth/realms/ubirch-default-realm",
+      |  "aud": "account",
+      |  "sub": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      |  "typ": "Bearer",
+      |  "azp": "ubirch-2.0-user-access",
+      |  "session_state": "f334122a-4693-4826-a2c0-546391886eda",
+      |  "acr": "1",
+      |  "allowed-origins": [
+      |    "http://localhost:9101",
+      |    "https://console.dev.ubirch.com"
+      |  ],
+      |  "realm_access": {
+      |    "roles": [
+      |      "offline_access",
+      |      "uma_authorization",
+      |      "USER"
+      |    ]
+      |  },
+      |  "resource_access": {
+      |    "account": {
+      |      "roles": [
+      |        "manage-account",
+      |        "manage-account-links",
+      |        "view-profile"
+      |      ]
+      |    }
+      |  },
+      |  "scope": "fav_color profile email",
+      |  "email_verified": true,
+      |  "fav_fruit": [
+      |    "/OWN_DEVICES_carlos.sanchez@ubirch.com"
+      |  ],
+      |  "name": "Carlos Sanchez",
+      |  "preferred_username": "carlos.sanchez@ubirch.com",
+      |  "given_name": "Carlos",
+      |  "family_name": "Sanchez",
+      |  "email": "carlos.sanchez@ubirch.com"
+      |}""".stripMargin
+
+}
+
+@Singleton
+class FakeTokenCreator @Inject() (privKey: PrivKey, tokenCreationService: TokenCreationService) {
+
+  def fakeToken(header: String, token: String): FakeToken = {
+    FakeToken(
+      tokenCreationService.encode(header, token, privKey)
+        .getOrElse(throw new Exception("Error Creating Token"))
+    )
+  }
+
+  val user: FakeToken = fakeToken(FakeToken.header, FakeToken.user)
+  val admin: FakeToken = fakeToken(FakeToken.header, FakeToken.admin)
+
 }
 
 class InjectorHelperImpl() extends InjectorHelper(List(new Binder {
@@ -102,6 +157,5 @@ class InjectorHelperImpl() extends InjectorHelper(List(new Binder {
   override def configure(): Unit = {
     super.configure()
     bind(classOf[PrivKey]).toProvider(classOf[KeyPairProvider])
-    bind(classOf[FakeToken]).toProvider(classOf[TokenProvider])
   }
 }))
