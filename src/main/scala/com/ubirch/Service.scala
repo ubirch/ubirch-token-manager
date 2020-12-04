@@ -15,13 +15,13 @@ import monix.execution.Scheduler
 @Singleton
 class Service @Inject() (restService: RestService, publicKeyPoolService: PublicKeyPoolService)(implicit scheduler: Scheduler) extends LazyLogging {
 
-  def start: Unit = {
+  def start(): Unit = {
 
     publicKeyPoolService.init.doOnFinish {
       case Some(e) =>
         Task.delay(logger.error("error_loading_keys", e))
       case None =>
-        Task.delay(restService.start)
+        Task.delay(restService.start())
     }.runToFuture
 
     val cd = new CountDownLatch(1)
@@ -32,6 +32,6 @@ class Service @Inject() (restService: RestService, publicKeyPoolService: PublicK
 
 object Service extends Boot(List(new Binder)) {
   def main(args: Array[String]): Unit = * {
-    get[Service].start
+    get[Service].start()
   }
 }

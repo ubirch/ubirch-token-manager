@@ -14,7 +14,7 @@ object Response {
 /**
   *  Represents an Error Response.
   * @param version the version of the response
-  * @param status the status of the response. NOK
+  * @param ok the status of the response. true or false
   * @param errorType the error type
   * @param errorMessage the message for the response
   */

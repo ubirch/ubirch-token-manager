@@ -24,7 +24,7 @@ class RestService @Inject() (config: Config, lifecycle: Lifecycle) extends LazyL
   val swaggerPath: String = config.getString(HttpServerConfPaths.SWAGGER_PATH)
   val contextPathBase: String = ""
 
-  def start = {
+  def start() = {
     val server = initializeServer
     startServer(server)
     addShutdownHook(server)
