@@ -54,8 +54,8 @@ class TokenController @Inject() (
 
   val postV1TokenCreate: SwaggerSupportSyntax.OperationBuilder =
     (apiOperation[TokenCreationData]("postV1TokenCreate")
-      summary "Creates an Access Token"
-      description "Creates Generic Access Tokens for particular users"
+      summary "Creates Generic Tokens"
+      description "Creates Generic Access Tokens for particular uses. This endpoint is only valid for users that are admins."
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
         bodyParam[TokenClaim]("tokeClaim").description("The token claims"),
