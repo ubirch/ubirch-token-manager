@@ -55,6 +55,7 @@ class TokenController @Inject() (
   options("/*") {
     response.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
     response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"))
+    NoContent()
   }
 
   val postV1TokenCreate: SwaggerSupportSyntax.OperationBuilder =
