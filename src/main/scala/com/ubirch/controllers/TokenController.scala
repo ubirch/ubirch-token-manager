@@ -52,6 +52,11 @@ class TokenController @Inject() (
     contentType = "application/json"
   }
 
+  options("/*") {
+    response.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
+    response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"))
+  }
+
   val postV1TokenCreate: SwaggerSupportSyntax.OperationBuilder =
     (apiOperation[TokenCreationData]("postV1TokenCreate")
       summary "Creates Generic Tokens"
