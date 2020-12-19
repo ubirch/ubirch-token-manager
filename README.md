@@ -33,7 +33,7 @@ This service knows about jwt tokens.
 
 _tenantId_: it is the keycloak id of the logged in user.
  
-_purpose_: it is a description for the token
+_purpose_: it is a description for the token.  Min characters are 6
 
 _targetIdentities_: it is a list of device ids that belong to the user. It supports a list of specific devices or the wildcard *.
 If it is meant as wildcard, the field should be sent as a string.
@@ -45,7 +45,7 @@ _notBefore_: the time in milliseconds after which the token should be considered
 **Mandatory Fields**
 
 * tenantId (uuid as string)
-* purpose (string)
+* purpose (string) :: min characters are 6
 * targetIdentities (array of uuid as string) | (*)
 
 **Option Fields** 
