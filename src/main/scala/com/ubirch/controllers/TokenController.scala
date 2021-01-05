@@ -8,7 +8,7 @@ import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrat
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
-import com.ubirch.{ DeletingException, ServiceException }
+import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
 import javax.inject._
 import monix.eval.Task
@@ -171,9 +171,42 @@ class TokenController @Inject() (
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                BadRequest(NOK.tokenListingError("Error creating token"))
+                BadRequest(NOK.tokenListingError("Error getting tokens"))
               case e: Exception =>
                 logger.error("1.2 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+      }
+    }
+  }
+
+  val getV1Token: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Option[TokenRow]]("getV1Token")
+      summary "Queries token for a particular user."
+      description "queries token based on an access token and token id"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters swaggerTokenAsHeader)
+
+  get("/v1/:id", operation(getV1Token)) {
+
+    authenticated() { token =>
+      asyncResult("get_token") { _ =>
+        for {
+          id <- Task(params.getOrElse("id", throw InvalidParamException("Invalid Token Id", "No Token Id parameter found in path")))
+            .map(UUID.fromString)
+            .onErrorHandle(_ => throw InvalidParamException("Invalid OwnerId", "Wrong owner param"))
+          res <- tokenStoreService.get(token, id)
+            .map { tks => Ok(Good(tks.orNull)) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                BadRequest(NOK.tokenListingError("Error getting token"))
+              case e: Exception =>
+                logger.error("1.2 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
                 InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
             }
 

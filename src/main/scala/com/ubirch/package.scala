@@ -28,4 +28,6 @@ package object ubirch {
   case class InvalidAllClaims(message: String, value: String) extends ServiceException(message)
   case class InvalidSpecificClaim(message: String, value: String) extends ServiceException(message)
 
+  case class InvalidParamException(message: String, reason: String) extends ServiceException(message)
+
 }
