@@ -131,6 +131,43 @@ class TokenVerificationControllerSpec
 
     }
 
+    "get single OK" taggedAs Tag("olive") in {
+
+      val token = Injector.get[FakeTokenCreator].user
+
+      val incomingBody =
+        """
+          |{
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+          |  "expiration": 2233738785,
+          |  "notBefore":null
+          |}
+          |""".stripMargin
+
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        val bodyAsEither = jsonConverter.as[Good](body)
+        val data = bodyAsEither.right.get.data.asInstanceOf[Map[String, Any]]
+        val id = data.get("id").map(x => UUID.fromString(x.toString))
+
+        assert(bodyAsEither.right.get.isInstanceOf[Good])
+        assert(id.isDefined)
+
+        get("/v1/" + id.get, headers = Map("authorization" -> token.prepare)) {
+          status should equal(200)
+          val res = jsonConverter.as[Good](body)
+          assert(res.isRight)
+          val data = res.right.get.data.asInstanceOf[Map[String, String]]
+          val id2 = data.get("id").map(x => UUID.fromString(x))
+          assert(id == id)
+        }
+
+      }
+
+    }
+
     "delete OK" taggedAs Tag("apple") in {
 
       val token = Injector.get[FakeTokenCreator].user
