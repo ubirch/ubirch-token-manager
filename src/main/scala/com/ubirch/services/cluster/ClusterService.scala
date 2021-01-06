@@ -80,8 +80,8 @@ class DefaultClusterService @Inject() (config: Config) extends ClusterService wi
   val maybeConsistencyLevel: Option[ConsistencyLevel] = checkConsistencyLevel(config.getString(CONSISTENCY_LEVEL))
   val maybeSerialConsistencyLevel: Option[ConsistencyLevel] = checkConsistencyLevel(config.getString(SERIAL_CONSISTENCY_LEVEL))
   val withSSL: Boolean = config.getBoolean(WITH_SSL)
-  val trustStorePath: String = config.getString(TRUST_STORE)
-  val trustStorePassword: String = config.getString(TRUST_STORE_PASSWORD)
+  lazy val trustStorePath: String = config.getString(TRUST_STORE)
+  lazy val trustStorePassword: String = config.getString(TRUST_STORE_PASSWORD)
   val username: String = config.getString(USERNAME)
   val password: String = config.getString(PASSWORD)
 
