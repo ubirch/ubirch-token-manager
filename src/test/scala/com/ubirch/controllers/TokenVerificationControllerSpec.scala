@@ -161,7 +161,7 @@ class TokenVerificationControllerSpec
           assert(res.isRight)
           val data = res.right.get.data.asInstanceOf[Map[String, String]]
           val id2 = data.get("id").map(x => UUID.fromString(x))
-          assert(id == id)
+          assert(id == id2)
         }
 
       }

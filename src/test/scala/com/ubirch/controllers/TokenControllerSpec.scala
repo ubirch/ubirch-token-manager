@@ -2,12 +2,11 @@ package com.ubirch.controllers
 
 import java.util.UUID
 
-import com.ubirch.models.{ Good, TokenRow }
+import com.ubirch.models.Good
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.PublicKeyPoolService
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
-import javax.inject.Named
 import org.scalatest.{ BeforeAndAfterEach, Tag }
 import org.scalatra.test.scalatest.ScalatraWordSpec
 

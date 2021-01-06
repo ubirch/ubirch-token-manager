@@ -59,9 +59,9 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
       _ <- earlyResponseIf(!tokenVerificationClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
       _ <- earlyResponseIf(!tokenVerificationClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
 
-      target: (Symbol, Any) = tokenVerificationClaim.targetIdentities match {
-        case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString)
-        case Right(other) => 'target_identities -> other
+      targetIdentities = tokenVerificationClaim.targetIdentities match {
+        case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString).asInstanceOf[Any]
+        case Right(other) => 'target_identities -> other.asInstanceOf[Any]
       }
 
       tokenClaim = TokenClaim(
@@ -74,7 +74,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
         issuedAt = None,
         content = Map(
           'purpose -> tokenVerificationClaim.purpose,
-          target,
+          targetIdentities,
           'role -> "verifier"
         )
       )

@@ -7,7 +7,6 @@ import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.TokenVerificationPaths
 import javax.inject._
 import monix.eval.Task
-import monix.execution.Scheduler
 
 import scala.collection.concurrent.TrieMap
 
@@ -18,7 +17,7 @@ trait PublicKeyPoolService {
 }
 
 @Singleton
-class DefaultPublicKeyPoolService @Inject() (config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService)(implicit scheduler: Scheduler) extends PublicKeyPoolService with LazyLogging {
+class DefaultPublicKeyPoolService @Inject() (config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService) extends PublicKeyPoolService with LazyLogging {
 
   final val acceptedKids = List(config.getString(TokenVerificationPaths.KID))
 

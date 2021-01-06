@@ -15,7 +15,7 @@ import scala.concurrent.Future
   */
 trait ConnectionServiceConfig {
   val keyspace: String
-  val preparedStatementCacheSize: Int
+  val preparedStatementCacheSize: Long
 }
 
 /**
@@ -50,7 +50,7 @@ class DefaultConnectionService @Inject() (clusterService: ClusterService, config
   extends ConnectionService with CassandraClusterConfPaths with LazyLogging {
 
   val keyspace: String = config.getString(KEYSPACE)
-  val preparedStatementCacheSize: Int = config.getInt(PREPARED_STATEMENT_CACHE_SIZE)
+  val preparedStatementCacheSize: Long = config.getLong(PREPARED_STATEMENT_CACHE_SIZE)
 
   if (keyspace.isEmpty) {
     throw NoKeyspaceException("Keyspace must be provided.")

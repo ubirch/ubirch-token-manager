@@ -85,7 +85,7 @@ class TokenController @Inject() (
   post("/v1/create", operation(postV1TokenCreate)) {
 
     authenticated(_.isAdmin) { token =>
-      asyncResult("create_token") { _ =>
+      asyncResult("create_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
           res <- tokenStoreService.create(token, readBody.extracted, 'generic)
@@ -133,7 +133,7 @@ class TokenController @Inject() (
   post("/v1/verification/create", operation(postV1TokenVerificationCreate)) {
 
     authenticated() { token =>
-      asyncResult("create_verification_token") { _ =>
+      asyncResult("create_verification_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenVerificationClaim](t => t.camelizeKeys))
           res <- tokenStoreService.create(token, readBody.extracted)
@@ -164,7 +164,7 @@ class TokenController @Inject() (
   get("/v1", operation(getV1TokenList)) {
 
     authenticated() { token =>
-      asyncResult("list_tokens") { _ =>
+      asyncResult("list_tokens") { _ => _ =>
         for {
           res <- tokenStoreService.list(token)
             .map { tks => Ok(Good(tks)) }
@@ -194,11 +194,12 @@ class TokenController @Inject() (
   get("/v1/:id", operation(getV1Token)) {
 
     authenticated() { token =>
-      asyncResult("get_token") { _ =>
+      asyncResult("get_token") { _ => _ =>
         for {
-          id <- Task(params.getOrElse("id", throw InvalidParamException("Invalid Token Id", "No Token Id parameter found in path")))
-            .map(UUID.fromString)
+          id <- Task(params.get("id"))
+            .map(_.map(UUID.fromString).get) // We want to know if failed or not as soon as possible
             .onErrorHandle(_ => throw InvalidParamException("Invalid OwnerId", "Wrong owner param"))
+
           res <- tokenStoreService.get(token, id)
             .map { tks => Ok(Good(tks.orNull)) }
             .onErrorHandle {
@@ -244,11 +245,13 @@ class TokenController @Inject() (
   delete("/v1/:tokenId", operation(deleteV1TokenId)) {
     authenticated() { accessToken =>
 
-      asyncResult("delete") { implicit request =>
+      asyncResult("delete") { implicit request => _ =>
 
         for {
-          tokenIdAsString <- Task(params.getOrElse("tokenId", throw DeletingException("Invalid Token", "No tokenId parameter found in path")))
-          tokenId <- Task(UUID.fromString(tokenIdAsString))
+          tokenId <- Task(params.get("tokenId"))
+            .map(_.map(UUID.fromString).get) // We want to know if failed or not as soon as possible
+            .onErrorHandle(_ => throw DeletingException("Invalid Token", "No tokenId parameter found in path"))
+
           res <- tokenStoreService.delete(accessToken, tokenId)
             .map { dr =>
               if (dr) Ok(Good("Token deleted"))
@@ -273,7 +276,7 @@ class TokenController @Inject() (
   }
 
   notFound {
-    asyncResult("not_found") { _ =>
+    asyncResult("not_found") { _ => _ =>
       Task {
         logger.info("controller=TokenController route_not_found={} query_string={}", requestPath, request.getQueryString)
         NotFound(NOK.noRouteFound(requestPath + " might exist in another universe"))

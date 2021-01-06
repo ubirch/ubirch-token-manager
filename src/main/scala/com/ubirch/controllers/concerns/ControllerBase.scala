@@ -78,10 +78,10 @@ abstract class ControllerBase extends ScalatraServlet
   with ServiceMetrics
   with LazyLogging {
 
-  def actionResult(body: HttpServletRequest => Task[ActionResult])(implicit request: HttpServletRequest, scheduler: Scheduler): Task[ActionResult] = {
+  def actionResult(body: HttpServletRequest => HttpServletResponse => Task[ActionResult])(implicit request: HttpServletRequest, response: HttpServletResponse): Task[ActionResult] = {
     for {
       _ <- Task.delay(logRequestInfo)
-      res <- Task.defer(body(request))
+      res <- Task.defer(body(request)(response))
         .onErrorHandle {
           case FailedExtractionException(_, rawBody, e) =>
             val msg = s"Couldn't parse [$rawBody] due to exception=${e.getClass.getCanonicalName} message=${e.getMessage}"
@@ -102,11 +102,11 @@ abstract class ControllerBase extends ScalatraServlet
 
   }
 
-  def asyncResultCore(body: () => CancelableFuture[ActionResult])(implicit request: HttpServletRequest, scheduler: Scheduler): AsyncResult = {
+  def asyncResultCore(body: () => CancelableFuture[ActionResult]): AsyncResult = {
     new AsyncResult() { override val is = body() }
   }
 
-  def asyncResult(name: String)(body: HttpServletRequest => Task[ActionResult])(implicit request: HttpServletRequest, scheduler: Scheduler): AsyncResult = {
+  def asyncResult(name: String)(body: HttpServletRequest => HttpServletResponse => Task[ActionResult])(implicit request: HttpServletRequest, response: HttpServletResponse, scheduler: Scheduler): AsyncResult = {
     asyncResultCore(() => count(name)(actionResult(body).runToFuture))
   }
 

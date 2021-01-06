@@ -54,6 +54,7 @@ class Binder
     TokenVerificationService
     PublicKeyDiscoveryService
     PublicKeyPoolService
+    ()
   }
 
 }

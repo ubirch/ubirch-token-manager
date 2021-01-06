@@ -3,12 +3,11 @@ package com.ubirch.services.jwt
 import java.time.Clock
 import java.util.UUID
 
-import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.crypto.PrivKey
 import com.ubirch.models.TokenClaim
 import com.ubirch.util.TaskHelpers
-import javax.inject.{ Inject, Singleton }
+import javax.inject.Singleton
 import pdi.jwt.{ Jwt, JwtAlgorithm, JwtClaim }
 
 import scala.util.Try
@@ -29,7 +28,7 @@ trait TokenCreationService {
 }
 
 @Singleton
-class DefaultTokenCreationService @Inject() (config: Config) extends TokenCreationService with TaskHelpers with LazyLogging {
+class DefaultTokenCreationService extends TokenCreationService with TaskHelpers with LazyLogging {
 
   implicit private val clock: Clock = Clock.systemUTC
 

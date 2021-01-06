@@ -12,7 +12,7 @@ class ScalatraBootstrap extends LifeCycle {
   lazy val tokenController: TokenController = Service.get[TokenController]
   lazy val resourceController: ResourcesController = Service.get[ResourcesController]
 
-  override def init(context: ServletContext) {
+  override def init(context: ServletContext): Unit = {
 
     context.setInitParameter("org.scalatra.cors.preflightMaxAge", "5")
     context.setInitParameter("org.scalatra.cors.allowCredentials", "false")
