@@ -264,6 +264,15 @@ class TokenControllerSpec
 
     }
 
+    "get JWK OK" taggedAs Tag("macadamia") in {
+
+      get("/v1/jwk") {
+        status should equal(200)
+        assert(body == """{"version":"1.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
+      }
+
+    }
+
   }
 
   override protected def beforeEach(): Unit = {
