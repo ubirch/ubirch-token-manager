@@ -4,10 +4,8 @@ import java.util.{ Date, UUID }
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import com.ubirch.ConfPaths.{ GenericConfPaths, TokenGenPaths }
+import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
-import com.ubirch.crypto.GeneratorKeyFactory
-import com.ubirch.crypto.utils.Curve
 import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokenVerificationClaim, TokensDAO }
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
@@ -23,9 +21,8 @@ trait TokenStoreService {
 }
 
 @Singleton
-class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCreationService, tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
+class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyService, tokenCreation: TokenCreationService, tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
 
-  private final val privKey = GeneratorKeyFactory.getPrivKey(config.getString(TokenGenPaths.PRIV_KEY_IN_HEX), Curve.PRIME256V1)
   private final val ENV = config.getString(GenericConfPaths.ENV)
 
   override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
@@ -35,7 +32,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
 
       jwtID = UUID.randomUUID()
 
-      res <- liftTry(tokenCreation.encode(jwtID, tokenClaim, privKey))(TokenEncodingException("Error creating token", tokenClaim))
+      res <- liftTry(tokenCreation.encode(jwtID, tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
       (token, claims) = res
 
       _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
