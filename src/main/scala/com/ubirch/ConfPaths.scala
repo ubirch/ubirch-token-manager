@@ -24,6 +24,8 @@ object ConfPaths {
     final val CONSISTENCY_LEVEL = "tokenSystem.cassandra.cluster.consistencyLevel"
     final val SERIAL_CONSISTENCY_LEVEL = "tokenSystem.cassandra.cluster.serialConsistencyLevel"
     final val WITH_SSL = "tokenSystem.cassandra.cluster.withSSL"
+    final val TRUST_STORE = "tokenSystem.cassandra.cluster.trustStore"
+    final val TRUST_STORE_PASSWORD = "tokenSystem.cassandra.cluster.trustStorePassword"
     final val USERNAME = "tokenSystem.cassandra.cluster.username"
     final val PASSWORD = "tokenSystem.cassandra.cluster.password"
     final val KEYSPACE = "tokenSystem.cassandra.cluster.keyspace"
