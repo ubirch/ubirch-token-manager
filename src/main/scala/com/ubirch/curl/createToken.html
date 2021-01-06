@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: "https://token.dev.ubirch.com/api/tokens/v1/verification/create",
+                contentType: "application/json",
+                crossDomain: true,
+                method: "POST",
+                headers: {
+                    "authorization": "Bearer eyJhbGciOiJFUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJQU0otWlFXeDlFUHp0UW93aE5iRVQwclp3VFlyYXFpNnVEYnhKd3k0bjNFIn0.eyJleHAiOjE2MDgwNDQwNzEsImlhdCI6MTYwODA0MjI3MSwianRpIjoiNGNmZDRjYzgtODA3YS00NDkzLWIxMDAtM2RkMTA0MjhjNjE5IiwiaXNzIjoiaHR0cHM6Ly9pZC5kZXYudWJpcmNoLmNvbS9hdXRoL3JlYWxtcy91YmlyY2gtZGVmYXVsdC1yZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiI5NjM5OTVlZC1jZTEyLTRlYTUtODlkYy1iMTgxNzAxZDFkN2IiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJ1YmlyY2gtMi4wLXVzZXItYWNjZXNzIiwic2Vzc2lvbl9zdGF0ZSI6ImMwYTg5ODI5LWFmZTctNDkwYS1hNjM5LWI3NjNhNmYwMTI3NiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiaHR0cDovL2xvY2FsaG9zdDo5MTAxIiwiaHR0cHM6Ly9jb25zb2xlLmRldi51YmlyY2guY29tIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsIkFETUlOIiwidW1hX2F1dGhvcml6YXRpb24iLCJVU0VSIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJmYXZfY29sb3IgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmYXZfZnJ1aXQiOlsiL09XTl9ERVZJQ0VTX2Nhcmxvcy5zYW5jaGV6QHViaXJjaC5jb20iXSwibmFtZSI6IkNhcmxvcyBTYW5jaGV6IiwicHJlZmVycmVkX3VzZXJuYW1lIjoiY2FybG9zLnNhbmNoZXpAdWJpcmNoLmNvbSIsImdpdmVuX25hbWUiOiJDYXJsb3MiLCJmYW1pbHlfbmFtZSI6IlNhbmNoZXoiLCJlbWFpbCI6ImNhcmxvcy5zYW5jaGV6QHViaXJjaC5jb20ifQ.K8UgcVbZg-LLWv1e6UKWE7vZm2xEcIaR8b6HvlNRQu0lweVXPAJpQXfjVmWAbXvXTyxlsnVppGBhQxBCRU_P-g"
+                },
+                data: JSON.stringify({
+                        "tenantId": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+                        "purpose": "King Dude - Concert",
+                        "targetIdentities": ["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+                        "expiration": 6311390400,
+                        "notBefore": null
+                    }
+                )
+            }).done(function (data) {
+                console.log(data);
+            });
+
+        });
+    </script>
+    <title>Token as QR Code</title>
+</head>
+<body>
+</body>
+</html>
