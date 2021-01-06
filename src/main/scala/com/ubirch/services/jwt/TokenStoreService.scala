@@ -18,6 +18,7 @@ trait TokenStoreService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
   def create(accessToken: Token, tokenClaim: TokenVerificationClaim): Task[TokenCreationData]
   def list(accessToken: Token): Task[List[TokenRow]]
+  def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
 }
 
@@ -58,9 +59,9 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
       _ <- earlyResponseIf(!tokenVerificationClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
       _ <- earlyResponseIf(!tokenVerificationClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
 
-      target: (Symbol, Any) = tokenVerificationClaim.targetIdentities match {
-        case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString)
-        case Right(other) => 'target_identities -> other
+      targetIdentities = tokenVerificationClaim.targetIdentities match {
+        case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString).asInstanceOf[Any]
+        case Right(other) => 'target_identities -> other.asInstanceOf[Any]
       }
 
       tokenClaim = TokenClaim(
@@ -73,7 +74,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
         issuedAt = None,
         content = Map(
           'purpose -> tokenVerificationClaim.purpose,
-          target,
+          targetIdentities,
           'role -> "verifier"
         )
       )
@@ -89,6 +90,15 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenCreation: TokenCr
     for {
       ownerId <- Task(UUID.fromString(accessToken.id))
       rows <- tokensDAO.byOwnerId(ownerId).toListL
+    } yield {
+      rows
+    }
+  }
+
+  override def get(accessToken: Token, id: UUID): Task[Option[TokenRow]] = {
+    for {
+      ownerId <- Task(UUID.fromString(accessToken.id))
+      rows <- tokensDAO.byOwnerIdAndId(ownerId, id).headOptionL
     } yield {
       rows
     }

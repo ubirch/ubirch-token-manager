@@ -8,10 +8,9 @@ import com.ubirch.crypto.{ GeneratorKeyFactory, PrivKey }
 import com.ubirch.services.jwt.{ DefaultPublicKeyPoolService, PublicKeyDiscoveryService, PublicKeyPoolService, TokenCreationService }
 import javax.inject.{ Inject, Provider, Singleton }
 import monix.eval.Task
-import monix.execution.Scheduler
 
 @Singleton
-class FakeDefaultPublicKeyPoolService @Inject() (privKey: PrivKey, config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService)(implicit scheduler: Scheduler)
+class FakeDefaultPublicKeyPoolService @Inject() (privKey: PrivKey, config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService)
   extends DefaultPublicKeyPoolService(config, publicKeyDiscoveryService) {
 
   override def getKeyFromDiscoveryService(kid: String): Task[Option[Key]] = Task {

@@ -48,19 +48,19 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
       tags SwaggerElements.TAG_WELCOME)
 
   get("/hola", operation(getSimpleCheck)) {
-    asyncResult("hola") { _ =>
+    asyncResult("hola") { _ => _ =>
       Task(hello)
     }
   }
 
   get("/hello", operation(getSimpleCheck)) {
-    asyncResult("hello") { _ =>
+    asyncResult("hello") { _ => _ =>
       Task(hello)
     }
   }
 
   get("/ping", operation(getSimpleCheck)) {
-    asyncResult("ping") { _ =>
+    asyncResult("ping") { _ => _ =>
       Task {
         Ok("pong")
       }
@@ -68,7 +68,7 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
   }
 
   get("/", operation(getSimpleCheck)) {
-    asyncResult("root") { _ =>
+    asyncResult("root") { _ => _ =>
       Task {
         Ok(Good("Hallo, Hola, Hello, Salut, Hej, this is the Ubirch Token Manager."))
       }
@@ -80,7 +80,7 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
   }
 
   notFound {
-    asyncResult("not_found") { _ =>
+    asyncResult("not_found") { _ => _ =>
       Task {
         logger.info("controller=InfoController route_not_found={} query_string={}", requestPath, request.getQueryString)
         NotFound(NOK.noRouteFound(requestPath + " might exist in another universe"))
