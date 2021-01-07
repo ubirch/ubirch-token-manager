@@ -134,7 +134,7 @@ object FakeToken {
 }
 
 @Singleton
-class FakeTokenCreator @Inject() (privKey: PrivKey, tokenCreationService: TokenCreationService) {
+class FakeTokenCreator @Inject() (val privKey: PrivKey, tokenCreationService: TokenCreationService) {
 
   def fakeToken(header: String, token: String): FakeToken = {
     FakeToken(
