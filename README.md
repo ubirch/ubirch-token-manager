@@ -9,7 +9,7 @@ This service knows about jwt tokens.
 5. [List Your Tokens](#list-your-tokens)
 6. [Delete A Token](#delete-a-token)
 7. [Keycloak and Responses](#keycloak-token-and-responses)
-8. [Verifying an Ubirch JWT Token](#Verifying an Ubirch JWT Token)
+8. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
 9. [Swagger](#swagger)
 
 ## Steps to prepare a request
@@ -262,7 +262,7 @@ The <response> codes could be:
 5. <500 Internal Server Error> When an internal error happened from which it is not possible to recover.
 ```
 
-##Verifying an Ubirch JWT Token
+## Verifying an Ubirch JWT Token
 
 The Ubirch Token Manager offers an endpoint that can be used to retrieve the public key for the tokens in order to be able to verify the generated token.
 This endpoint doesn't require of a access token. 
