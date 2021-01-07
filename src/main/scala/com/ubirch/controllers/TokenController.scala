@@ -66,7 +66,10 @@ class TokenController @Inject() (
       description "Creates Generic Access Tokens for particular uses. This endpoint is only valid for users that are admins."
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
-        bodyParam[TokenClaim]("tokeClaim").description("The token claims"),
+        bodyParam[TokenClaim]("tokeClaim").description("The token claims" +
+          "\n Note that expiration and notBefore can be read as follows: " +
+          "\n _expiration_: the number of seconds after which the token will be considered expired. That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server." +
+          "\n _notBefore_: the number of seconds after which the token should be considered valid. \nThat is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server."),
         swaggerTokenAsHeader
       )
         responseMessages (
@@ -114,7 +117,12 @@ class TokenController @Inject() (
       description "Creates Verification Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
-        bodyParam[TokenVerificationClaim]("TokenVerificationClaim").description("The verification token claims"),
+        bodyParam[TokenVerificationClaim]("TokenVerificationClaim").description(
+          "The verification token claims. " +
+            "\n Note that expiration and notBefore can be read as follows: " +
+            "\n _expiration_: the number of seconds after which the token will be considered expired. That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server." +
+            "\n _notBefore_: the number of seconds after which the token should be considered valid. \nThat is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server."
+        ),
         swaggerTokenAsHeader
       )
         responseMessages (
