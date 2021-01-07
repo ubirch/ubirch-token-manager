@@ -72,7 +72,8 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
         content = Map(
           'purpose -> tokenVerificationClaim.purpose,
           targetIdentities,
-          'role -> "verifier"
+          'role -> "verifier",
+          'scope -> "ver"
         )
       )
 
