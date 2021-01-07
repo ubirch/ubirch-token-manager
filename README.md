@@ -39,9 +39,12 @@ _purpose_: it is a description for the token.  Min characters are 6
 _targetIdentities_: it is a list of device ids that belong to the user. It supports a list of specific devices or the wildcard *.
 If it is meant as wildcard, the field should be sent as a string.
 
-_expiration_: the time in milliseconds after which the token will be considered expired. If not set, it will not expire.
+_expiration_: the number of seconds after which the token will be considered expired.
+That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server.
+If not set, it will not expire.
 
-_notBefore_: the time in milliseconds after which the token should be considered valid. 
+_notBefore_: the number of seconds after which the token should be considered valid. 
+That is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server.
 
 **Mandatory Fields**
 
@@ -51,8 +54,8 @@ _notBefore_: the time in milliseconds after which the token should be considered
 
 **Option Fields** 
 
-* expiration (number or null)
-* notBefore (number of null)
+* expiration (number or null) in seconds
+* notBefore (number of null) in seconds
 
 Set as null or don't send the fields
 
