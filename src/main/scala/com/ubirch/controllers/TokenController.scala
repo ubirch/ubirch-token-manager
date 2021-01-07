@@ -7,10 +7,11 @@ import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenStoreService, TokenVerificationService }
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenKeyService, TokenStoreService, TokenVerificationService }
 import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
 import javax.inject._
+
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.json4s.Formats
@@ -27,7 +28,8 @@ class TokenController @Inject() (
     jsonConverterService: JsonConverterService,
     publicKeyPoolService: PublicKeyPoolService,
     tokenVerificationService: TokenVerificationService,
-    tokenStoreService: TokenStoreService
+    tokenStoreService: TokenStoreService,
+    tokenKeyService: TokenKeyService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
   extends ControllerBase with KeycloakBearerAuthenticationSupport {
 
@@ -214,6 +216,27 @@ class TokenController @Inject() (
         } yield {
           res
         }
+      }
+    }
+  }
+
+  val getV1JWK: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Map[String, String]]("getV1JWK")
+      summary "Returns the public key used to verify tokens in jwk format"
+      description "returns the jwk for the current token verification"
+      tags SwaggerElements.TAG_TOKEN_SERVICE)
+
+  get("/v1/jwk", operation(getV1JWK)) {
+    asyncResult("get_jwk") { _ => _ =>
+      (for {
+        key <- Task.fromEither(jsonConverterService.as[Map[String, String]](tokenKeyService.publicJWK.toJson))
+        res <- Task.delay(Ok(Good(key)))
+      } yield {
+        res
+      }).onErrorRecover {
+        case e: Exception =>
+          logger.error("1.1 Error getting jwk: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
       }
     }
   }

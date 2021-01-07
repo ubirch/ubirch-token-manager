@@ -37,6 +37,7 @@ class Binder
   def TokenVerificationService: ScopedBindingBuilder = bind(classOf[TokenVerificationService]).to(classOf[DefaultTokenVerificationService])
   def PublicKeyDiscoveryService: ScopedBindingBuilder = bind(classOf[PublicKeyDiscoveryService]).to(classOf[DefaultPublicKeyDiscoveryService])
   def PublicKeyPoolService: ScopedBindingBuilder = bind(classOf[PublicKeyPoolService]).to(classOf[DefaultPublicKeyPoolService])
+  def TokenKeyService: ScopedBindingBuilder = bind(classOf[TokenKeyService]).to(classOf[DefaultTokenKeyService])
 
   def configure(): Unit = {
     Config
@@ -54,6 +55,7 @@ class Binder
     TokenVerificationService
     PublicKeyDiscoveryService
     PublicKeyPoolService
+    TokenKeyService
     ()
   }
 

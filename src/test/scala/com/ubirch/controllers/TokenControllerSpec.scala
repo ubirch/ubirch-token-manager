@@ -1,12 +1,14 @@
 package com.ubirch.controllers
 
+import java.security.PublicKey
 import java.util.UUID
 
 import com.ubirch.models.Good
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.PublicKeyPoolService
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenVerificationService }
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
+import org.jose4j.jwk.PublicJsonWebKey
 import org.scalatest.{ BeforeAndAfterEach, Tag }
 import org.scalatra.test.scalatest.ScalatraWordSpec
 
@@ -53,6 +55,44 @@ class TokenControllerSpec
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+      }
+
+    }
+
+    "create OK and verified" taggedAs Tag("avocado") in {
+
+      get("/v1/jwk") {
+        status should equal(200)
+        assert(body == """{"version":"1.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
+      }
+
+      val token = Injector.get[FakeTokenCreator]
+      val tokenVerificationService = Injector.get[TokenVerificationService]
+
+      val incomingBody =
+        """
+          |{
+          |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "issuer":"",
+          |  "subject":"",
+          |  "audience":"",
+          |  "expiration":null,
+          |  "notBefore":null,
+          |  "issuedAt":null,
+          |  "content":{
+          |    "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b"
+          |  }
+          |}
+          |""".stripMargin
+
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.admin.prepare)) {
+        status should equal(200)
+        val good = jsonConverter.as[Good](body).right.get
+        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        val token = good.data.asInstanceOf[Map[String, String]]("token")
+        val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
+        val claims = tokenVerificationService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
+        assert(claims.isDefined)
       }
 
     }
@@ -260,6 +300,15 @@ class TokenControllerSpec
       delete("/v1/" + UUID.randomUUID().toString, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+      }
+
+    }
+
+    "get JWK OK" taggedAs Tag("macadamia") in {
+
+      get("/v1/jwk") {
+        status should equal(200)
+        assert(body == """{"version":"1.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
       }
 
     }
