@@ -8,9 +8,10 @@ This service knows about jwt tokens.
 4. [Create Verification Token with Wildcard](#create-a-verification-token-for-specific-devices)
 5. [List Your Tokens](#list-your-tokens)
 6. [Delete A Token](#delete-a-token)
-7. [Keycloak and Responses](#keycloak-token-and-responses)
-8. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
-9. [Swagger](#swagger)
+7. [Verification Token Claims](#verification-token-claims)
+8. [Keycloak and Responses](#keycloak-token-and-responses)
+9. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
+10. [Swagger](#swagger)
 
 ## Steps to prepare a request
 
@@ -167,7 +168,7 @@ curl -s -X POST \
 }
 ```
 
-### Verification Token Claims
+## Verification Token Claims
 
 This token has the following header:
 
