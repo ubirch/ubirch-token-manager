@@ -150,22 +150,63 @@ curl -s -X POST \
   "version": "1.0",
   "ok": true,
   "data": {
-    "id": "6be6c7c0-4f15-40ba-9cb2-d066d4b81099",
+    "id": "2d105274-1cb3-45bc-9aed-b7c444d25f2f",
     "jwtClaim": {
-      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":\"*\",\"role\":\"verifier\"}",
+      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":\"*\",\"role\":\"verifier\",\"scope\":\"ver\"}",
       "issuer": "https://token.dev.ubirch.com",
       "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
       "audience": [
         "https://verify.dev.ubirch.com"
       ],
-      "expiration": 7918388949,
-      "issuedAt": 1606998549,
-      "jwtId": "6be6c7c0-4f15-40ba-9cb2-d066d4b81099"
+      "expiration": 7921842955,
+      "issuedAt": 1610452555,
+      "jwtId": "2d105274-1cb3-45bc-9aed-b7c444d25f2f"
     },
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MTgzODg5NDksImlhdCI6MTYwNjk5ODU0OSwianRpIjoiNmJlNmM3YzAtNGYxNS00MGJhLTljYjItZDA2NmQ0YjgxMDk5IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6IioiLCJyb2xlIjoidmVyaWZpZXIifQ.-8nHxBoz71v4Vo9IGyg2A-iYKpsVYN4C5XgdC0D9jesMCxR7cYeufy4qe1QaHYGvZhO2tUBuiVVITeBFY4Az_Q"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MjE4NDI5NTUsImlhdCI6MTYxMDQ1MjU1NSwianRpIjoiMmQxMDUyNzQtMWNiMy00NWJjLTlhZWQtYjdjNDQ0ZDI1ZjJmIiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6IioiLCJyb2xlIjoidmVyaWZpZXIiLCJzY29wZSI6InZlciJ9.AE5njTtbWGXDr-6hyn7UJYJgD10vGznp3vof2B8Bs77HzUqC42xfLDk0f0Fhcb8sXb61i32jxQj9fG0OulPVAg"
   }
 }
+```
 
+### Verification Token Claims
+
+This token has the following header:
+
+```json
+{
+  "typ": "JWT",
+  "alg": "ES256"
+}
+```
+
+```json
+{
+  "iss": "https://token.dev.ubirch.com",
+  "sub": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+  "aud": "https://verify.dev.ubirch.com",
+  "exp": 7921535473,
+  "iat": 1610145073,
+  "jti": "f359eaf1-2a91-4462-962b-5c85523bafad",
+  "purpose": "Shark Tank - Mexico",
+  "target_identities": [
+    "7549acd8-91e1-4230-833a-2f386e09b96f"
+  ],
+  "role": "verifier",
+  "scope": "ver"
+}
+```
+
+```
+Where 
+    'iss' is Principal Entity that signs/issues the token: The Token Manager.
+    'sub' is the purpose or subject for this token: The tenantId/UserId from Keycloak 
+    'aud' target entity: The target system, in this token, the Verfication Service.  
+    'exp' is the expiration time
+    'iat' is the initial time
+    'jti' is a unique uuid id for the token
+    'purpose' is a description of the main usage for this token, like a concert or artist show
+    'target_identities': it is the entities for which the subject can perform the action on the target audience system
+    'role' is the role that was assigned to this token
+    'scope' is the action allowed for this token.
 ```
 
 ## List your Tokens 
@@ -233,7 +274,7 @@ curl -s -X DELETE \
     "${host}/api/tokens/v1/${tokenId}" | jq .
 ```
 
-#### Keycloak Token and Responses
+### Keycloak Token and Responses
  
 In order for any request be received and executed, the initiator must provide proof it has been granted with the required permissions. 
 In order to do so, its request must contain an Authorization header. 
