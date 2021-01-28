@@ -69,7 +69,6 @@ class TokenVerificationControllerSpec
           |""".stripMargin
 
       post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
-        println(body)
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -93,8 +92,8 @@ class TokenVerificationControllerSpec
           |""".stripMargin
 
       post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
-        status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        status should equal(400)
+        assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
 
     }
