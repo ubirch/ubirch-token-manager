@@ -1,5 +1,7 @@
 package com.ubirch.models
 
+import com.ubirch.util.URLsHelper
+
 import java.net.URL
 import java.util.UUID
 import scala.util.Try
@@ -12,6 +14,7 @@ case class TokenVerificationClaim(
     notBefore: Option[Long],
     originDomains: List[URL]
 ) {
+
   def validateIdentities: Boolean = {
     targetIdentities match {
       case Left(value) => value.nonEmpty
@@ -19,8 +22,17 @@ case class TokenVerificationClaim(
     }
   }
 
-  def validateOriginsDomains: Boolean = Try(originDomains).map(_.map(_.toURI)).isSuccess
+  def validateOriginsDomains: Boolean = {
+    (for {
+      fts <- Try(originDomains).map(_.map(_.toURI))
+      verifications <- Try(fts.map(x => URLsHelper.urlValidator().isValid(x.toString)))
+    } yield {
+
+      verifications.forall(b => b)
+    }).getOrElse(false)
+  }
 
   def validatePurpose: Boolean = purpose.nonEmpty && purpose.length > 5
+
 }
 

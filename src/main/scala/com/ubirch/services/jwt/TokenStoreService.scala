@@ -51,7 +51,6 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
 
   override def create(accessToken: Token, tokenVerificationClaim: TokenVerificationClaim): Task[TokenCreationData] = {
     for {
-      _ <- Task.unit
 
       _ <- earlyResponseIf(!tokenVerificationClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
       _ <- earlyResponseIf(!tokenVerificationClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))

@@ -27,7 +27,8 @@ This service knows about jwt tokens.
   "purpose":"King Dude - Concert",
   "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"] | "*",
   "expiration": 6311390400,
-  "notBefore":null
+  "notBefore":null,
+  "originDomains": ["https://verification.dev.ubirch.com"]
 }
 ```
 
@@ -47,11 +48,14 @@ If not set, it will not expire.
 _notBefore_: the number of seconds after which the token should be considered valid. 
 That is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server.
 
+_originDomains_: list of domains from which the calls will be accepted from when verifying.
+
 **Mandatory Fields**
 
 * tenantId (uuid as string)
 * purpose (string) :: min characters are 6
 * targetIdentities (array of uuid as string) | (*)
+* originDomains (array of urls from which a verification can originate)
 
 **Option Fields** 
 
