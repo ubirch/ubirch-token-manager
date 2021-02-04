@@ -123,22 +123,22 @@ class TokenController @Inject() (
             "\n _expiration_: the number of seconds after which the token will be considered expired. That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server." +
             "\n _notBefore_: the number of seconds after which the token should be considered valid. \nThat is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server."
         ),
-        swaggerTokenAsHeader
+          swaggerTokenAsHeader
       )
-        responseMessages (
-          ResponseMessage(
-            SwaggerElements.ERROR_REQUEST_CODE_400,
-            jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
-              .right
-              .getOrElse("Error creating token")
-          ),
+          responseMessages (
             ResponseMessage(
-              SwaggerElements.INTERNAL_ERROR_CODE_500,
-              jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+              SwaggerElements.ERROR_REQUEST_CODE_400,
+              jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
                 .right
-                .getOrElse("Sorry, something went wrong on our end")
-            )
-        ))
+                .getOrElse("Error creating token")
+            ),
+              ResponseMessage(
+                SwaggerElements.INTERNAL_ERROR_CODE_500,
+                jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+                  .right
+                  .getOrElse("Sorry, something went wrong on our end")
+              )
+          ))
 
   post("/v1/verification/create", operation(postV1TokenVerificationCreate)) {
 

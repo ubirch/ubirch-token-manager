@@ -52,6 +52,52 @@ class TokenVerificationControllerSpec
 
     }
 
+    "create OK with list of domains" taggedAs Tag("pomegranate") in {
+
+      val token = Injector.get[FakeTokenCreator].user
+
+      val incomingBody =
+        """
+          |{
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "targetIdentities": "*",
+          |  "expiration": 2233738785,
+          |  "notBefore":null,
+          |  "originDomains": ["https://meet.google.com", "https://simple.wikipedia.org"]
+          |}
+          |""".stripMargin
+
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+      }
+
+    }
+
+    "not create when schema is wrong" taggedAs Tag("pomegranate") in {
+
+      val token = Injector.get[FakeTokenCreator].user
+
+      val incomingBody =
+        """
+          |{
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "targetIdentities": "*",
+          |  "expiration": 2233738785,
+          |  "notBefore":null,
+          |  "originDomains": ["ftp://meet.google.com", "https://simple.wikipedia.org"]
+          |}
+          |""".stripMargin
+
+      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(400)
+        assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+      }
+
+    }
+
     "create OK" taggedAs Tag("plum") in {
 
       val token = Injector.get[FakeTokenCreator].user

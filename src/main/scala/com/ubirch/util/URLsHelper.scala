@@ -1,14 +1,19 @@
 package com.ubirch
 package util
 
-import java.net.{ InetSocketAddress, URL }
+import org.apache.commons.validator.routines.UrlValidator
 
+import java.net.{ InetSocketAddress, URL }
 import scala.util.Try
 
 /**
   * A helper convenience for URL related work
   */
 object URLsHelper {
+
+  def urlValidator(schemes: List[String] = List("https", "http")): UrlValidator = {
+    new UrlValidator(schemes.toArray, UrlValidator.NO_FRAGMENTS)
+  }
 
   /**
     * Parses a string to InetSocketAddress

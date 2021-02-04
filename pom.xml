@@ -82,6 +82,7 @@
         <bcprov-jdk15on.version>1.61</bcprov-jdk15on.version>
 
         <jwt-core.version>4.2.0</jwt-core.version>
+        <commons-validator.version>1.7</commons-validator.version>
 
         <io.prometheus.simpleclient.version>0.6.0</io.prometheus.simpleclient.version>
         <io.prometheus.simpleclient_hotspot.version>0.6.0</io.prometheus.simpleclient_hotspot.version>
@@ -121,6 +122,12 @@
     </repositories>
 
     <dependencies>
+
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>${commons-validator.version}</version>
+        </dependency>
 
         <!--BouncyCastle-->
         <dependency>
