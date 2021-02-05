@@ -1,15 +1,15 @@
 package com.ubirch.controllers.concerns
 
-import java.util.Locale
-
 import com.ubirch.models.NOK
-import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import org.json4s.JNothing
 import org.json4s.JsonAST.JValue
 import org.scalatra.ScalatraBase
 import org.scalatra.auth.{ ScentryConfig, ScentryStrategy, ScentrySupport }
 
+import java.util.{ Locale, UUID }
+import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import scala.language.implicitConversions
+import scala.util.Try
 
 trait BearerAuthSupport[TokenType <: AnyRef] {
   self: ScalatraBase with ScentrySupport[TokenType] =>
@@ -30,9 +30,10 @@ trait BearerAuthSupport[TokenType <: AnyRef] {
 
   }
 
-  protected def authenticated(p: TokenType => Boolean = _ => true)(action: TokenType => Any)(implicit request: HttpServletRequest, response: HttpServletResponse): Any = {
+  protected def authenticated(p: (TokenType => Boolean)*)(action: TokenType => Any)(implicit request: HttpServletRequest, response: HttpServletResponse): Any = {
+    val predicates: Seq[TokenType => Boolean] = p
     bearerAuth() match {
-      case Some(value) if p(value) => action(value)
+      case Some(value) if predicates.forall(x => x(value)) => action(value)
       case _ => halt(403, NOK.authenticationError("Forbidden"))
     }
   }
@@ -81,6 +82,8 @@ case class Token(value: String, json: JValue, sub: String, name: String, email: 
   def ownerId: String = id
   def isAdmin: Boolean = roles.contains(Token.ADMIN)
   def isUser: Boolean = roles.contains(Token.USER)
+  def hasRole(role: Symbol): Boolean = roles.contains(role)
+  def ownerIdAsUUID: Try[UUID] = Try(UUID.fromString(ownerId))
 }
 
 object Token {
@@ -105,7 +108,7 @@ trait BearerAuthenticationSupport extends ScentrySupport[Token] with BearerAuthS
     new ScentryConfig {}.asInstanceOf[ScentryConfiguration]
   }
 
-  override def realm: String = "Ubirch Token Service"
+  override def realm: String = "Ubirch Token Manager"
 
 }
 
