@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
-import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokenVerificationClaim, TokensDAO }
+import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokenPurposedClaim, TokensDAO }
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
 import javax.inject.{ Inject, Singleton }
@@ -14,7 +14,7 @@ import monix.eval.Task
 
 trait TokenStoreService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
-  def create(accessToken: Token, tokenClaim: TokenVerificationClaim): Task[TokenCreationData]
+  def create(accessToken: Token, tokenClaim: TokenPurposedClaim): Task[TokenCreationData]
   def list(accessToken: Token): Task[List[TokenRow]]
   def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
@@ -49,7 +49,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
 
   }
 
-  override def create(accessToken: Token, tokenVerificationClaim: TokenVerificationClaim): Task[TokenCreationData] = {
+  override def create(accessToken: Token, tokenVerificationClaim: TokenPurposedClaim): Task[TokenCreationData] = {
     for {
 
       _ <- earlyResponseIf(!tokenVerificationClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))

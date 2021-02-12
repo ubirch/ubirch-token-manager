@@ -6,7 +6,7 @@ import java.net.URL
 import java.util.UUID
 import scala.util.Try
 
-case class TokenVerificationClaim(
+case class TokenPurposedClaim(
     tenantId: UUID,
     purpose: String,
     targetIdentities: Either[List[UUID], String],
