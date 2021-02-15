@@ -56,10 +56,14 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
       _ <- earlyResponseIf(!tokenPurposedClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidSpecificClaim("Invalid Origin Domains", "Origin Domains are empty or invalid"))
 
+      purpose = 'purpose -> tokenPurposedClaim.purpose
       targetIdentities = tokenPurposedClaim.targetIdentities match {
         case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString).asInstanceOf[Any]
         case Right(other) => 'target_identities -> other.asInstanceOf[Any]
       }
+      origin = 'origin_domains -> tokenPurposedClaim.originDomains.distinct.map(_.toString)
+      role = 'role -> "verifier"
+      scope = 'scope -> "ver"
 
       tokenClaim = TokenClaim(
         ownerId = tokenPurposedClaim.tenantId,
@@ -69,13 +73,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
         expiration = tokenPurposedClaim.expiration,
         notBefore = tokenPurposedClaim.notBefore,
         issuedAt = None,
-        content = Map(
-          'purpose -> tokenPurposedClaim.purpose,
-          targetIdentities,
-          'origin_domains -> tokenPurposedClaim.originDomains.distinct.map(_.toString),
-          'role -> "verifier",
-          'scope -> "ver"
-        )
+        content = Map(purpose, targetIdentities, origin, role, scope)
       )
 
       tokeCreationData <- create(accessToken, tokenClaim, 'verification)
