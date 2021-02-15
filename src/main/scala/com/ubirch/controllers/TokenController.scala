@@ -27,7 +27,7 @@ class TokenController @Inject() (
     jFormats: Formats,
     jsonConverterService: JsonConverterService,
     publicKeyPoolService: PublicKeyPoolService,
-    tokenVerificationService: TokenDecodingService,
+    tokenDecodingService: TokenDecodingService,
     tokenStoreService: TokenStoreService,
     tokenKeyService: TokenKeyService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
@@ -316,7 +316,7 @@ class TokenController @Inject() (
   }
 
   override protected def createStrategy(app: ScalatraBase): KeycloakBearerAuthStrategy = {
-    new KeycloakBearerAuthStrategy(app, tokenVerificationService, publicKeyPoolService)
+    new KeycloakBearerAuthStrategy(app, tokenDecodingService, publicKeyPoolService)
   }
 
   def swaggerTokenAsHeader: SwaggerSupportSyntax.ParameterBuilder[String] = headerParam[String]("Authorization")

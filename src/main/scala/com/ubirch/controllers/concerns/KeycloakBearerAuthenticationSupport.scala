@@ -9,7 +9,7 @@ import org.scalatra.ScalatraBase
 
 class KeycloakBearerAuthStrategy(
     protected override val app: ScalatraBase,
-    tokenVerificationService: TokenDecodingService,
+    tokenDecodingService: TokenDecodingService,
     publicKeyPoolService: PublicKeyPoolService
 ) extends BearerAuthStrategy[Token](app) {
 
@@ -19,7 +19,7 @@ class KeycloakBearerAuthStrategy(
     for {
       key <- publicKeyPoolService.getDefaultKey
 
-      claims <- tokenVerificationService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
+      claims <- tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
 
       sub <- claims.findField(_._1 == "sub").map(_._2).collect {
         case JsonAST.JString(s) => s
