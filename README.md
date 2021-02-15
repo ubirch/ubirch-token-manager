@@ -3,7 +3,7 @@
 This service knows about jwt tokens.
 
 1. [Getting Started](#steps-to-prepare-a-request)
-2. [TokenVerificationClaim Object](#token-verification-claim-object)
+2. [TokenPurposedClaim Object](#token-verification-claim-object)
 3. [Create Verification Token for Devices](#create-a-verification-token-for-specific-devices)
 4. [Create Verification Token with Wildcard](#create-a-verification-token-for-specific-devices)
 5. [List Your Tokens](#list-your-tokens)

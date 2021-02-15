@@ -117,7 +117,7 @@ class TokenController @Inject() (
       description "Creates Verification Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
-        bodyParam[TokenPurposedClaim]("TokenVerificationClaim").description(
+        bodyParam[TokenPurposedClaim]("tokenPurposedClaim").description(
           "The verification token claims. " +
             "\n Note that expiration and notBefore can be read as follows: " +
             "\n _expiration_: the number of seconds after which the token will be considered expired. That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server." +

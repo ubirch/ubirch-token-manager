@@ -49,30 +49,30 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
 
   }
 
-  override def create(accessToken: Token, tokenVerificationClaim: TokenPurposedClaim): Task[TokenCreationData] = {
+  override def create(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[TokenCreationData] = {
     for {
 
-      _ <- earlyResponseIf(!tokenVerificationClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
-      _ <- earlyResponseIf(!tokenVerificationClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
-      _ <- earlyResponseIf(!tokenVerificationClaim.validateOriginsDomains)(InvalidSpecificClaim("Invalid Origin Domains", "Origin Domains are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidSpecificClaim("Invalid Origin Domains", "Origin Domains are empty or invalid"))
 
-      targetIdentities = tokenVerificationClaim.targetIdentities match {
+      targetIdentities = tokenPurposedClaim.targetIdentities match {
         case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString).asInstanceOf[Any]
         case Right(other) => 'target_identities -> other.asInstanceOf[Any]
       }
 
       tokenClaim = TokenClaim(
-        ownerId = tokenVerificationClaim.tenantId,
+        ownerId = tokenPurposedClaim.tenantId,
         issuer = s"https://token.$ENV.ubirch.com",
-        subject = tokenVerificationClaim.tenantId.toString,
+        subject = tokenPurposedClaim.tenantId.toString,
         audience = s"https://verify.$ENV.ubirch.com",
-        expiration = tokenVerificationClaim.expiration,
-        notBefore = tokenVerificationClaim.notBefore,
+        expiration = tokenPurposedClaim.expiration,
+        notBefore = tokenPurposedClaim.notBefore,
         issuedAt = None,
         content = Map(
-          'purpose -> tokenVerificationClaim.purpose,
+          'purpose -> tokenPurposedClaim.purpose,
           targetIdentities,
-          'origin_domains -> tokenVerificationClaim.originDomains.distinct.map(_.toString),
+          'origin_domains -> tokenPurposedClaim.originDomains.distinct.map(_.toString),
           'role -> "verifier",
           'scope -> "ver"
         )
