@@ -12,7 +12,7 @@ import pdi.jwt.{ Jwt, JwtAlgorithm, JwtClaim }
 
 import scala.util.Try
 
-trait TokenCreationService {
+trait TokenEncodingService {
   def create[T <: Any](
       id: UUID,
       by: String,
@@ -28,7 +28,7 @@ trait TokenCreationService {
 }
 
 @Singleton
-class DefaultTokenCreationService extends TokenCreationService with TaskHelpers with LazyLogging {
+class DefaultTokenEncodingService extends TokenEncodingService with TaskHelpers with LazyLogging {
 
   implicit private val clock: Clock = Clock.systemUTC
 

@@ -5,7 +5,7 @@ import com.google.inject.binder.ScopedBindingBuilder
 import com.typesafe.config.Config
 import com.ubirch.crypto.utils.Curve
 import com.ubirch.crypto.{ GeneratorKeyFactory, PrivKey }
-import com.ubirch.services.jwt.{ DefaultPublicKeyPoolService, PublicKeyDiscoveryService, PublicKeyPoolService, TokenCreationService }
+import com.ubirch.services.jwt.{ DefaultPublicKeyPoolService, PublicKeyDiscoveryService, PublicKeyPoolService, TokenEncodingService }
 import javax.inject.{ Inject, Provider, Singleton }
 import monix.eval.Task
 
@@ -134,11 +134,11 @@ object FakeToken {
 }
 
 @Singleton
-class FakeTokenCreator @Inject() (val privKey: PrivKey, tokenCreationService: TokenCreationService) {
+class FakeTokenCreator @Inject() (val privKey: PrivKey, tokenEncodingService: TokenEncodingService) {
 
   def fakeToken(header: String, token: String): FakeToken = {
     FakeToken(
-      tokenCreationService.encode(header, token, privKey)
+      tokenEncodingService.encode(header, token, privKey)
         .getOrElse(throw new Exception("Error Creating Token"))
     )
   }

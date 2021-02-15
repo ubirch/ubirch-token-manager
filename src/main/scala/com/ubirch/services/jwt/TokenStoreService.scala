@@ -21,7 +21,7 @@ trait TokenStoreService {
 }
 
 @Singleton
-class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyService, tokenCreation: TokenCreationService, tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
+class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyService, tokenEncodingService: TokenEncodingService, tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
 
@@ -32,7 +32,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
 
       jwtID = UUID.randomUUID()
 
-      res <- liftTry(tokenCreation.encode(jwtID, tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
+      res <- liftTry(tokenEncodingService.encode(jwtID, tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
       (token, claims) = res
 
       _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
