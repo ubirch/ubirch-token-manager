@@ -9,7 +9,7 @@ import scala.util.Try
 case class TokenPurposedClaim(
     tenantId: UUID,
     purpose: String,
-    targetIdentities: Either[List[UUID], String],
+    targetIdentities: Either[List[UUID], List[String]],
     expiration: Option[Long],
     notBefore: Option[Long],
     originDomains: List[URL]
@@ -18,7 +18,8 @@ case class TokenPurposedClaim(
   def validateIdentities: Boolean = {
     targetIdentities match {
       case Left(value) => value.nonEmpty
-      case Right(value) => value == "*"
+      case Right(List("*")) => true
+      case Right(_) => false
     }
   }
 

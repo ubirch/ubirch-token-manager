@@ -9,12 +9,12 @@ import javax.inject.{ Inject, Singleton }
 import org.json4s.JValue
 import pdi.jwt.{ Jwt, JwtAlgorithm }
 
-trait TokenVerificationService {
+trait TokenDecodingService {
   def decodeAndVerify(jwt: String, publicKey: PublicKey): Option[JValue]
 }
 
 @Singleton
-class DefaultTokenVerificationService @Inject() (jsonConverterService: JsonConverterService) extends TokenVerificationService with LazyLogging {
+class DefaultTokenDecodingService @Inject() (jsonConverterService: JsonConverterService) extends TokenDecodingService with LazyLogging {
 
   final val ISSUER = "iss"
   final val SUBJECT = "sub"

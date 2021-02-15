@@ -5,7 +5,7 @@ import java.util.UUID
 
 import com.ubirch.models.Good
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenVerificationService }
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
 import org.jose4j.jwk.PublicJsonWebKey
@@ -67,7 +67,7 @@ class TokenControllerSpec
       }
 
       val token = Injector.get[FakeTokenCreator]
-      val tokenVerificationService = Injector.get[TokenVerificationService]
+      val tokenVerificationService = Injector.get[TokenDecodingService]
 
       val incomingBody =
         """
