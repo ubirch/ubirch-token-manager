@@ -3,7 +3,7 @@
 This service knows about jwt tokens.
 
 1. [Getting Started](#steps-to-prepare-a-request)
-2. [TokenPurposedClaim Object](#token-verification-claim-object)
+2. [Token Claim Object](#token-claim-object)
 3. [Create Verification Token for Devices](#create-a-verification-token-for-specific-devices)
 4. [Create Verification Token with Wildcard](#create-a-verification-token-for-specific-devices)
 5. [List Your Tokens](#list-your-tokens)
@@ -19,18 +19,9 @@ This service knows about jwt tokens.
 2. Prepare the data object - when needed (creation).
 3. Prepare the request and send.
 
-## Token Verification Claim Object
+## Token Claim Object
 
-```json
-{
-  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-  "purpose":"King Dude - Concert",
-  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"] | "*",
-  "expiration": 6311390400,
-  "notBefore":null,
-  "originDomains": ["https://verification.dev.ubirch.com"]
-}
-```
+![Data Model](DataModel.png)
 
 **Fields**
 
@@ -49,6 +40,9 @@ _notBefore_: the number of seconds after which the token should be considered va
 That is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server.
 
 _originDomains_: list of domains from which the calls will be accepted from when verifying.
+
+_scopes_: list of available scopes: "upp:anchor", "upp:verify", "thing:create"
+
 
 **Mandatory Fields**
 
