@@ -140,7 +140,7 @@ class TokenController @Inject() (
               )
           ))
 
-  post("/v1/verification/create", operation(postV1TokenVerificationCreate)) {
+  post("/v1/create", operation(postV1TokenVerificationCreate)) {
 
     authenticated() { token =>
       asyncResult("create_verification_token") { _ => _ =>

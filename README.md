@@ -91,7 +91,7 @@ curl -s -X POST \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
     -d @createVerificationToken.json \
-    "${host}/api/tokens/v1/verification/create" | jq .
+    "${host}/api/tokens/v1/create" | jq .
 ```
 
 #### Post Response
@@ -145,7 +145,7 @@ curl -s -X POST \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
     -d @createVerificationToken.json \
-    "${host}/api/tokens/v1/verification/create" | jq .
+    "${host}/api/tokens/v1/create" | jq .
 ```
 
 #### Post Response

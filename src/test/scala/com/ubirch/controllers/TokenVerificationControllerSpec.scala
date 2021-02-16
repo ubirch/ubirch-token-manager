@@ -46,7 +46,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -70,7 +70,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -93,7 +93,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
@@ -116,7 +116,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -138,7 +138,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
@@ -161,12 +161,12 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -197,7 +197,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         val bodyAsEither = jsonConverter.as[Good](body)
         val data = bodyAsEither.right.get.data.asInstanceOf[Map[String, Any]]
@@ -235,12 +235,12 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -275,7 +275,7 @@ class TokenVerificationControllerSpec
     "fail when no access token provided: create" taggedAs Tag("mandarina") in {
 
       val incomingBody = "{}"
-      post("/v1/verification/create", body = incomingBody) {
+      post("/v1/create", body = incomingBody) {
         status should equal(401)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
@@ -303,7 +303,7 @@ class TokenVerificationControllerSpec
     "fail when invalid access token provided: create" taggedAs Tag("durian") in {
 
       val incomingBody = "{}"
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
@@ -343,7 +343,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
