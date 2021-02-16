@@ -3,9 +3,9 @@ package com.ubirch.defaults
 import javax.inject._
 
 import com.ubirch.api.JsonConverterService
-import org.json4s.native.JsonMethods.{compact, render}
-import org.json4s.native.Serialization.{read, write}
-import org.json4s.{Formats, JValue}
+import org.json4s.native.JsonMethods.{ compact, render }
+import org.json4s.native.Serialization.{ read, write }
+import org.json4s.{ Formats, JValue }
 
 /**
   * Represents a default internal service or component for managing Json.

@@ -1,6 +1,6 @@
 package com.ubirch.utils
 
-import com.google.inject.{Guice, Injector, Module}
+import com.google.inject.{ Guice, Injector, Module }
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.reflect._

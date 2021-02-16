@@ -2,7 +2,7 @@ package com.ubirch.utils
 
 import javax.inject._
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
 /**
   * Configuration Provider for the Configuration Component.

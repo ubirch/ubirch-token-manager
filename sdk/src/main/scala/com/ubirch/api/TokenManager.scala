@@ -5,11 +5,11 @@ import java.security.PublicKey
 import java.util.UUID
 
 import com.ubirch.crypto.PubKey
-import com.ubirch.defaults.{InvalidOrigin, InvalidSpecificClaim, InvalidUUID}
+import com.ubirch.defaults.{ InvalidOrigin, InvalidSpecificClaim, InvalidUUID }
 import com.ubirch.protocol.ProtocolMessage
 import org.json4s.JValue
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 trait TokenManager {
 
@@ -65,11 +65,11 @@ trait JsonConverterService {
 }
 
 case class Content(
-                    role: Symbol,
-                    purpose: String,
-                    targetIdentities: Either[List[UUID], String],
-                    originDomains: List[URL]
-                  )
+    role: Symbol,
+    purpose: String,
+    targetIdentities: Either[List[UUID], String],
+    originDomains: List[URL]
+)
 
 case class Claims(token: String, all: Map[String, Any], content: Content) {
 

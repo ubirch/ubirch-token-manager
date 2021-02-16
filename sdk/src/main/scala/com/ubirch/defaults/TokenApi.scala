@@ -3,7 +3,7 @@ package com.ubirch.defaults
 import com.google.inject.AbstractModule
 import com.typesafe.config.Config
 import com.ubirch.api._
-import com.ubirch.utils.{ConfigProvider, InjectorHelper, JsonFormatsProvider}
+import com.ubirch.utils.{ ConfigProvider, InjectorHelper, JsonFormatsProvider }
 import org.json4s.Formats
 
 object TokenApi extends TokenManager {

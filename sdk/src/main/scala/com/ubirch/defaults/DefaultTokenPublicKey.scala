@@ -5,7 +5,7 @@ import javax.inject._
 import com.typesafe.config.Config
 import com.ubirch.api.TokenPublicKey
 import com.ubirch.crypto.utils.Curve
-import com.ubirch.crypto.{GeneratorKeyFactory, PubKey}
+import com.ubirch.crypto.{ GeneratorKeyFactory, PubKey }
 import com.ubirch.utils.Paths
 
 @Singleton
