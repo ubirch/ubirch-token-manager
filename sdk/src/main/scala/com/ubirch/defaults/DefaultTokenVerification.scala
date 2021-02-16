@@ -12,7 +12,11 @@ import pdi.jwt.{ Jwt, JwtAlgorithm }
 import scala.util.Try
 
 @Singleton
-class DefaultTokenVerification @Inject() (config: Config, tokenPublicKey: TokenPublicKey, jsonConverterService: JsonConverterService) extends TokenVerification with LazyLogging {
+class DefaultTokenVerification @Inject() (
+    config: Config,
+    tokenPublicKey: TokenPublicKey,
+    jsonConverterService: JsonConverterService
+) extends TokenVerification with LazyLogging {
 
   import com.ubirch.api.TokenVerification._
 
@@ -27,7 +31,9 @@ class DefaultTokenVerification @Inject() (config: Config, tokenPublicKey: TokenP
   override def decodeAndVerify(jwt: String): Option[Claims] = {
     (for {
       (_, p, _) <- Jwt.decodeRawAll(jwt, tokenPublicKey.publicKey, Seq(JwtAlgorithm.ES256))
-      otherClaims <- jsonConverterService.as[Content](p).toTry
+
+      _ = println(p)
+      otherClaims <- Try(jsonConverterService.fromJsonInput[Content](p)(_.camelizeKeys))
         .recover { case e: Exception => throw InvalidOtherClaims(e.getMessage, jwt) }
 
       all <- jsonConverterService.as[Map[String, Any]](p).toTry

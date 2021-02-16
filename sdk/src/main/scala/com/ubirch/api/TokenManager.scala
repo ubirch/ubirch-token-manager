@@ -7,7 +7,7 @@ import java.util.UUID
 import com.ubirch.crypto.PubKey
 import com.ubirch.defaults.{ InvalidOrigin, InvalidSpecificClaim, InvalidUUID }
 import com.ubirch.protocol.ProtocolMessage
-import org.json4s.JValue
+import org.json4s.{ JValue, JsonInput }
 
 import scala.util.{ Failure, Success, Try }
 
@@ -62,6 +62,7 @@ trait JsonConverterService {
   def toJValue(value: String): Either[Exception, JValue]
   def toJValue[T](obj: T): Either[Exception, JValue]
   def as[T: Manifest](value: String): Either[Exception, T]
+  def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T
 }
 
 case class Content(

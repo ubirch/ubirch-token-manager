@@ -3,9 +3,10 @@ package com.ubirch.defaults
 import javax.inject._
 
 import com.ubirch.api.JsonConverterService
+import org.json4s.native.JsonMethods
 import org.json4s.native.JsonMethods.{ compact, render }
 import org.json4s.native.Serialization.{ read, write }
-import org.json4s.{ Formats, JValue }
+import org.json4s.{ Formats, JValue, JsonInput }
 
 /**
   * Represents a default internal service or component for managing Json.
@@ -48,6 +49,11 @@ class DefaultJsonConverterService @Inject() (implicit formats: Formats) extends 
       case e: Exception =>
         Left(e)
     }
+  }
+
+  def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T = {
+    val jv = JsonMethods.parse(json, formats.wantsBigDecimal, formats.wantsBigInt)
+    f(jv).extract(formats, mf)
   }
 
 }
