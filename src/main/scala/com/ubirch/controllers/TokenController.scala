@@ -249,6 +249,23 @@ class TokenController @Inject() (
     }
   }
 
+  val getV1Scopes: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Map[String, String]]("getV1JWK")
+      summary "Returns a list of available scopes"
+      description "returns the list of available scopes"
+      tags SwaggerElements.TAG_TOKEN_SERVICE)
+
+  get("/v1/scopes", operation(getV1Scopes)) {
+    asyncResult("get_scopes") { _ => _ =>
+      Task.delay(Ok(Good(Scopes.list.map(Scopes.asString))))
+        .onErrorRecover {
+        case e: Exception =>
+          logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+      }
+    }
+  }
+
   val deleteV1TokenId: SwaggerSupportSyntax.OperationBuilder =
     (apiOperation[Good]("deleteV1TokenId")
       summary "Deletes a token"

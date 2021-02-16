@@ -11,4 +11,4 @@ fi
 
 echo "=> host: $host"
 
-curl -s -X GET $host/api/tokens/v1/jwk | jq .
+curl -s -X GET $host/api/tokens/v1/scopes | jq .
