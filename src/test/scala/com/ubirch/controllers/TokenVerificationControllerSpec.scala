@@ -41,7 +41,8 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities": ["*"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
@@ -64,7 +65,8 @@ class TokenVerificationControllerSpec
           |  "targetIdentities": ["*"],
           |  "expiration": 2233738785,
           |  "notBefore":null,
-          |  "originDomains": ["https://meet.google.com", "https://simple.wikipedia.org"]
+          |  "originDomains": ["https://meet.google.com", "https://simple.wikipedia.org"],
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
@@ -109,7 +111,8 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
@@ -153,7 +156,8 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
@@ -188,7 +192,8 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
@@ -225,7 +230,8 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
