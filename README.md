@@ -330,7 +330,9 @@ curl -s -X GET $host/api/tokens/v1/scopes | jq .
 ```
 
 **upp:anchor**  :: it allows anchoring upps
+
 **upp:verify**  :: it allows verifying upps
+
 **thing:create**:: it allows creating/registering devices or things.
 
 This call returns a json object whose data field is an array of scopes.
