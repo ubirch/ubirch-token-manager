@@ -87,7 +87,7 @@ class TokenController @Inject() (
             )
         ))
 
-  post("/v1/create", operation(postV1TokenCreate)) {
+  post("/v1/generic/create", operation(postV1TokenCreate)) {
 
     authenticated(_.isAdmin) { token =>
       asyncResult("create_token") { _ => _ =>
@@ -259,10 +259,10 @@ class TokenController @Inject() (
     asyncResult("get_scopes") { _ => _ =>
       Task.delay(Ok(Good(Scopes.list.map(Scopes.asString))))
         .onErrorRecover {
-        case e: Exception =>
-          logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-          InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
-      }
+          case e: Exception =>
+            logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+            InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+        }
     }
   }
 

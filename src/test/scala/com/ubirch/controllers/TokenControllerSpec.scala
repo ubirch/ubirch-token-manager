@@ -52,7 +52,7 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -85,7 +85,7 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.admin.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.admin.prepare)) {
         status should equal(200)
         val good = jsonConverter.as[Good](body).right.get
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
@@ -117,7 +117,7 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(403)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Forbidden"}""")
       }
@@ -144,7 +144,7 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
@@ -171,12 +171,12 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -211,12 +211,12 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -251,7 +251,7 @@ class TokenControllerSpec
     "fail when no access token provided: create" taggedAs Tag("mandarina") in {
 
       val incomingBody = "{}"
-      post("/v1/create", body = incomingBody) {
+      post("/v1/generic/create", body = incomingBody) {
         status should equal(401)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
@@ -279,7 +279,7 @@ class TokenControllerSpec
     "fail when invalid access token provided: create" taggedAs Tag("durian") in {
 
       val incomingBody = "{}"
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+      post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
