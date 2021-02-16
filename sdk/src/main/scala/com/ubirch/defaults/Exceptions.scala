@@ -1,4 +1,4 @@
-package com.ubirch
+package com.ubirch.defaults
 
 case class InvalidOtherClaims(message: String, value: String) extends Exception(message)
 case class InvalidAllClaims(message: String, value: String) extends Exception(message)

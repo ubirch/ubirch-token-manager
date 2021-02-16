@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ubirch</groupId>
-    <artifactId>ubirch-token-manager</artifactId>
+    <artifactId>ubirch-token-sdk</artifactId>
     <version>0.6.4</version>
     <packaging>jar</packaging>
 

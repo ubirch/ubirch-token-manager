@@ -1,28 +1,25 @@
-package com.ubirch
+package com.ubirch.defaults
 
 import java.time.Clock
 import java.util.UUID
+import javax.inject.{Inject, Singleton}
 
 import com.typesafe.scalalogging.LazyLogging
+import com.ubirch.api.{Content, JsonConverterService, TokenCreation}
 import com.ubirch.crypto.utils.Curve
-import com.ubirch.crypto.{ GeneratorKeyFactory, PrivKey }
-import javax.inject.{ Inject, Singleton }
+import com.ubirch.crypto.{GeneratorKeyFactory, PrivKey}
+import com.ubirch.utils.JsonFormatsProvider
 import org.bouncycastle.util.encoders.Hex
-import pdi.jwt.{ Jwt, JwtAlgorithm, JwtClaim }
+import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 
 import scala.util.Try
 
-trait TokenCreation {
-  def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String]
-  def encode(by: String, to: String, about: String, expiresIn: Option[Int], otherClaims: Content, privKey: PrivKey): Try[String]
-}
-
 @Singleton
-class DefaultTokenCreation @Inject() (jsonConverterService: DefaultJsonConverterService) extends TokenCreation with LazyLogging {
+class DefaultTokenCreation @Inject() (jsonConverterService: JsonConverterService) extends TokenCreation with LazyLogging {
 
   implicit private val clock: Clock = Clock.systemUTC
 
-  def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String] = Try {
+  override def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String] = Try {
     Jwt.encode(
       jwtClaim,
       privKey.getPrivateKey,
