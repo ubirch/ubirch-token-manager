@@ -1,6 +1,5 @@
 package com.ubirch.defaults
 
-import java.security.PublicKey
 import javax.inject._
 
 import com.typesafe.config.Config

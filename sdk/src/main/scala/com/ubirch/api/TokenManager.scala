@@ -4,11 +4,10 @@ import java.net.URL
 import java.security.PublicKey
 import java.util.UUID
 
-import com.ubirch.crypto.{PrivKey, PubKey}
+import com.ubirch.crypto.PubKey
 import com.ubirch.defaults.{InvalidOrigin, InvalidSpecificClaim, InvalidUUID}
 import com.ubirch.protocol.ProtocolMessage
 import org.json4s.JValue
-import pdi.jwt.JwtClaim
 
 import scala.util.{Failure, Success, Try}
 
@@ -30,11 +29,6 @@ trait TokenManager {
 trait TokenPublicKey {
   def pubKey: PubKey
   def publicKey: PublicKey = pubKey.getPublicKey
-}
-
-trait TokenCreation {
-  def encode(jwtClaim: JwtClaim, privKey: PrivKey): Try[String]
-  def encode(by: String, to: String, about: String, expiresIn: Option[Int], otherClaims: Content, privKey: PrivKey): Try[String]
 }
 
 trait TokenVerification {
