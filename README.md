@@ -325,12 +325,27 @@ The scopes have this definition:
 RESOURCE: Represents the entity in the system that needs to be regulated. For example: DEVICE or USER or UPP
 ACTION: Represents the verb/action that is regulated for the given resource. For example: verify or anchor
 
-
 ```shell script
 curl -s -X GET $host/api/tokens/v1/scopes | jq .
 ```
 
+**upp:anchor**  :: it allows anchoring upps
+**upp:verify**  :: it allows verifying upps
+**thing:create**:: it allows creating/registering devices or things.
+
 This call returns a json object whose data field is an array of scopes.
+
+```json
+{
+  "version": "1.0",
+  "ok": true,
+  "data": [
+    "upp:anchor",
+    "upp:verify",
+    "thing:create"
+  ]
+}
+```
 
 ## Verifying an Ubirch JWT Token
 
