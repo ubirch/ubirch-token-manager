@@ -30,9 +30,9 @@ class DefaultTokenVerification @Inject() (
 
   override def decodeAndVerify(jwt: String): Option[Claims] = {
     (for {
+
       (_, p, _) <- Jwt.decodeRawAll(jwt, tokenPublicKey.publicKey, Seq(JwtAlgorithm.ES256))
 
-      _ = println(p)
       otherClaims <- Try(jsonConverterService.fromJsonInput[Content](p)(_.camelizeKeys))
         .recover { case e: Exception => throw InvalidOtherClaims(e.getMessage, jwt) }
 
