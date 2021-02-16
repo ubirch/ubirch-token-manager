@@ -12,7 +12,8 @@ case class TokenPurposedClaim(
     targetIdentities: Either[List[UUID], List[String]],
     expiration: Option[Long],
     notBefore: Option[Long],
-    originDomains: List[URL]
+    originDomains: List[URL],
+    scopes: List[String]
 ) {
 
   def validateIdentities: Boolean = {
@@ -34,6 +35,11 @@ case class TokenPurposedClaim(
   }
 
   def validatePurpose: Boolean = purpose.nonEmpty && purpose.length > 5
+
+  def validateScopes: Boolean = scopes match {
+    case Nil => false
+    case _ => scopes.flatMap(x => Scopes.fromString(x)).distinct.map(Scopes.asString).nonEmpty
+  }
 
 }
 

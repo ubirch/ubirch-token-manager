@@ -4,5 +4,6 @@
   "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
   "expiration": 6311390400,
   "notBefore":null,
-  "originDomains": ["http://verification.dev.ubirch.com"]
+  "originDomains": ["http://verification.dev.ubirch.com"],
+  "scopes": ["thing:create"]
 }

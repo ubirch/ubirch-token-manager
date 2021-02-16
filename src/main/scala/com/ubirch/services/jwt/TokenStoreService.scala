@@ -1,14 +1,14 @@
 package com.ubirch.services.jwt
 
 import java.util.{ Date, UUID }
-
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
-import com.ubirch.models.{ TokenClaim, TokenCreationData, TokenRow, TokenPurposedClaim, TokensDAO }
+import com.ubirch.models.{ Scopes, TokenClaim, TokenCreationData, TokenPurposedClaim, TokenRow, TokensDAO }
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
+
 import javax.inject.{ Inject, Singleton }
 import monix.eval.Task
 
@@ -55,6 +55,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
       _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidSpecificClaim("Invalid Origin Domains", "Origin Domains are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidSpecificClaim("Invalid Scopes", "Scopes are empty or invalid"))
 
       purpose = 'purpose -> tokenPurposedClaim.purpose
       targetIdentities = tokenPurposedClaim.targetIdentities match {
@@ -62,8 +63,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
         case Right(other) => 'target_identities -> other.asInstanceOf[Any]
       }
       origin = 'origin_domains -> tokenPurposedClaim.originDomains.distinct.map(_.toString)
-      role = 'role -> "verifier"
-      scope = 'scope -> "ver"
+      scope = 'scopes -> tokenPurposedClaim.scopes.flatMap(x => Scopes.fromString(x)).distinct.map(Scopes.asString)
 
       tokenClaim = TokenClaim(
         ownerId = tokenPurposedClaim.tenantId,
@@ -73,7 +73,7 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
         expiration = tokenPurposedClaim.expiration,
         notBefore = tokenPurposedClaim.notBefore,
         issuedAt = None,
-        content = Map(purpose, targetIdentities, origin, role, scope)
+        content = Map(purpose, targetIdentities, origin, scope)
       )
 
       tokeCreationData <- create(accessToken, tokenClaim, 'verification)

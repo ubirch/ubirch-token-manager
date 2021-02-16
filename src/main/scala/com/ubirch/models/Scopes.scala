@@ -29,7 +29,7 @@ object Scopes {
   final val Thing_Create: Scope = (Thing, Create)
   final val list = List(UPP_Anchor, UPP_Verify, Thing_Create)
 
-  def asString(scope: Scope): String =  {
+  def asString(scope: Scope): String = {
     val (resource, action) = scope
     s"${resource.toString.toLowerCase}:${action.toString.toLowerCase}"
   }
@@ -53,5 +53,4 @@ object Scopes {
   }
 
 }
-
 
