@@ -8,10 +8,11 @@ This service knows about jwt tokens.
 4. [Create Verification Token with Wildcard](#create-a-verification-token-for-specific-devices)
 5. [List Your Tokens](#list-your-tokens)
 6. [Delete A Token](#delete-a-token)
-7. [Verification Token Claims](#verification-token-claims)
-8. [Keycloak and Responses](#keycloak-token-and-responses)
-9. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
-10. [Swagger](#swagger)
+7. [Available Scopes](#available-scopes)
+8. [Verification Token Claims](#verification-token-claims)
+9. [Keycloak and Responses](#keycloak-token-and-responses)
+10. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
+11. [Swagger](#swagger)
 
 ## Steps to prepare a request
 
@@ -50,6 +51,7 @@ _scopes_: list of available scopes: "upp:anchor", "upp:verify", "thing:create"
 * purpose (string) :: min characters are 6
 * targetIdentities (array of uuid as string) | (*)
 * originDomains (array of urls from which a verification can originate)
+* scopes (array of at least one scope)
 
 **Option Fields** 
 
@@ -74,8 +76,11 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
   "purpose":"King Dude - Concert",
   "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
   "expiration": 6311390400,
-  "notBefore":null
+  "notBefore":null,
+  "originDomains": ["http://verification.dev.ubirch.com"],
+  "scopes": ["upp:verify"]
 }
+
 ```
 
 #### Post Request
@@ -95,19 +100,19 @@ curl -s -X POST \
   "version": "1.0",
   "ok": true,
   "data": {
-    "id": "b9107002-9a60-4230-9b8a-a43b4317de1c",
+    "id": "407f29ab-ac74-42c7-81e9-107a53f3de36",
     "jwtClaim": {
-      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":[\"840b7e21-03e9-4de7-bb31-0b9524f3b500\"],\"role\":\"verifier\"}",
+      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":[\"840b7e21-03e9-4de7-bb31-0b9524f3b500\"],\"origin_domains\":[\"http://verification.dev.ubirch.com\"],\"scopes\":[\"upp:verify\"]}",
       "issuer": "https://token.dev.ubirch.com",
       "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
       "audience": [
         "https://verify.dev.ubirch.com"
       ],
-      "expiration": 7918235892,
-      "issuedAt": 1606845492,
-      "jwtId": "b9107002-9a60-4230-9b8a-a43b4317de1c"
+      "expiration": 7924869463,
+      "issuedAt": 1613479063,
+      "jwtId": "407f29ab-ac74-42c7-81e9-107a53f3de36"
     },
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MTgyMzU4OTIsImlhdCI6MTYwNjg0NTQ5MiwianRpIjoiYjkxMDcwMDItOWE2MC00MjMwLTliOGEtYTQzYjQzMTdkZTFjIiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwicm9sZSI6InZlcmlmaWVyIn0.7OiXbsoZMtNE6OaanUat7beuW3vZeKrJ8_fkW1iOwXHPXewq_p4kanDKJEmQkd-dV8dg3IfbdCndnnM6jpCQdA"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MjQ4Njk0NjMsImlhdCI6MTYxMzQ3OTA2MywianRpIjoiNDA3ZjI5YWItYWM3NC00MmM3LTgxZTktMTA3YTUzZjNkZTM2IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwib3JpZ2luX2RvbWFpbnMiOlsiaHR0cDovL3ZlcmlmaWNhdGlvbi5kZXYudWJpcmNoLmNvbSJdLCJzY29wZXMiOlsidXBwOnZlcmlmeSJdfQ.sSelvdqPV82dJTPaLxw6bJAH9XlnO8YK8cG8WPwlQWfhI_pjw0qJX0DHLUzK3awT2LtAa-8nkJr_cUoo5XCMHg"
   }
 }
 ```
@@ -126,9 +131,11 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 {
   "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
   "purpose":"King Dude - Concert",
-  "targetIdentities": "*",
+  "targetIdentities":["*"],
   "expiration": 6311390400,
-  "notBefore":null
+  "notBefore":null,
+  "originDomains": ["http://verification.dev.ubirch.com"],
+  "scopes": ["upp:verify"]
 }
 ```
 
@@ -149,19 +156,19 @@ curl -s -X POST \
   "version": "1.0",
   "ok": true,
   "data": {
-    "id": "2d105274-1cb3-45bc-9aed-b7c444d25f2f",
+    "id": "740eefa9-5566-49df-839d-70416e57aa96",
     "jwtClaim": {
-      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":\"*\",\"role\":\"verifier\",\"scope\":\"ver\"}",
+      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":[\"*\"],\"origin_domains\":[\"http://verification.dev.ubirch.com\"],\"scopes\":[\"upp:verify\"]}",
       "issuer": "https://token.dev.ubirch.com",
       "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
       "audience": [
         "https://verify.dev.ubirch.com"
       ],
-      "expiration": 7921842955,
-      "issuedAt": 1610452555,
-      "jwtId": "2d105274-1cb3-45bc-9aed-b7c444d25f2f"
+      "expiration": 7924869565,
+      "issuedAt": 1613479165,
+      "jwtId": "740eefa9-5566-49df-839d-70416e57aa96"
     },
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MjE4NDI5NTUsImlhdCI6MTYxMDQ1MjU1NSwianRpIjoiMmQxMDUyNzQtMWNiMy00NWJjLTlhZWQtYjdjNDQ0ZDI1ZjJmIiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6IioiLCJyb2xlIjoidmVyaWZpZXIiLCJzY29wZSI6InZlciJ9.AE5njTtbWGXDr-6hyn7UJYJgD10vGznp3vof2B8Bs77HzUqC42xfLDk0f0Fhcb8sXb61i32jxQj9fG0OulPVAg"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MjQ4Njk1NjUsImlhdCI6MTYxMzQ3OTE2NSwianRpIjoiNzQwZWVmYTktNTU2Ni00OWRmLTgzOWQtNzA0MTZlNTdhYTk2IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyIqIl0sIm9yaWdpbl9kb21haW5zIjpbImh0dHA6Ly92ZXJpZmljYXRpb24uZGV2LnViaXJjaC5jb20iXSwic2NvcGVzIjpbInVwcDp2ZXJpZnkiXX0.OfZqlftYl0kMflOKDm39fXneJ3R1aWLXB4WaJhPVl4W3F4koCzIoXFupB-9U2xwCCl7eA6uTy8E7fGNm9aFWVg"
   }
 }
 ```
@@ -182,15 +189,19 @@ This token has the following header:
   "iss": "https://token.dev.ubirch.com",
   "sub": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
   "aud": "https://verify.dev.ubirch.com",
-  "exp": 7921535473,
-  "iat": 1610145073,
-  "jti": "f359eaf1-2a91-4462-962b-5c85523bafad",
-  "purpose": "Shark Tank - Mexico",
+  "exp": 7924869463,
+  "iat": 1613479063,
+  "jti": "407f29ab-ac74-42c7-81e9-107a53f3de36",
+  "purpose": "King Dude - Concert",
   "target_identities": [
-    "7549acd8-91e1-4230-833a-2f386e09b96f"
+    "840b7e21-03e9-4de7-bb31-0b9524f3b500"
   ],
-  "role": "verifier",
-  "scope": "ver"
+  "origin_domains": [
+    "http://verification.dev.ubirch.com"
+  ],
+  "scopes": [
+    "upp:verify"
+  ]
 }
 ```
 
@@ -198,14 +209,13 @@ This token has the following header:
 Where 
     'iss' is Principal Entity that signs/issues the token: The Token Manager.
     'sub' is the purpose or subject for this token: The tenantId/UserId from Keycloak 
-    'aud' target entity: The target system, in this token, the Verfication Service.  
+    'aud' target entity: The target systems: Verfication Service, Niomon, or Thing API.  
     'exp' is the expiration time
     'iat' is the initial time
     'jti' is a unique uuid id for the token
     'purpose' is a description of the main usage for this token, like a concert or artist show
     'target_identities': it is the entities for which the subject can perform the action on the target audience system
-    'role' is the role that was assigned to this token
-    'scope' is the action allowed for this token.
+    'scopes' is set of actions allowed per resource for this token.
 ```
 
 ## List your Tokens 
@@ -304,6 +314,23 @@ The <response> codes could be:
                            <realm> is "Ubirch Token Service"
 5. <500 Internal Server Error> When an internal error happened from which it is not possible to recover.
 ```
+
+
+## Available Scopes
+
+The scopes have this definition:
+
+`[RESOURCE]:[ACTION]`
+
+RESOURCE: Represents the entity in the system that needs to be regulated. For example: DEVICE or USER or UPP
+ACTION: Represents the verb/action that is regulated for the given resource. For example: verify or anchor
+
+
+```shell script
+curl -s -X GET $host/api/tokens/v1/scopes | jq .
+```
+
+This call returns a json object whose data field is an array of scopes.
 
 ## Verifying an Ubirch JWT Token
 
