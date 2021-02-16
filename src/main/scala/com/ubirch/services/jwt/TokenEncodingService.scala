@@ -16,7 +16,7 @@ trait TokenEncodingService {
   def create[T <: Any](
       id: UUID,
       by: String,
-      to: String,
+      to: Set[String],
       about: String,
       expiresIn: Option[Long],
       notBefore: Option[Long],
@@ -35,7 +35,7 @@ class DefaultTokenEncodingService extends TokenEncodingService with TaskHelpers 
   override def create[T <: Any](
       id: UUID,
       by: String,
-      to: String,
+      to: Set[String],
       about: String,
       expiresIn: Option[Long],
       notBefore: Option[Long],
@@ -85,7 +85,7 @@ class DefaultTokenEncodingService extends TokenEncodingService with TaskHelpers 
       claims <- create(
         id = id,
         by = tokenClaim.issuer,
-        to = tokenClaim.audience,
+        to = tokenClaim.audience.toSet,
         about = tokenClaim.subject,
         expiresIn = tokenClaim.expiration,
         notBefore = tokenClaim.notBefore,

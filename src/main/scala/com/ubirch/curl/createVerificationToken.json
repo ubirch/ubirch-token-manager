@@ -5,5 +5,5 @@
   "expiration": 6311390400,
   "notBefore":null,
   "originDomains": ["http://verification.dev.ubirch.com"],
-  "scopes": ["thing:create"]
+  "scopes": ["thing:create", "upp:anchor", "upp:verify"]
 }

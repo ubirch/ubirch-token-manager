@@ -1,5 +1,7 @@
 package com.ubirch.models
 
+import java.net.URL
+
 sealed trait Resource
 object Resource {
   final val list: List[Resource] = List(UPP, Thing)
@@ -52,5 +54,12 @@ object Scopes {
       }
   }
 
-}
+  def audience(scope: Scopes.Scope, ENV: String): URL = {
+    scope match {
+      case Scopes.UPP_Anchor => new URL(s"https://niomon.$ENV.ubirch.com")
+      case Scopes.UPP_Verify => new URL(s"https://verify.$ENV.ubirch.com")
+      case Scopes.Thing_Create => new URL(s"https://api.console.$ENV.ubirch.com")
+    }
+  }
 
+}

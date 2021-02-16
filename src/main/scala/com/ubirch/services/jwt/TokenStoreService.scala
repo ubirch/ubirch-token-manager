@@ -1,15 +1,15 @@
 package com.ubirch.services.jwt
 
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
-import com.ubirch.models.{ Scopes, TokenClaim, TokenCreationData, TokenPurposedClaim, TokenRow, TokensDAO }
+import com.ubirch.models.{Scopes, TokenClaim, TokenCreationData, TokenPurposedClaim, TokenRow, TokensDAO}
 import com.ubirch.util.TaskHelpers
-import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
+import com.ubirch.{InvalidSpecificClaim, TokenEncodingException}
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 import monix.eval.Task
 
 trait TokenStoreService {
@@ -63,18 +63,18 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
         case Right(other) => 'target_identities -> other.asInstanceOf[Any]
       }
       origin = 'origin_domains -> tokenPurposedClaim.originDomains.distinct.map(_.toString)
-      scope = 'scopes -> tokenPurposedClaim.scopes.flatMap(x => Scopes.fromString(x)).distinct.map(Scopes.asString)
+      scopes = tokenPurposedClaim.scopes.sorted.flatMap(x => Scopes.fromString(x)).distinct
+      scopesKey = 'scopes -> scopes.map(Scopes.asString)
 
       tokenClaim = TokenClaim(
         ownerId = tokenPurposedClaim.tenantId,
         issuer = s"https://token.$ENV.ubirch.com",
         subject = tokenPurposedClaim.tenantId.toString,
-        audience = s"https://verify.$ENV.ubirch.com",
+        audience = scopes.map(x => Scopes.audience(x, ENV)).map(_.toString),
         expiration = tokenPurposedClaim.expiration,
         notBefore = tokenPurposedClaim.notBefore,
         issuedAt = None,
-        content = Map(purpose, targetIdentities, origin, scope)
-      )
+        content = Map(purpose, targetIdentities, origin, scopesKey))
 
       tokeCreationData <- create(accessToken, tokenClaim, 'verification)
 
