@@ -15,6 +15,8 @@ class TokenApiSpec extends TestBase {
 
       TokenApi.decodeAndVerify(token) match {
         case Success(claims) =>
+          assert(claims.subject == "963995ed-ce12-4ea5-89dc-b181701d1d7b")
+          assert(claims.audiences.length == 3)
           assert(claims.validateUUID(UUID.fromString("840b7e21-03e9-4de7-bb31-0b9524f3b500")).isSuccess)
           assert(claims.validateOrigin(Some("http://verification.dev.ubirch.com")).isSuccess)
           assert(claims.validatePurpose.filter(_ == "King Dude - Concert").isSuccess)
