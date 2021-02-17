@@ -3,9 +3,10 @@ package com.ubirch.controllers.concerns
 import java.security.PublicKey
 
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
-import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import org.json4s.JsonAST
 import org.scalatra.ScalatraBase
+
+import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 
 class KeycloakBearerAuthStrategy(
     protected override val app: ScalatraBase,

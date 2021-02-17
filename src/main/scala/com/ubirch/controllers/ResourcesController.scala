@@ -1,8 +1,9 @@
 package com.ubirch.controllers
 
-import javax.inject._
 import org.scalatra.ScalatraServlet
 import org.scalatra.swagger.{ ApiInfo, NativeSwaggerBase, Swagger }
+
+import javax.inject._
 
 /**
   *  Represents the Resource Controller that allows to serve public files: The Swagger UI.

@@ -10,6 +10,7 @@ import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterS
 import com.ubirch.services.jwt._
 import com.ubirch.services.lifeCycle.{ DefaultJVMHook, DefaultLifecycle, JVMHook, Lifecycle }
 import com.ubirch.services.rest.SwaggerProvider
+import com.ubirch.services.state.{ DefaultExternalGetter, DefaultStateVerifier, ExternalStateGetter, StateVerifier }
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra.swagger.Swagger
@@ -38,6 +39,8 @@ class Binder
   def PublicKeyDiscoveryService: ScopedBindingBuilder = bind(classOf[PublicKeyDiscoveryService]).to(classOf[DefaultPublicKeyDiscoveryService])
   def PublicKeyPoolService: ScopedBindingBuilder = bind(classOf[PublicKeyPoolService]).to(classOf[DefaultPublicKeyPoolService])
   def TokenKeyService: ScopedBindingBuilder = bind(classOf[TokenKeyService]).to(classOf[DefaultTokenKeyService])
+  def ExternalStateGetter: ScopedBindingBuilder = bind(classOf[ExternalStateGetter]).to(classOf[DefaultExternalGetter])
+  def StateVerifier: ScopedBindingBuilder = bind(classOf[StateVerifier]).to(classOf[DefaultStateVerifier])
 
   def configure(): Unit = {
     Config
@@ -56,6 +59,8 @@ class Binder
     PublicKeyDiscoveryService
     PublicKeyPoolService
     TokenKeyService
+    ExternalStateGetter
+    StateVerifier
     ()
   }
 

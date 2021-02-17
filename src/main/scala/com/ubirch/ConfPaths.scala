@@ -45,9 +45,14 @@ object ConfPaths {
     final val KID = "tokenSystem.tokenVerification.kid"
   }
 
+  trait ExternalStateGetterPaths {
+    final val DEVICE_GROUPS_ENDPOINT = "tokenSystem.externalStateGetter.deviceGroupsEndpoint"
+  }
+
   object GenericConfPaths extends GenericConfPaths
   object HttpServerConfPaths extends HttpServerConfPaths
   object TokenGenPaths extends TokenGenPaths
   object TokenVerificationPaths extends TokenVerificationPaths
+  object ExternalStateGetterPaths extends ExternalStateGetterPaths
 
 }

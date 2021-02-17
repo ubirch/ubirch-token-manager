@@ -7,9 +7,9 @@ import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.crypto.PrivKey
 import com.ubirch.models.TokenClaim
 import com.ubirch.util.TaskHelpers
-import javax.inject.Singleton
 import pdi.jwt.{ Jwt, JwtAlgorithm, JwtClaim }
 
+import javax.inject.Singleton
 import scala.util.Try
 
 trait TokenEncodingService {

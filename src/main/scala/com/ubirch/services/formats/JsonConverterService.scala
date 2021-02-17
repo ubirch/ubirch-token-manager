@@ -1,9 +1,10 @@
 package com.ubirch.services.formats
 
-import javax.inject._
 import org.json4s.native.JsonMethods.{ compact, render }
 import org.json4s.native.Serialization.{ read, write }
 import org.json4s.{ Formats, JValue }
+
+import javax.inject._
 
 /**
   * Represents an internal service or component for managing Json.

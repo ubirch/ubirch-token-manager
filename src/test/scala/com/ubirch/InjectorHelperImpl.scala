@@ -6,8 +6,9 @@ import com.typesafe.config.Config
 import com.ubirch.crypto.utils.Curve
 import com.ubirch.crypto.{ GeneratorKeyFactory, PrivKey }
 import com.ubirch.services.jwt.{ DefaultPublicKeyPoolService, PublicKeyDiscoveryService, PublicKeyPoolService, TokenEncodingService }
-import javax.inject.{ Inject, Provider, Singleton }
 import monix.eval.Task
+
+import javax.inject.{ Inject, Provider, Singleton }
 
 @Singleton
 class FakeDefaultPublicKeyPoolService @Inject() (privKey: PrivKey, config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService)

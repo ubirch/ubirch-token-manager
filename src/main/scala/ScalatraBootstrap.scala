@@ -1,7 +1,8 @@
 import com.ubirch.Service
 import com.ubirch.controllers.{ InfoController, ResourcesController, TokenController }
-import javax.servlet.ServletContext
 import org.scalatra.LifeCycle
+
+import javax.servlet.ServletContext
 
 /**
   * Represents the configuration of controllers

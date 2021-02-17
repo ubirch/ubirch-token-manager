@@ -5,9 +5,10 @@ import java.security.PublicKey
 
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.services.formats.JsonConverterService
-import javax.inject.{ Inject, Singleton }
 import org.json4s.JValue
 import pdi.jwt.{ Jwt, JwtAlgorithm }
+
+import javax.inject.{ Inject, Singleton }
 
 trait TokenDecodingService {
   def decodeAndVerify(jwt: String, publicKey: PublicKey): Option[JValue]

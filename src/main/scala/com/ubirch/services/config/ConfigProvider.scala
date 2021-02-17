@@ -1,6 +1,7 @@
 package com.ubirch.services.config
 
 import com.typesafe.config.{ Config, ConfigFactory }
+
 import javax.inject._
 
 /**

@@ -1,16 +1,17 @@
 package com.ubirch.services.jwt
 
 import java.util.{ Date, UUID }
+
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
-import com.ubirch.models.{ Scopes, TokenClaim, TokenCreationData, TokenPurposedClaim, TokenRow, TokensDAO }
+import com.ubirch.models._
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
+import monix.eval.Task
 
 import javax.inject.{ Inject, Singleton }
-import monix.eval.Task
 
 trait TokenStoreService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
@@ -53,30 +54,11 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
     for {
 
       _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidSpecificClaim("Invalid Origin Domains", "Origin Domains are empty or invalid"))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidSpecificClaim("Invalid Scopes", "Scopes are empty or invalid"))
 
-      purpose = 'purpose -> tokenPurposedClaim.purpose
-      targetIdentities = tokenPurposedClaim.targetIdentities match {
-        case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString).asInstanceOf[Any]
-        case Right(other) => 'target_identities -> other.asInstanceOf[Any]
-      }
-      origin = 'origin_domains -> tokenPurposedClaim.originDomains.distinct.map(_.toString)
-      scopes = tokenPurposedClaim.scopes.sorted.flatMap(x => Scopes.fromString(x)).distinct
-      scopesKey = 'scopes -> scopes.map(Scopes.asString)
-
-      tokenClaim = TokenClaim(
-        ownerId = tokenPurposedClaim.tenantId,
-        issuer = s"https://token.$ENV.ubirch.com",
-        subject = tokenPurposedClaim.tenantId.toString,
-        audience = scopes.flatMap(x => Scopes.audience(x, ENV).toList).map(_.toString),
-        expiration = tokenPurposedClaim.expiration,
-        notBefore = tokenPurposedClaim.notBefore,
-        issuedAt = None,
-        content = Map(purpose, targetIdentities, origin, scopesKey)
-      )
-
+      tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
       tokeCreationData <- create(accessToken, tokenClaim, 'purposed_claim)
 
     } yield {

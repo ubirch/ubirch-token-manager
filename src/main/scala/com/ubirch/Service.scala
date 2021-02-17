@@ -5,9 +5,10 @@ import java.util.concurrent.CountDownLatch
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.services.jwt.PublicKeyPoolService
 import com.ubirch.services.rest.RestService
-import javax.inject.{ Inject, Singleton }
 import monix.eval.Task
 import monix.execution.Scheduler
+
+import javax.inject.{ Inject, Singleton }
 
 /**
   * Represents a bootable service object that starts the system

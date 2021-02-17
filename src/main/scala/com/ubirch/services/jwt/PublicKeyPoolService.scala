@@ -5,9 +5,9 @@ import java.security.Key
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.TokenVerificationPaths
-import javax.inject._
 import monix.eval.Task
 
+import javax.inject._
 import scala.collection.concurrent.TrieMap
 
 trait PublicKeyPoolService {
