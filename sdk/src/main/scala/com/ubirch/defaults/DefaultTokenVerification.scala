@@ -19,8 +19,6 @@ class DefaultTokenVerification @Inject() (
     jsonConverterService: JsonConverterService
 ) extends TokenVerification with LazyLogging {
 
-  import com.ubirch.api.TokenVerification._
-
   private val validIssuer = config.getString(Paths.VALID_ISSUER_PATH)
   private val validAudience = config.getString(Paths.VALID_AUDIENCE_PATH)
   private val validScopes = config.getStringList(Paths.VALID_SCOPES_PATH).asScala.toList
@@ -30,37 +28,30 @@ class DefaultTokenVerification @Inject() (
 
       (_, p, _) <- Jwt.decodeRawAll(jwt, tokenPublicKey.publicKey, Seq(JwtAlgorithm.ES256))
 
-      otherClaims <- Try(jsonConverterService.fromJsonInput[Content](p)(_.camelizeKeys))
-        .recover { case e: Exception => throw InvalidOtherClaims(e.getMessage, jwt) }
-
-      all <- jsonConverterService.as[Map[String, Any]](p).toTry
+      all <- jsonConverterService.toJValue(p).toTry
         .recover { case e: Exception => throw InvalidAllClaims(e.getMessage, jwt) }
 
-      isIssuerValid <- all.get(ISSUER).toRight(InvalidSpecificClaim("Invalid issuer", p)).toTry.map(_ == validIssuer)
+      claims = new Claims(jwt, all)
+
+      isIssuerValid <- Try(claims.issuer).map(_ == validIssuer)
       _ = if (!isIssuerValid) throw InvalidSpecificClaim("Invalid issuer", p)
 
-      maybeAudiences <- all.get(AUDIENCE).toRight(InvalidSpecificClaim("Invalid audience", p)).toTry
-      isAudienceValid <- Try(maybeAudiences).map {
-        case x: String => x == validAudience
-        case x :: xs if x.isInstanceOf[String] => (x :: xs).contains(validAudience)
-      }
+      isAudienceValid <- Try(claims.audiences).map(_.contains(validAudience))
       _ = if (!isAudienceValid) throw InvalidSpecificClaim("Invalid audience", p)
 
-      _ <- all.get(SUBJECT).toRight(InvalidSpecificClaim("Invalid subject", p))
-        .toTry
-        .map(_.asInstanceOf[String])
+      _ <- Try(claims.subject)
         .filter(_.nonEmpty)
         .map(UUID.fromString)
         .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }
 
-      _ <- Try(otherClaims.scopes).filter(_.exists(validScopes.contains))
+      _ <- Try(claims.scopes).filter(_.exists(validScopes.contains))
         .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }
 
-      _ <- Try(otherClaims.purpose).filter(_.nonEmpty)
+      _ <- Try(claims.purpose).filter(_.nonEmpty)
         .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }
 
     } yield {
-      Claims(jwt, all, otherClaims)
+      claims
     }).recoverWith {
       case e: InvalidSpecificClaim =>
         logger.error(s"invalid_token_specific_claim=${e.getMessage}", e)
