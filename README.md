@@ -335,6 +335,8 @@ curl -s -X GET $host/api/tokens/v1/scopes | jq .
 
 **thing:create**:: it allows creating/registering devices or things.
 
+**thing:getInfo**:: it allows querying info about a device or thing.
+
 This call returns a json object whose data field is an array of scopes.
 
 ```json
@@ -344,7 +346,8 @@ This call returns a json object whose data field is an array of scopes.
   "data": [
     "upp:anchor",
     "upp:verify",
-    "thing:create"
+    "thing:create",
+    "thing:getInfo"
   ]
 }
 ```

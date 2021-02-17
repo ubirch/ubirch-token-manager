@@ -14,7 +14,7 @@ case object Thing extends Resource
 
 sealed trait Action
 object Action {
-  final val list: List[Action] = List(Anchor, Verify, Create)
+  final val list: List[Action] = List(Anchor, Verify, Create, GetInfo)
   def fromString(value: String): Option[Action] = {
     list.find(_.toString.toLowerCase == value)
   }
@@ -22,6 +22,7 @@ object Action {
 case object Anchor extends Action
 case object Verify extends Action
 case object Create extends Action
+case object GetInfo extends Action
 
 object Scopes {
 
@@ -29,7 +30,8 @@ object Scopes {
   final val UPP_Anchor: Scope = (UPP, Anchor)
   final val UPP_Verify: Scope = (UPP, Verify)
   final val Thing_Create: Scope = (Thing, Create)
-  final val list = List(UPP_Anchor, UPP_Verify, Thing_Create)
+  final val Thing_GetInfo: Scope = (Thing, GetInfo)
+  final val list = List(UPP_Anchor, UPP_Verify, Thing_Create, Thing_GetInfo)
 
   def asString(scope: Scope): String = {
     val (resource, action) = scope
@@ -59,6 +61,7 @@ object Scopes {
       case Scopes.UPP_Anchor => Option(new URL(s"https://niomon.$ENV.ubirch.com"))
       case Scopes.UPP_Verify => Option(new URL(s"https://verify.$ENV.ubirch.com"))
       case Scopes.Thing_Create => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
+      case Scopes.Thing_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
       case _ => None
     }
   }
