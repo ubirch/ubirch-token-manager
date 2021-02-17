@@ -6,23 +6,14 @@ import java.util.UUID
 
 import com.ubirch.crypto.PubKey
 import com.ubirch.defaults.{ InvalidOrigin, InvalidSpecificClaim, InvalidUUID }
-import com.ubirch.protocol.ProtocolMessage
 import org.json4s.{ JValue, JsonInput }
 
 import scala.util.{ Failure, Success, Try }
 
 trait TokenManager {
 
-  def tokenVerification: TokenVerification
-
-  def getClaims(token: String): Option[Claims] = token.split(" ").toList match {
-    case List(x, y) =>
-      val isBearer = x.toLowerCase == "bearer"
-      val claims = tokenVerification.decodeAndVerify(y)
-      if (isBearer && claims.isDefined) claims
-      else None
-    case _ => None
-  }
+  def decodeAndVerify(jwt: String): Try[Claims]
+  def getClaims(token: String): Try[Claims]
 
 }
 
@@ -32,7 +23,7 @@ trait TokenPublicKey {
 }
 
 trait TokenVerification {
-  def decodeAndVerify(jwt: String): Option[Claims]
+  def decodeAndVerify(jwt: String): Try[Claims]
 }
 
 object TokenVerification {
@@ -66,21 +57,25 @@ trait JsonConverterService {
 }
 
 case class Content(
-    role: Symbol,
     purpose: String,
     targetIdentities: Either[List[UUID], String],
-    originDomains: List[URL]
+    originDomains: List[URL],
+    scopes: List[String]
 )
 
 case class Claims(token: String, all: Map[String, Any], content: Content) {
 
-  def validateUUID(protocolMessage: ProtocolMessage): Try[ProtocolMessage] = {
+  def validatePurpose: Try[String] = {
+    Try(content.purpose.nonEmpty && content.purpose.length > 3).map(_ => content.purpose)
+  }
+
+  def validateUUID(uuid: UUID): Try[UUID] = {
     val res = content.targetIdentities match {
-      case Left(uuids) => uuids.contains(protocolMessage.getUUID)
+      case Left(uuids) => uuids.contains(uuid)
       case Right(wildcard) => wildcard == "*"
     }
-    if (res) Success(protocolMessage)
-    else Failure(InvalidUUID("Invalid UUID", s"upp_uuid_not_equals_target_identities=${protocolMessage.getUUID} != ${content.targetIdentities.left.map(_.map(_.toString))}"))
+    if (res) Success(uuid)
+    else Failure(InvalidUUID("Invalid UUID", s"upp_uuid_not_equals_target_identities=${uuid} != ${content.targetIdentities.left.map(_.map(_.toString))}"))
   }
 
   def validateOrigin(maybeOrigin: Option[String]): Try[List[URL]] = {

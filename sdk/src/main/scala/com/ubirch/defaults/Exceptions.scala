@@ -9,3 +9,4 @@ case class InvalidAllClaims(message: String, value: String) extends TokenSDKExce
 case class InvalidSpecificClaim(message: String, value: String) extends TokenSDKException(message, value)
 case class InvalidUUID(message: String, value: String) extends TokenSDKException(message, value)
 case class InvalidOrigin(message: String, value: String) extends TokenSDKException(message, value)
+case class InvalidToken(message: String, value: String) extends TokenSDKException(message, value)

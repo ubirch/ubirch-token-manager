@@ -111,12 +111,6 @@
 
         <dependency>
             <groupId>com.ubirch</groupId>
-            <artifactId>ubirch-protocol-java</artifactId>
-            <version>${ubirch-protocol-java.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.ubirch</groupId>
             <artifactId>ubirch-crypto</artifactId>
             <version>${ubirch-crypto.version}</version>
         </dependency>
