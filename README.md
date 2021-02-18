@@ -26,25 +26,25 @@ This service knows about jwt tokens.
 
 **Fields**
 
-_tenantId_: it is the keycloak id of the logged in user.
+_`tenantId`_: it is the keycloak id of the logged in user.
  
-_purpose_: it is a description for the token.  Min characters are 6
+_`purpose`_: it is a description for the token.  Min characters are 6
 
-_targetIdentities_: it is a list of device ids that belong to the user. It supports a list of specific devices or the wildcard *.
+_`targetIdentities`_: it is a list of device ids that belong to the user. It supports a list of specific devices or the wildcard *.
 If it is meant as wildcard, the field should be sent as `["*"]`.
 
-_targetGroups_: it is a list of uuids that correspond to identity groups or a list of the names of the groups.
+_`targetGroups`_: it is a list of uuids that correspond to identity groups or a list of the names of the groups.
 
-_expiration_: the number of seconds after which the token will be considered expired.
+_`expiration`_: the number of seconds after which the token will be considered expired.
 That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server.
 If not set, it will not expire.
 
-_notBefore_: the number of seconds after which the token should be considered valid. 
+_`notBefore`_: the number of seconds after which the token should be considered valid. 
 That is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server.
 
-_originDomains_: list of domains from which the calls will be accepted from when verifying.
+_`originDomains`_: list of domains from which the calls will be accepted from when verifying.
 
-_scopes_: list of available scopes: "upp:anchor", "upp:verify", "thing:create", "thing:getinfo", "user:getinfo"
+_`scopes`_: list of available scopes: "upp:anchor", "upp:verify", "thing:create", "thing:getinfo", "user:getinfo"
 
 **Mandatory Fields**
 
