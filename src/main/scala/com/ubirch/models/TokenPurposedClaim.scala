@@ -25,6 +25,13 @@ case class TokenPurposedClaim(
       .exists(x => x.nonEmpty && x != "*")
   }
 
+  def hasMaybeIdentities: Boolean = {
+    targetIdentities.left
+      .map(_.map(_.toString))
+      .merge
+      .exists(x => x.nonEmpty && x != "*")
+  }
+
   def validateGroups: Boolean = {
     targetGroups match {
       case Left(value) => value.nonEmpty

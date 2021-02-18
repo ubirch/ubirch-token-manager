@@ -31,7 +31,9 @@ _tenantId_: it is the keycloak id of the logged in user.
 _purpose_: it is a description for the token.  Min characters are 6
 
 _targetIdentities_: it is a list of device ids that belong to the user. It supports a list of specific devices or the wildcard *.
-If it is meant as wildcard, the field should be sent as a string.
+If it is meant as wildcard, the field should be sent as `["*"]`.
+
+_targetGroups_: it is a list of uuids that correspond to identity groups or a list of the names of the groups.
 
 _expiration_: the number of seconds after which the token will be considered expired.
 That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server.
@@ -42,14 +44,14 @@ That is to say: 'X seconds from now', where X == notBefore AND now == the curren
 
 _originDomains_: list of domains from which the calls will be accepted from when verifying.
 
-_scopes_: list of available scopes: "upp:anchor", "upp:verify", "thing:create"
-
+_scopes_: list of available scopes: "upp:anchor", "upp:verify", "thing:create", "thing:getinfo", "user:getinfo"
 
 **Mandatory Fields**
 
 * tenantId (uuid as string)
 * purpose (string) :: min characters are 6
-* targetIdentities (array of uuid as string) | (*)
+* targetIdentities (array of uuid as string) | (["*"])
+* targetGroups (array of uuids as string) | (array of group names)
 * originDomains (array of urls from which a verification can originate)
 * scopes (array of at least one scope)
 
@@ -58,7 +60,9 @@ _scopes_: list of available scopes: "upp:anchor", "upp:verify", "thing:create"
 * expiration (number or null) in seconds
 * notBefore (number of null) in seconds
 
-Set as null or don't send the fields
+Set as null or don't send the fields.
+
+NOTE: Don't send `targetIdentities` and `targetGroups`. Send only one at a time.  
 
 ## Create a Verification Token for Specific Devices. 
 
@@ -337,6 +341,8 @@ curl -s -X GET $host/api/tokens/v1/scopes | jq .
 
 **thing:getinfo**:: it allows querying info about a device or thing.
 
+**"user:getinfo"**:: it allows querying info about a user.
+
 This call returns a json object whose data field is an array of scopes.
 
 ```json
@@ -347,7 +353,8 @@ This call returns a json object whose data field is an array of scopes.
     "upp:anchor",
     "upp:verify",
     "thing:create",
-    "thing:getinfo"
+    "thing:getinfo",
+    "user:getinfo"
   ]
 }
 ```
