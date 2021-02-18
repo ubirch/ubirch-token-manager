@@ -45,7 +45,7 @@ class DefaultTokenVerification @Inject() (
         .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }
 
       _ <- Try(claims.scopes).filter(_.exists(validScopes.contains))
-        .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }
+        .recover { case e: Exception => throw InvalidSpecificClaim(s"Invalid Scopes :: ${claims.scopes} not found in $validScopes", p) }
 
       _ <- Try(claims.purpose).filter(_.nonEmpty)
         .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }

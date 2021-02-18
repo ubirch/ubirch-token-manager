@@ -20,8 +20,12 @@ case class TokenPurposedClaim(
   def hasMaybeGroups: Boolean = {
     targetIdentities match {
       case Left(_) => false
-      case Right(List("*")) => false
-      case Right(_) => true
+      case Right(ids) =>
+        ids.filter(_.nonEmpty) match {
+          case List("*") => false
+          case Nil => false
+          case _ => true
+        }
     }
   }
 
