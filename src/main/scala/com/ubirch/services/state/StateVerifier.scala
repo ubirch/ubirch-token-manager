@@ -19,7 +19,7 @@ import net.logstash.logback.argument.StructuredArguments.v
 import javax.inject.{ Inject, Singleton }
 
 trait StateVerifier {
-  def groups(uuid: UUID): Task[List[Group]]
+  def groups(identityUUID: UUID): Task[List[Group]]
 }
 
 @Singleton
@@ -35,15 +35,15 @@ class DefaultStateVerifier @Inject() (
   private final val ENV = config.getString(GenericConfPaths.ENV)
   private final val REALM_NAME: String = config.getString(ExternalStateGetterPaths.REALM_NAME)
 
-  override def groups(uuid: UUID): Task[List[Group]] = {
+  override def groups(identityUUID: UUID): Task[List[Group]] = {
     for {
 
       _ <- Task.unit
 
       tokenClaim = TokenPurposedClaim(
-        tenantId = uuid, // What UUID to use here?
+        tenantId = identityUUID, // What UUID to use here?
         purpose = "systems_interchange",
-        targetIdentities = Left(List(uuid)),
+        targetIdentities = Left(List(identityUUID)),
         expiration = Some(60 * 5),
         notBefore = None,
         originDomains = Nil,
@@ -62,10 +62,10 @@ class DefaultStateVerifier @Inject() (
       resBody <- Task(new String(res.body))
 
       _ = logger.info(
-        "deviceId:" + uuid.toString +
+        "deviceId:" + identityUUID.toString +
           " res_status:" + res.status +
           " res_body:" + resBody,
-        v("deviceId", uuid)
+        v("deviceId", identityUUID)
       )
 
       groups <- Task.fromEither(jsonConverterService.as[List[Group]](resBody))
