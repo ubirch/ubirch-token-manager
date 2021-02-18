@@ -11,6 +11,7 @@ case class TokenPurposedClaim(
     tenantId: UUID,
     purpose: String,
     targetIdentities: Either[List[UUID], List[String]],
+    targetGroups: Either[List[UUID], List[String]],
     expiration: Option[Long],
     notBefore: Option[Long],
     originDomains: List[URL],
@@ -18,14 +19,17 @@ case class TokenPurposedClaim(
 ) {
 
   def hasMaybeGroups: Boolean = {
-    targetIdentities match {
-      case Left(_) => false
-      case Right(ids) =>
-        ids.filter(_.nonEmpty) match {
-          case List("*") => false
-          case Nil => false
-          case _ => true
-        }
+    targetGroups.left
+      .map(_.map(_.toString))
+      .merge
+      .exists(x => x.nonEmpty && x != "*")
+  }
+
+  def validateGroups: Boolean = {
+    targetGroups match {
+      case Left(value) => value.nonEmpty
+      case Right(List("*")) => false
+      case Right(_) => true
     }
   }
 
@@ -56,10 +60,8 @@ case class TokenPurposedClaim(
 
   def toTokenClaim(ENV: String): TokenClaim = {
     val purposeKey = 'purpose -> purpose
-    val targetIdentitiesKey = targetIdentities match {
-      case Left(uuids) => 'target_identities -> uuids.distinct.map(_.toString).asInstanceOf[Any]
-      case Right(other) => 'target_identities -> other.asInstanceOf[Any]
-    }
+    val targetIdentitiesKey = 'target_identities -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
+    val targetGroupsKey = 'target_groups -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val originKey = 'origin_domains -> originDomains.distinct.map(_.toString)
     val typedScopes = scopes.sorted.flatMap(x => Scopes.fromString(x)).distinct
     val scopesKey = 'scopes -> typedScopes.map(Scopes.asString)
@@ -72,7 +74,7 @@ case class TokenPurposedClaim(
       expiration = expiration,
       notBefore = notBefore,
       issuedAt = None,
-      content = Map(purposeKey, targetIdentitiesKey, originKey, scopesKey)
+      content = Map(purposeKey, targetIdentitiesKey, targetGroupsKey, originKey, scopesKey)
     )
   }
 

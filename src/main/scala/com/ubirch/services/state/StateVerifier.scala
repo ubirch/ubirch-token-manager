@@ -45,6 +45,7 @@ class DefaultStateVerifier @Inject() (
         tenantId = identityUUID, // What UUID to use here?
         purpose = "systems_interchange",
         targetIdentities = Left(List(identityUUID)),
+        targetGroups = Left(Nil),
         expiration = Some(60 * 5),
         notBefore = None,
         originDomains = Nil,
@@ -90,6 +91,7 @@ class DefaultStateVerifier @Inject() (
         tenantId = tenantId, // What UUID to use here?
         purpose = "systems_interchange",
         targetIdentities = Left(Nil),
+        targetGroups = Left(Nil),
         expiration = Some(60 * 5),
         notBefore = None,
         originDomains = Nil,
