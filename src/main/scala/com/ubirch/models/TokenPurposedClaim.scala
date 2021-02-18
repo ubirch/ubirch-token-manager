@@ -19,7 +19,7 @@ case class TokenPurposedClaim(
 
   def hasMaybeGroups: Boolean = {
     targetIdentities match {
-      case Left(value) => false
+      case Left(_) => false
       case Right(List("*")) => false
       case Right(_) => true
     }
