@@ -1,0 +1,16 @@
+@startuml
+actor tenant #red
+box "Token Creation" #LightBlue
+tenant->Console: logs in
+tenant->Console: goes to the "tokens section"
+tenant->Console: starts token creation
+tenant->Console: enters data for the token creation
+Console->Console: prepares KeyCloak Token
+Console->"Token Service": sends Request(keycloakToken, claims)
+"Token Service"->"Token Service": validates User and Claims
+"Token Service"->"Thing API": asks for groups if groups claims available
+"Token Service"->"Token Service": validates groups if needed
+"Token Service"->"Console": sends Ubirch Token
+"Console"->tenant:Shows list of Tokens
+end box
+@enduml

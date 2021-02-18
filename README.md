@@ -13,6 +13,7 @@ This service knows about jwt tokens.
 9. [Keycloak and Responses](#keycloak-token-and-responses)
 10. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
 11. [Swagger](#swagger)
+12 [Some Workflows](#some-workflows)
 
 ## Steps to prepare a request
 
@@ -375,4 +376,6 @@ This call returns a json object whose data field is the public key. This public 
 
 Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 
+## Some Workflows
 
+[Token workflows](token_verification_workflows.md)
