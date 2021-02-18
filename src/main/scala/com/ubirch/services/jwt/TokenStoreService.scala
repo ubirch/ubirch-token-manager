@@ -74,7 +74,7 @@ class DefaultTokenStoreService @Inject() (config: Config,
           }
       } else Task.delay(true)
 
-      _ <- earlyResponseIf(!groupsCheck)(InvalidSpecificClaim("Invalid Groups", "---"))
+      _ <- earlyResponseIf(!groupsCheck)(InvalidSpecificClaim("Invalid Groups", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
       tokeCreationData <- create(accessToken, tokenClaim, 'purposed_claim)
