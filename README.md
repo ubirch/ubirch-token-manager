@@ -342,7 +342,7 @@ curl -s -X GET $host/api/tokens/v1/scopes | jq .
 
 **thing:getinfo**:: it allows querying info about a device or thing.
 
-**"user:getinfo"**:: it allows querying info about a user.
+**user:getinfo**:: it allows querying info about a user.
 
 This call returns a json object whose data field is an array of scopes.
 
