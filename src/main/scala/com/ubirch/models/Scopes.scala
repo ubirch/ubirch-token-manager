@@ -48,7 +48,8 @@ object Scopes {
           for {
             resource <- Resource.fromString(r)
             action <- Action.fromString(a)
-            scope <- list.find(x => x == (resource, action))
+            maybeScope = (resource, action)
+            scope <- list.find(_ == maybeScope)
           } yield {
             scope
           }

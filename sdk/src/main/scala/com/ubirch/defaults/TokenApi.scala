@@ -18,6 +18,7 @@ object TokenApi extends TokenManager {
 
       bind(classOf[Config]).toProvider(classOf[ConfigProvider])
       bind(classOf[Formats]).toProvider(classOf[JsonFormatsProvider])
+      ()
     }
   })) {}
 

@@ -4,8 +4,8 @@ import java.util.UUID
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import com.ubirch.ConfPaths.GenericConfPaths
-import com.ubirch.TokenEncodingException
+import com.ubirch.ConfPaths.{ ExternalStateGetterPaths, GenericConfPaths }
+import com.ubirch.{ StateVerifierException, TokenEncodingException }
 import com.ubirch.models.{ Group, Scopes, TokenPurposedClaim }
 import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
@@ -15,7 +15,6 @@ import com.ubirch.util.TaskHelpers
 import monix.eval.Task
 import monix.execution.Scheduler
 import net.logstash.logback.argument.StructuredArguments.v
-import org.json4s.JString
 
 import javax.inject.{ Inject, Singleton }
 
@@ -34,6 +33,7 @@ class DefaultStateVerifier @Inject() (
   extends StateVerifier with TaskHelpers with LazyLogging {
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
+  private final val REALM_NAME: String = config.getString(ExternalStateGetterPaths.REALM_NAME)
 
   override def groups(uuid: UUID): Task[List[Group]] = {
     for {
@@ -49,19 +49,17 @@ class DefaultStateVerifier @Inject() (
         originDomains = Nil,
         scopes = List(Scopes.asString(Scopes.Thing_GetInfo))
       ).toTokenClaim(ENV)
-        .addContent('realm_access -> "DEVICE")
+        .addContent(
+          'realm_access -> "DEVICE",
+          'realm_name -> REALM_NAME
+        )
 
       res <- liftTry(tokenEncodingService.encode(UUID.randomUUID(), tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
       (token, _) = res
 
-      _ = println(token)
-
       res <- Task.delay(externalStateGetter.getDeviceGroups(token))
 
       resBody <- Task(new String(res.body))
-      resBodyJValue <- Task.fromEither(jsonConverterService.toJValue(resBody)).onErrorRecover {
-        case _: Exception => JString(resBody)
-      }
 
       _ = logger.info(
         "deviceId:" + uuid.toString +
@@ -70,9 +68,15 @@ class DefaultStateVerifier @Inject() (
         v("deviceId", uuid)
       )
 
+      groups <- Task.fromEither(jsonConverterService.as[List[Group]](resBody))
+        .onErrorRecoverWith {
+          case e: Exception =>
+            logger.error("error_getting_groups=" + e.getMessage)
+            Task.raiseError(StateVerifierException("Invalid Get Groups Response"))
+        }
+
     } yield {
-      println(resBodyJValue)
-      Nil
+      groups
     }
   }
 
@@ -103,7 +107,9 @@ object DefaultStateVerifier extends {
 
     val stateVerifier: StateVerifier = new DefaultStateVerifier(config, externalStateGetter, tokenKeyService, tokenEncodingService, jsonConverterService)
 
-    await(stateVerifier.groups(UUID.fromString("83fa48fa-c2a5-4fae-9b4a-5f839c8cd87b")), 5 seconds)
+    val res = await(stateVerifier.groups(UUID.fromString("bdab47d0-fcf9-429e-a118-3dae0773cac2")), 5 seconds)
+
+    println(res)
 
   }
 }

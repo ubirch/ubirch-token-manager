@@ -157,5 +157,6 @@ class InjectorHelperImpl() extends InjectorHelper(List(new Binder {
   override def configure(): Unit = {
     super.configure()
     bind(classOf[PrivKey]).toProvider(classOf[KeyPairProvider])
+    ()
   }
 }))
