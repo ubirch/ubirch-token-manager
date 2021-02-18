@@ -47,6 +47,7 @@ object ConfPaths {
 
   trait ExternalStateGetterPaths {
     final val DEVICE_GROUPS_ENDPOINT = "tokenSystem.externalStateGetter.deviceGroupsEndpoint"
+    final val TENANT_GROUPS_ENDPOINT = "tokenSystem.externalStateGetter.tenantGroupsEndpoint"
     final val REALM_NAME = "tokenSystem.externalStateGetter.realmName"
   }
 

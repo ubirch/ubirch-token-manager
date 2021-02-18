@@ -4,13 +4,14 @@ import java.net.URL
 
 sealed trait Resource
 object Resource {
-  final val list: List[Resource] = List(UPP, Thing)
+  final val list: List[Resource] = List(UPP, Thing, User)
   def fromString(value: String): Option[Resource] = {
     list.find(_.toString.toLowerCase == value)
   }
 }
 case object UPP extends Resource
 case object Thing extends Resource
+case object User extends Resource
 
 sealed trait Action
 object Action {
@@ -31,7 +32,8 @@ object Scopes {
   final val UPP_Verify: Scope = (UPP, Verify)
   final val Thing_Create: Scope = (Thing, Create)
   final val Thing_GetInfo: Scope = (Thing, GetInfo)
-  final val list = List(UPP_Anchor, UPP_Verify, Thing_Create, Thing_GetInfo)
+  final val User_GetInfo: Scope = (User, GetInfo)
+  final val list = List(UPP_Anchor, UPP_Verify, Thing_Create, Thing_GetInfo, User_GetInfo)
 
   def asString(scope: Scope): String = {
     val (resource, action) = scope
@@ -63,6 +65,7 @@ object Scopes {
       case Scopes.UPP_Verify => Option(new URL(s"https://verify.$ENV.ubirch.com"))
       case Scopes.Thing_Create => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
       case Scopes.Thing_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
+      case Scopes.User_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
       case _ => None
     }
   }

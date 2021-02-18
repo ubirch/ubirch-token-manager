@@ -20,6 +20,7 @@ import javax.inject.{ Inject, Singleton }
 
 trait StateVerifier {
   def groups(identityUUID: UUID): Task[List[Group]]
+  def groups(tenantId: UUID, username: String): Task[List[Group]]
 }
 
 @Singleton
@@ -71,8 +72,8 @@ class DefaultStateVerifier @Inject() (
       groups <- Task.fromEither(jsonConverterService.as[List[Group]](resBody))
         .onErrorRecoverWith {
           case e: Exception =>
-            logger.error("error_getting_groups=" + e.getMessage)
-            Task.raiseError(StateVerifierException("Invalid Get Groups Response"))
+            logger.error("error_getting_device_groups=" + e.getMessage)
+            Task.raiseError(StateVerifierException("Invalid Get Device Groups Response"))
         }
 
     } yield {
@@ -80,6 +81,51 @@ class DefaultStateVerifier @Inject() (
     }
   }
 
+  override def groups(tenantId: UUID, username: String): Task[List[Group]] = {
+    for {
+
+      _ <- Task.unit
+
+      tokenClaim = TokenPurposedClaim(
+        tenantId = tenantId, // What UUID to use here?
+        purpose = "systems_interchange",
+        targetIdentities = Left(Nil),
+        expiration = Some(60 * 5),
+        notBefore = None,
+        originDomains = Nil,
+        scopes = List(Scopes.asString(Scopes.User_GetInfo))
+      ).toTokenClaim(ENV)
+        .addContent(
+          'realm_access -> "USER",
+          'realm_name -> REALM_NAME,
+          'username -> username
+        )
+
+      res <- liftTry(tokenEncodingService.encode(UUID.randomUUID(), tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
+      (token, _) = res
+
+      res <- Task.delay(externalStateGetter.getUserGroups(token))
+
+      resBody <- Task(new String(res.body))
+
+      _ = logger.info(
+        "ownerId:" + tenantId.toString +
+          " res_status:" + res.status +
+          " res_body:" + resBody,
+        v("ownerId", tenantId)
+      )
+
+      groups <- Task.fromEither(jsonConverterService.as[List[Group]](resBody))
+        .onErrorRecoverWith {
+          case e: Exception =>
+            logger.error("error_getting_user_groups=" + e.getMessage)
+            Task.raiseError(StateVerifierException("Invalid Get User Groups Response"))
+        }
+
+    } yield {
+      groups
+    }
+  }
 }
 
 object DefaultStateVerifier extends {
@@ -107,9 +153,12 @@ object DefaultStateVerifier extends {
 
     val stateVerifier: StateVerifier = new DefaultStateVerifier(config, externalStateGetter, tokenKeyService, tokenEncodingService, jsonConverterService)
 
-    val res = await(stateVerifier.groups(UUID.fromString("bdab47d0-fcf9-429e-a118-3dae0773cac2")), 5 seconds)
+    //val res = await(stateVerifier.groups(UUID.fromString("bdab47d0-fcf9-429e-a118-3dae0773cac2")), 5 seconds)
+
+    val res = await(stateVerifier.groups(UUID.fromString("963995ed-ce12-4ea5-89dc-b181701d1d7b"), "carlos.sanchez@ubirch.com"), 5 seconds)
 
     println(res)
 
   }
+
 }
