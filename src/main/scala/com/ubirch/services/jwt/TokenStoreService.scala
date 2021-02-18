@@ -1,6 +1,6 @@
 package com.ubirch.services.jwt
 
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
@@ -8,10 +8,11 @@ import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
 import com.ubirch.models._
 import com.ubirch.util.TaskHelpers
-import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
+import com.ubirch.{InvalidSpecificClaim, TokenEncodingException}
 import monix.eval.Task
+import javax.inject.{Inject, Singleton}
 
-import javax.inject.{ Inject, Singleton }
+import com.ubirch.services.state.StateVerifier
 
 trait TokenStoreService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
@@ -22,7 +23,11 @@ trait TokenStoreService {
 }
 
 @Singleton
-class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyService, tokenEncodingService: TokenEncodingService, tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
+class DefaultTokenStoreService @Inject() (config: Config,
+                                          tokenKey: TokenKeyService,
+                                          tokenEncodingService: TokenEncodingService,
+                                          stateVerifier: StateVerifier,
+                                          tokensDAO: TokensDAO) extends TokenStoreService with TaskHelpers with LazyLogging {
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
 
@@ -57,6 +62,19 @@ class DefaultTokenStoreService @Inject() (config: Config, tokenKey: TokenKeyServ
       _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidSpecificClaim("Invalid Origin Domains", "Origin Domains are empty or invalid"))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidSpecificClaim("Invalid Scopes", "Scopes are empty or invalid"))
+
+      groupsCheck <- if(tokenPurposedClaim.hasMaybeGroups) {
+        stateVerifier
+          .groups(tokenPurposedClaim.tenantId, accessToken.email)
+          .map { gs =>
+            tokenPurposedClaim.targetGroups match {
+              case Right(names) => gs.forall(x => names.contains(x.name))
+              case Left(uuids) => gs.forall(x => uuids.contains(x.id))
+            }
+          }
+      } else Task.delay(true)
+
+      _ <- earlyResponseIf(!groupsCheck)(InvalidSpecificClaim("Invalid Groups", "---"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
       tokeCreationData <- create(accessToken, tokenClaim, 'purposed_claim)

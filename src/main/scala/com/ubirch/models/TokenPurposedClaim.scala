@@ -60,7 +60,7 @@ case class TokenPurposedClaim(
 
   def toTokenClaim(ENV: String): TokenClaim = {
     val purposeKey = 'purpose -> purpose
-    val targetIdentitiesKey = 'target_identities -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
+    val targetIdentitiesKey = 'target_identities -> targetIdentities.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val targetGroupsKey = 'target_groups -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val originKey = 'origin_domains -> originDomains.distinct.map(_.toString)
     val typedScopes = scopes.sorted.flatMap(x => Scopes.fromString(x)).distinct
