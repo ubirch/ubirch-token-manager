@@ -5,6 +5,7 @@ import java.security.PublicKey
 import java.util.UUID
 
 import com.ubirch.crypto.PubKey
+import monix.eval.Task
 import org.json4s.JsonAST.{ JArray, JField }
 import org.json4s.{ JObject, JString, JValue, JsonInput }
 
@@ -13,6 +14,7 @@ import scala.util.{ Failure, Success, Try }
 trait TokenManager {
   def decodeAndVerify(jwt: String): Try[Claims]
   def getClaims(token: String): Try[Claims]
+  def verify(accessToken: String, identity: UUID): Task[Boolean]
 }
 
 trait TokenPublicKey {
@@ -32,6 +34,18 @@ trait JsonConverterService {
   def as[T: Manifest](value: String): Either[Exception, T]
   def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T
 }
+
+case class VerificationRequest(token: String, identity: UUID)
+
+trait ExternalStateGetter {
+  def verify(body: Array[Byte]): ExternalResponseData[Array[Byte]]
+}
+
+trait ExternalStateVerifier {
+  def verify(verificationRequest: VerificationRequest): Task[Boolean]
+}
+
+case class ExternalResponseData[T](status: Int, headers: Map[String, List[String]], body: T)
 
 class TokenSDKException(message: String, value: String) extends Exception(message) {
   def getValue: String = value
