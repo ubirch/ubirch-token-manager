@@ -136,6 +136,20 @@ class DefaultTokenService @Inject() (
       _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
       _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
 
+      groupsCheck <- if (tokenPurposedClaim.hasMaybeGroups) {
+        stateVerifier
+          .groups(verificationRequest.identity)
+          .map { gs =>
+            println(gs)
+            tokenPurposedClaim.targetGroups match {
+              case Right(names) => gs.forall(x => names.contains(x.name))
+              case Left(uuids) => gs.forall(x => uuids.contains(x.id))
+            }
+          }
+      } else Task.delay(true)
+
+      _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
+
     } yield {
       true
     }

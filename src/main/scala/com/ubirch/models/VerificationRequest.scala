@@ -1,3 +1,5 @@
 package com.ubirch.models
 
-case class VerificationRequest(token: String)
+import java.util.UUID
+
+case class VerificationRequest(token: String, identity: UUID)
