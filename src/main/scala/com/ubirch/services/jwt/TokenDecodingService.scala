@@ -21,16 +21,9 @@ class DefaultTokenDecodingService @Inject() (jsonConverterService: JsonConverter
   def decodeAndVerify(jwt: String, publicKey: PublicKey): Try[JValue] = {
     (for {
       (_, p, _) <- Jwt.decodeRawAll(jwt, publicKey, Seq(JwtAlgorithm.ES256))
-
       all <- jsonConverterService.toJValue(p).toTry
         .recover { case e: Exception => throw InvalidAllClaims(e.getMessage, jwt) }
-
-    } yield {
-      all
-    }).recoverWith {
-      case e: InvalidAllClaims =>
-        logger.error(s"invalid_token_all_claims=${e.getMessage}", e)
-        Failure(e)
+    } yield all).recoverWith {
       case e: Exception =>
         logger.error(s"invalid_token=${e.getMessage}", e)
         Failure(e)
