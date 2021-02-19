@@ -29,8 +29,8 @@ object TokenApi extends TokenManager {
       val isBearer = x.toLowerCase == "bearer"
       val claims = tokenVerification.decodeAndVerify(y)
       if (isBearer && claims.isSuccess) claims
-      else Failure(InvalidToken("Invalid Check", "Either is not Bearer or extraction failed."))
-    case _ => Failure(InvalidToken("Invalid Elements", "The token definition seems not to have the required parts"))
+      else Failure(InvalidClaimException("Invalid Check", "Either is not Bearer or extraction failed."))
+    case _ => Failure(InvalidClaimException("Invalid Elements", "The token definition seems not to have the required parts"))
   }
 
   override def decodeAndVerify(jwt: String): Try[Claims] = tokenVerification.decodeAndVerify(jwt)

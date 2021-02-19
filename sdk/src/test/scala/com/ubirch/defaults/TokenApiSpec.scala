@@ -21,7 +21,6 @@ class TokenApiSpec extends TestBase {
           assert(claims.validateOrigin(Some("http://verification.dev.ubirch.com")).isSuccess)
           assert(claims.validatePurpose.filter(_ == "King Dude - Concert").isSuccess)
 
-        case Failure(exception: TokenSDKException) => fail(exception)
         case Failure(exception) => fail(exception)
       }
 

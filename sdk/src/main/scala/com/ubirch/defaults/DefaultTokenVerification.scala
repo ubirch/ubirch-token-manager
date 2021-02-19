@@ -29,38 +29,32 @@ class DefaultTokenVerification @Inject() (
       (_, p, _) <- Jwt.decodeRawAll(jwt, tokenPublicKey.publicKey, Seq(JwtAlgorithm.ES256))
 
       all <- jsonConverterService.toJValue(p).toTry
-        .recover { case e: Exception => throw InvalidAllClaims(e.getMessage, jwt) }
+        .recover { case e: Exception => throw InvalidClaimException(e.getMessage, jwt) }
 
       claims = new Claims(jwt, all)
 
       isIssuerValid <- Try(claims.issuer).map(_ == validIssuer)
-      _ = if (!isIssuerValid) throw InvalidSpecificClaim("Invalid issuer", p)
+      _ = if (!isIssuerValid) throw InvalidClaimException("Invalid issuer", p)
 
       isAudienceValid <- Try(claims.audiences).map(_.contains(validAudience))
-      _ = if (!isAudienceValid) throw InvalidSpecificClaim("Invalid audience", p)
+      _ = if (!isAudienceValid) throw InvalidClaimException("Invalid audience", p)
 
       _ <- Try(claims.subject)
         .filter(_.nonEmpty)
         .map(UUID.fromString)
-        .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }
+        .recover { case e: Exception => throw InvalidClaimException(e.getMessage, p) }
 
       _ <- Try(claims.scopes).filter(_.exists(validScopes.contains))
-        .recover { case _: Exception => throw InvalidSpecificClaim(s"Invalid Scopes :: ${claims.scopes} not found in $validScopes", p) }
+        .recover { case _: Exception => throw InvalidClaimException(s"Invalid Scopes :: ${claims.scopes} not found in $validScopes", p) }
 
       _ <- Try(claims.purpose).filter(_.nonEmpty)
-        .recover { case e: Exception => throw InvalidSpecificClaim(e.getMessage, p) }
+        .recover { case e: Exception => throw InvalidClaimException(e.getMessage, p) }
 
     } yield {
       claims
     }).recoverWith {
-      case e: InvalidSpecificClaim =>
-        logger.error(s"invalid_token_specific_claim=${e.getMessage}", e)
-        Failure(e)
-      case e: InvalidAllClaims =>
-        logger.error(s"invalid_token_all_claims=${e.getMessage}", e)
-        Failure(e)
-      case e: InvalidOtherClaims =>
-        logger.error(s"invalid_token_other_claims=${e.getMessage}", e)
+      case e: InvalidClaimException =>
+        logger.error(s"invalid_claim=${e.getMessage}", e)
         Failure(e)
       case e: Exception =>
         logger.error(s"invalid_token=${e.getMessage}", e)

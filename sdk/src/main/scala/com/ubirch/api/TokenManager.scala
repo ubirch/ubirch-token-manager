@@ -5,7 +5,6 @@ import java.security.PublicKey
 import java.util.UUID
 
 import com.ubirch.crypto.PubKey
-import com.ubirch.defaults.{ InvalidOrigin, InvalidUUID }
 import org.json4s.JsonAST.{ JArray, JField }
 import org.json4s.{ JObject, JString, JValue, JsonInput }
 
@@ -34,6 +33,12 @@ trait JsonConverterService {
   def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T
 }
 
+class TokenSDKException(message: String, value: String) extends Exception(message) {
+  def getValue: String = value
+}
+
+case class InvalidClaimException(message: String, value: String) extends TokenSDKException(message, value)
+
 class Claims(val token: String, val all: JValue) {
 
   import Claims._
@@ -56,7 +61,7 @@ class Claims(val token: String, val all: JValue) {
   def validateIdentity(uuid: UUID): Try[UUID] = {
     val res = if (isWildCard) true else targetIdentities.contains(uuid)
     if (res) Success(uuid)
-    else Failure(InvalidUUID("Invalid UUID", s"upp_uuid_not_equals_target_identities=${uuid} != ${targetIdentities.map(_.toString).mkString(",")}"))
+    else Failure(InvalidClaimException("Invalid UUID", s"upp_uuid_not_equals_target_identities=${uuid} != ${targetIdentities.map(_.toString).mkString(",")}"))
   }
 
   def validateOrigin(maybeOrigin: Option[String]): Try[List[URL]] = {
@@ -66,7 +71,7 @@ class Claims(val token: String, val all: JValue) {
     } yield res) match {
       case Success(true) => Success(originDomains)
       case _ =>
-        Failure(InvalidOrigin("Invalid Origin", s"origin_not_equals_origin_domains=${maybeOrigin.filter(_.nonEmpty).getOrElse("NO-ORIGIN")} != ${originDomains.map(_.toString).mkString(",")}"))
+        Failure(InvalidClaimException("Invalid Origin", s"origin_not_equals_origin_domains=${maybeOrigin.filter(_.nonEmpty).getOrElse("NO-ORIGIN")} != ${originDomains.map(_.toString).mkString(",")}"))
     }
   }
 
