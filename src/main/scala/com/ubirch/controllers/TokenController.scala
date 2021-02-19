@@ -27,7 +27,7 @@ class TokenController @Inject() (
     jsonConverterService: JsonConverterService,
     publicKeyPoolService: PublicKeyPoolService,
     tokenDecodingService: TokenDecodingService,
-    tokenStoreService: TokenService,
+    tokenService: TokenService,
     tokenKeyService: TokenKeyService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
   extends ControllerBase with KeycloakBearerAuthenticationSupport {
@@ -92,7 +92,7 @@ class TokenController @Inject() (
       asyncResult("create_generic_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
-          res <- tokenStoreService.create(token, readBody.extracted, 'generic)
+          res <- tokenService.create(token, readBody.extracted, 'generic)
             .map { tkc => Ok(Good(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
@@ -145,7 +145,7 @@ class TokenController @Inject() (
       asyncResult("create_purpose_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenPurposedClaim](t => t.camelizeKeys))
-          res <- tokenStoreService.create(token, readBody.extracted)
+          res <- tokenService.create(token, readBody.extracted)
             .map { tkc => Ok(Good(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
@@ -175,7 +175,7 @@ class TokenController @Inject() (
     authenticated() { token =>
       asyncResult("list_tokens") { _ => _ =>
         for {
-          res <- tokenStoreService.list(token)
+          res <- tokenService.list(token)
             .map { tks => Ok(Good(tks)) }
             .onErrorHandle {
               case e: ServiceException =>
@@ -209,7 +209,7 @@ class TokenController @Inject() (
             .map(_.map(UUID.fromString).get) // We want to know if failed or not as soon as possible
             .onErrorHandle(_ => throw InvalidParamException("Invalid OwnerId", "Wrong owner param"))
 
-          res <- tokenStoreService.get(token, id)
+          res <- tokenService.get(token, id)
             .map { tks => Ok(Good(tks.orNull)) }
             .onErrorHandle {
               case e: ServiceException =>
@@ -299,7 +299,7 @@ class TokenController @Inject() (
             .map(_.map(UUID.fromString).get) // We want to know if failed or not as soon as possible
             .onErrorHandle(_ => throw DeletingException("Invalid Token", "No tokenId parameter found in path"))
 
-          res <- tokenStoreService.delete(accessToken, tokenId)
+          res <- tokenService.delete(accessToken, tokenId)
             .map { dr =>
               if (dr) Ok(Good("Token deleted"))
               else BadRequest(NOK.tokenDeleteError("Failed to delete token"))
