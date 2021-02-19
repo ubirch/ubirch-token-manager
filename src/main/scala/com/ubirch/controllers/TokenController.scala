@@ -163,7 +163,14 @@ class TokenController @Inject() (
     }
   }
 
-  post("/v1/verify") {
+  val getV1Verify: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Boolean]("getV1Verify")
+      summary "Verifies Ubirch Token"
+      description "verifies token and identity"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters swaggerTokenAsHeader)
+
+  post("/v1/verify", operation(getV1Verify)) {
 
     asyncResult("verify_token") { _ => _ =>
       for {
