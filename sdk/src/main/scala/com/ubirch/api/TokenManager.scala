@@ -51,17 +51,33 @@ class Claims(val token: String, val all: JValue) {
   }
 
   val purpose: String = extractString("purpose", all)
-  val targetIdentities: List[UUID] = extractListUUID("target_identities", all)
-  val isWildCard: Boolean = extractListString("target_identities", all).contains("*")
+
+  val targetIdentities: Either[List[UUID], List[String]] = extractListUUID("target_identities", all) match {
+    case Nil => Right(extractListString("target_identities", all).distinct)
+    case xs => Left(xs.distinct)
+  }
+  val targetIdentitiesMerged: List[String] = targetIdentities.left.map(_.map(_.toString)).merge
+  val isTargetIdentitiesStarWildCard: Boolean = targetIdentities.right.map(_.contains("*")).fold(_ => false, x => x)
+  val hasMaybeTargetIdentities: Boolean = targetIdentitiesMerged.exists(_.nonEmpty)
+
+  val targetGroups: Either[List[UUID], List[String]] = extractListUUID("target_groups", all) match {
+    case Nil => Right(extractListString("target_groups", all).distinct)
+    case xs => Left(xs.distinct)
+  }
+  val hasMaybeGroups: Boolean = targetGroups.left.map(_.map(_.toString)).merge.exists(_.nonEmpty)
+
   val scopes: List[String] = extractListString("scopes", all)
   val originDomains: List[URL] = extractListURL("origin_domains", all)
 
   def validatePurpose: Try[String] = Try(purpose.nonEmpty && purpose.length > 3).map(_ => purpose)
 
   def validateIdentity(uuid: UUID): Try[UUID] = {
-    val res = if (isWildCard) true else targetIdentities.contains(uuid)
+    val res =
+      if (isTargetIdentitiesStarWildCard) true
+      else targetIdentities.left.map(_.contains(uuid)).isLeft
+
     if (res) Success(uuid)
-    else Failure(InvalidClaimException("Invalid UUID", s"upp_uuid_not_equals_target_identities=${uuid} != ${targetIdentities.map(_.toString).mkString(",")}"))
+    else Failure(InvalidClaimException("Invalid UUID", s"upp_uuid_not_equals_target_identities=${uuid} != ${targetIdentitiesMerged.mkString(",")}"))
   }
 
   def validateOrigin(maybeOrigin: Option[String]): Try[List[URL]] = {

@@ -1,8 +1,10 @@
 package com.ubirch.defaults
 
 import com.ubirch.TestBase
-
 import java.util.UUID
+
+import com.ubirch.api.TokenSDKException
+
 import scala.util.{ Failure, Success }
 
 class TokenApiSpec extends TestBase {
@@ -17,6 +19,9 @@ class TokenApiSpec extends TestBase {
         case Success(claims) =>
           assert(claims.subject == "963995ed-ce12-4ea5-89dc-b181701d1d7b")
           assert(claims.audiences.length == 3)
+          assert(claims.targetIdentities.isLeft)
+          assert(!claims.hasMaybeGroups)
+          assert(claims.issuer == "https://token.dev.ubirch.com")
           assert(claims.validateIdentity(UUID.fromString("840b7e21-03e9-4de7-bb31-0b9524f3b500")).isSuccess)
           assert(claims.validateOrigin(Some("http://verification.dev.ubirch.com")).isSuccess)
           assert(claims.validatePurpose.filter(_ == "King Dude - Concert").isSuccess)
