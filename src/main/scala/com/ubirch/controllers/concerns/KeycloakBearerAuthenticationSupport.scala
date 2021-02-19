@@ -53,12 +53,10 @@ class KeycloakBearerAuthStrategy(
           case _ => Nil
         }
 
-      t = Token(token, claims, sub, name, email, roles)
-      if t.isUser || t.isAdmin
+      keyCloakToken = Token(token, claims, sub, name, email, roles)
+      if keyCloakToken.isUser || keyCloakToken.isAdmin
 
-    } yield {
-      t
-    }
+    } yield keyCloakToken
 
   }
 
