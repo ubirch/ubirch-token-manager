@@ -89,7 +89,7 @@ class TokenController @Inject() (
   post("/v1/generic/create", operation(postV1TokenCreate)) {
 
     authenticated(_.isAdmin) { token =>
-      asyncResult("create_token") { _ => _ =>
+      asyncResult("create_generic_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
           res <- tokenStoreService.create(token, readBody.extracted, 'generic)
@@ -142,7 +142,7 @@ class TokenController @Inject() (
   post("/v1/create", operation(postV1TokenVerificationCreate)) {
 
     authenticated() { token =>
-      asyncResult("create_verification_token") { _ => _ =>
+      asyncResult("create_purpose_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenPurposedClaim](t => t.camelizeKeys))
           res <- tokenStoreService.create(token, readBody.extracted)
