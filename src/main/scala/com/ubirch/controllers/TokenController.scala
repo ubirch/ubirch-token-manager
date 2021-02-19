@@ -7,7 +7,7 @@ import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService, TokenKeyService, TokenStoreService }
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService, TokenKeyService, TokenService }
 import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
 import monix.eval.Task
@@ -27,7 +27,7 @@ class TokenController @Inject() (
     jsonConverterService: JsonConverterService,
     publicKeyPoolService: PublicKeyPoolService,
     tokenDecodingService: TokenDecodingService,
-    tokenStoreService: TokenStoreService,
+    tokenStoreService: TokenService,
     tokenKeyService: TokenKeyService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
   extends ControllerBase with KeycloakBearerAuthenticationSupport {

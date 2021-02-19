@@ -14,7 +14,7 @@ import javax.inject.{ Inject, Singleton }
 
 import com.ubirch.services.state.StateVerifier
 
-trait TokenStoreService {
+trait TokenService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
   def create(accessToken: Token, tokenClaim: TokenPurposedClaim): Task[TokenCreationData]
   def list(accessToken: Token): Task[List[TokenRow]]
@@ -23,13 +23,13 @@ trait TokenStoreService {
 }
 
 @Singleton
-class DefaultTokenStoreService @Inject() (
+class DefaultTokenService @Inject() (
     config: Config,
     tokenKey: TokenKeyService,
     tokenEncodingService: TokenEncodingService,
     stateVerifier: StateVerifier,
     tokensDAO: TokensDAO
-) extends TokenStoreService with TaskHelpers with LazyLogging {
+) extends TokenService with TaskHelpers with LazyLogging {
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
 

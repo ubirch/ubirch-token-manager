@@ -33,7 +33,7 @@ class Binder
   def JsonConverterService: ScopedBindingBuilder = bind(classOf[JsonConverterService]).to(classOf[DefaultJsonConverterService])
   def ClusterService: ScopedBindingBuilder = bind(classOf[ClusterService]).to(classOf[DefaultClusterService])
   def ConnectionService: ScopedBindingBuilder = bind(classOf[ConnectionService]).to(classOf[DefaultConnectionService])
-  def TokenStoreService: ScopedBindingBuilder = bind(classOf[TokenStoreService]).to(classOf[DefaultTokenStoreService])
+  def TokenService: ScopedBindingBuilder = bind(classOf[TokenService]).to(classOf[DefaultTokenService])
   def TokenEncodingService: ScopedBindingBuilder = bind(classOf[TokenEncodingService]).to(classOf[DefaultTokenEncodingService])
   def TokenDecodingService: ScopedBindingBuilder = bind(classOf[TokenDecodingService]).to(classOf[DefaultTokenDecodingService])
   def PublicKeyDiscoveryService: ScopedBindingBuilder = bind(classOf[PublicKeyDiscoveryService]).to(classOf[DefaultPublicKeyDiscoveryService])
@@ -53,7 +53,7 @@ class Binder
     JsonConverterService
     ClusterService
     ConnectionService
-    TokenStoreService
+    TokenService
     TokenEncodingService
     TokenDecodingService
     PublicKeyDiscoveryService
