@@ -8,7 +8,7 @@ import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
 import com.ubirch.models._
 import com.ubirch.util.TaskHelpers
-import com.ubirch.{ InvalidSpecificClaim, TokenEncodingException }
+import com.ubirch.{ InvalidClaimException, TokenEncodingException }
 import monix.eval.Task
 import javax.inject.{ Inject, Singleton }
 
@@ -36,7 +36,7 @@ class DefaultTokenService @Inject() (
   override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
 
     for {
-      _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidSpecificClaim(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
+      _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidClaimException(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
 
       jwtID = UUID.randomUUID()
 
@@ -60,11 +60,11 @@ class DefaultTokenService @Inject() (
   override def create(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[TokenCreationData] = {
     for {
 
-      _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidSpecificClaim("Invalid Target Identities or Groups", "Either have identities or groups"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidSpecificClaim("Invalid Purpose", "Purpose is not correct."))
-      _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidSpecificClaim("Invalid Target Identities", "Target Identities are empty or invalid"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidSpecificClaim("Invalid Origin Domains", "Origin Domains are empty or invalid"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidSpecificClaim("Invalid Scopes", "Scopes are empty or invalid"))
+      _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidClaimException("Invalid Target Identities or Groups", "Either have identities or groups"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
+      _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
 
       groupsCheck <- if (tokenPurposedClaim.hasMaybeGroups) {
         stateVerifier
@@ -77,7 +77,7 @@ class DefaultTokenService @Inject() (
           }
       } else Task.delay(true)
 
-      _ <- earlyResponseIf(!groupsCheck)(InvalidSpecificClaim("Invalid Groups", "Groups couldn't be validated"))
+      _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
       tokeCreationData <- create(accessToken, tokenClaim, 'purposed_claim)
