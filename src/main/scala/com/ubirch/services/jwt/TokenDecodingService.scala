@@ -1,7 +1,7 @@
 package com.ubirch
 package services.jwt
 
-import java.security.PublicKey
+import java.security.{ Key, PublicKey }
 
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.services.formats.JsonConverterService
@@ -13,12 +13,17 @@ import scala.util.{ Failure, Try }
 
 trait TokenDecodingService {
   def decodeAndVerify(jwt: String, publicKey: PublicKey): Try[JValue]
+  def decodeAndVerify(jwt: String, publicKey: Key): Try[JValue]
 }
 
 @Singleton
 class DefaultTokenDecodingService @Inject() (jsonConverterService: JsonConverterService) extends TokenDecodingService with LazyLogging {
 
-  def decodeAndVerify(jwt: String, publicKey: PublicKey): Try[JValue] = {
+  override def decodeAndVerify(jwt: String, publicKey: Key): Try[JValue] = {
+    decodeAndVerify(jwt, publicKey.asInstanceOf[PublicKey])
+  }
+
+  override def decodeAndVerify(jwt: String, publicKey: PublicKey): Try[JValue] = {
     (for {
       (_, p, _) <- Jwt.decodeRawAll(jwt, publicKey, Seq(JwtAlgorithm.ES256))
       all <- jsonConverterService.toJValue(p).toTry

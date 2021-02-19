@@ -19,8 +19,7 @@ class KeycloakBearerAuthStrategy(
   override protected def validate(token: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[Token] = {
     for {
       key <- publicKeyPoolService.getDefaultKey
-
-      claims <- tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey]).toOption
+      claims <- tokenDecodingService.decodeAndVerify(token, key).toOption
 
       sub <- claims.findField(_._1 == "sub").map(_._2).collect {
         case JsonAST.JString(s) => s
