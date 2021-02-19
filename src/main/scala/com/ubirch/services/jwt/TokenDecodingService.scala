@@ -9,15 +9,16 @@ import org.json4s.JValue
 import pdi.jwt.{ Jwt, JwtAlgorithm }
 
 import javax.inject.{ Inject, Singleton }
+import scala.util.{ Failure, Try }
 
 trait TokenDecodingService {
-  def decodeAndVerify(jwt: String, publicKey: PublicKey): Option[JValue]
+  def decodeAndVerify(jwt: String, publicKey: PublicKey): Try[JValue]
 }
 
 @Singleton
 class DefaultTokenDecodingService @Inject() (jsonConverterService: JsonConverterService) extends TokenDecodingService with LazyLogging {
 
-  def decodeAndVerify(jwt: String, publicKey: PublicKey): Option[JValue] = {
+  def decodeAndVerify(jwt: String, publicKey: PublicKey): Try[JValue] = {
     (for {
       (_, p, _) <- Jwt.decodeRawAll(jwt, publicKey, Seq(JwtAlgorithm.ES256))
 
@@ -25,15 +26,15 @@ class DefaultTokenDecodingService @Inject() (jsonConverterService: JsonConverter
         .recover { case e: Exception => throw InvalidAllClaims(e.getMessage, jwt) }
 
     } yield {
-      Some(all)
-    }).recover {
+      all
+    }).recoverWith {
       case e: InvalidAllClaims =>
         logger.error(s"invalid_token_all_claims=${e.getMessage}", e)
-        None
+        Failure(e)
       case e: Exception =>
         logger.error(s"invalid_token=${e.getMessage}", e)
-        None
-    }.getOrElse(None)
+        Failure(e)
+    }
 
   }
 

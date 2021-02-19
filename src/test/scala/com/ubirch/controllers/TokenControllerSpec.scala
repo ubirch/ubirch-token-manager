@@ -92,7 +92,7 @@ class TokenControllerSpec
         val token = good.data.asInstanceOf[Map[String, String]]("token")
         val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
         val claims = tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
-        assert(claims.isDefined)
+        assert(claims.isSuccess)
       }
 
     }

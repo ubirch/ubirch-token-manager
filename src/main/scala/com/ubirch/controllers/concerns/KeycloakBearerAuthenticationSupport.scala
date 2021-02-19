@@ -20,7 +20,7 @@ class KeycloakBearerAuthStrategy(
     for {
       key <- publicKeyPoolService.getDefaultKey
 
-      claims <- tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
+      claims <- tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey]).toOption
 
       sub <- claims.findField(_._1 == "sub").map(_._2).collect {
         case JsonAST.JString(s) => s
