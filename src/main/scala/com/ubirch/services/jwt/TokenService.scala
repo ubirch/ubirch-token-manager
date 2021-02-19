@@ -12,6 +12,7 @@ import com.ubirch.{ InvalidClaimException, TokenEncodingException }
 import monix.eval.Task
 import javax.inject.{ Inject, Singleton }
 
+import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.state.StateVerifier
 
 trait TokenService {
@@ -20,6 +21,7 @@ trait TokenService {
   def list(accessToken: Token): Task[List[TokenRow]]
   def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
+  def verify(verificationRequest: VerificationRequest): Task[Boolean]
 }
 
 @Singleton
@@ -27,8 +29,10 @@ class DefaultTokenService @Inject() (
     config: Config,
     tokenKey: TokenKeyService,
     tokenEncodingService: TokenEncodingService,
+    tokenDecodingService: TokenDecodingService,
     stateVerifier: StateVerifier,
-    tokensDAO: TokensDAO
+    tokensDAO: TokensDAO,
+    jsonConverterService: JsonConverterService
 ) extends TokenService with TaskHelpers with LazyLogging {
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
@@ -117,4 +121,24 @@ class DefaultTokenService @Inject() (
     }
   }
 
+  override def verify(verificationRequest: VerificationRequest): Task[Boolean] = {
+
+    for {
+      tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(verificationRequest.token, tokenKey.key.getPublicKey))
+      tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
+      tokenPurposedClaim <- Task.delay(jsonConverterService.fromJsonInput[TokenPurposedClaim](tokenString) { x =>
+        x.camelizeKeys.transformField { case ("sub", value) => ("tenantId", value) }
+      })
+
+      _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidClaimException("Invalid Target Identities or Groups", "Either have identities or groups"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
+      _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
+      _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
+
+    } yield {
+      true
+    }
+
+  }
 }

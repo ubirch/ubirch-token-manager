@@ -2,9 +2,10 @@ package com.ubirch.services.formats
 
 import org.json4s.native.JsonMethods.{ compact, render }
 import org.json4s.native.Serialization.{ read, write }
-import org.json4s.{ Formats, JValue }
-
+import org.json4s.{ Formats, JValue, JsonInput }
 import javax.inject._
+
+import org.json4s.native.JsonMethods
 
 /**
   * Represents an internal service or component for managing Json.
@@ -15,6 +16,7 @@ trait JsonConverterService {
   def toJValue(value: String): Either[Exception, JValue]
   def toJValue[T](obj: T): Either[Exception, JValue]
   def as[T: Manifest](value: String): Either[Exception, T]
+  def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T
 }
 
 /**
@@ -24,9 +26,9 @@ trait JsonConverterService {
 @Singleton
 class DefaultJsonConverterService @Inject() (implicit formats: Formats) extends JsonConverterService {
 
-  def toString(value: JValue): String = compact(render(value))
+  override def toString(value: JValue): String = compact(render(value))
 
-  def toString[T](t: T): Either[Exception, String] = {
+  override def toString[T](t: T): Either[Exception, String] = {
     try {
       Right(write[T](t))
     } catch {
@@ -35,7 +37,7 @@ class DefaultJsonConverterService @Inject() (implicit formats: Formats) extends 
     }
   }
 
-  def toJValue(value: String): Either[Exception, JValue] = {
+  override def toJValue(value: String): Either[Exception, JValue] = {
     try {
       Right(read[JValue](value))
     } catch {
@@ -44,20 +46,25 @@ class DefaultJsonConverterService @Inject() (implicit formats: Formats) extends 
     }
   }
 
-  def toJValue[T](obj: T): Either[Exception, JValue] = {
+  override def toJValue[T](obj: T): Either[Exception, JValue] = {
     for {
       s <- toString[T](obj)
       jv <- toJValue(s)
     } yield jv
   }
 
-  def as[T: Manifest](value: String): Either[Exception, T] = {
+  override def as[T: Manifest](value: String): Either[Exception, T] = {
     try {
       Right(read[T](value))
     } catch {
       case e: Exception =>
         Left(e)
     }
+  }
+
+  override def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T = {
+    val jv = JsonMethods.parse(json, formats.wantsBigDecimal, formats.wantsBigInt)
+    f(jv).extract(formats, mf)
   }
 
 }
