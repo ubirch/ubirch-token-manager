@@ -40,6 +40,6 @@ object TokenApi extends TokenManager {
   }
 
   override def decodeAndVerify(jwt: String): Try[Claims] = tokenVerification.decodeAndVerify(jwt)
-  override def verify(accessToken: String, identity: UUID): Task[Boolean] = externalStateVerifier.verify(VerificationRequest(accessToken, identity))
+  override def externalStateVerify(accessToken: String, identity: UUID): Task[Boolean] = externalStateVerifier.verify(VerificationRequest(accessToken, identity))
 
 }

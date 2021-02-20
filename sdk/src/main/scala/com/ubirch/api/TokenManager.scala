@@ -14,7 +14,7 @@ import scala.util.{ Failure, Success, Try }
 trait TokenManager {
   def decodeAndVerify(jwt: String): Try[Claims]
   def getClaims(token: String): Try[Claims]
-  def verify(accessToken: String, identity: UUID): Task[Boolean]
+  def externalStateVerify(accessToken: String, identity: UUID): Task[Boolean]
 }
 
 trait TokenPublicKey {
@@ -105,7 +105,10 @@ class Claims(val token: String, val all: JValue) {
     }
   }
 
-  def isSubjectUUID: Try[UUID] = Try(UUID.fromString(subject))
+  def isSubjectUUID: Try[UUID] = Try(UUID.fromString(subject)).recoverWith {
+    case _: Exception =>
+      Failure(InvalidClaimException("Invalid Subject As UUID", s"subject_not_convertible_to_uuid=$subject"))
+  }
 
 }
 
