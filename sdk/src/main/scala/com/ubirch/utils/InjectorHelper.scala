@@ -54,17 +54,3 @@ object InjectorHelper {
     */
   case class InjectorCreationException(message: String) extends Exception(message)
 }
-
-/**
-  * Represents an assembly for the boot process
-  * @param modules It is the modules of the system
-  */
-abstract class Boot(modules: List[Module]) extends InjectorHelper(modules) {
-  def *[T](block: => T): Unit =
-    try { val _ = block } catch {
-      case e: Exception =>
-        logger.error("Exiting after exception found = {}", e.getMessage)
-        Thread.sleep(5000)
-        sys.exit(1)
-    }
-}
