@@ -9,6 +9,7 @@ import monix.eval.Task
 import org.json4s.JsonAST.{ JArray, JField }
 import org.json4s.{ JObject, JString, JValue, JsonInput }
 
+import javax.crypto.SecretKey
 import scala.util.{ Failure, Success, Try }
 
 trait TokenManager {
@@ -24,6 +25,11 @@ trait TokenPublicKey {
 
 trait TokenVerification {
   def decodeAndVerify(jwt: String): Try[Claims]
+}
+
+trait HMAC {
+  def getHMAC(data: Array[Byte], macKey: SecretKey): String
+  def getHMAC(data: Array[Byte]): String
 }
 
 trait JsonConverterService {
