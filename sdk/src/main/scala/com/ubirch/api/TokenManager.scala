@@ -63,9 +63,7 @@ class Claims(val token: String, val all: JValue) {
     case Nil => List(extractString(AUDIENCE, all))
     case xs => xs
   }
-
   val purpose: String = extractString("purpose", all)
-
   val targetIdentities: Either[List[UUID], List[String]] = extractListUUID("target_identities", all) match {
     case Nil => Right(extractListString("target_identities", all).distinct)
     case xs => Left(xs.distinct)
