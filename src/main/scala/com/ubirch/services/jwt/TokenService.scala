@@ -38,7 +38,6 @@ class DefaultTokenService @Inject() (
   private final val ENV = config.getString(GenericConfPaths.ENV)
 
   override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
-
     for {
       _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidClaimException(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
 
@@ -58,29 +57,12 @@ class DefaultTokenService @Inject() (
     } yield {
       TokenCreationData(jwtID, claims, token)
     }
-
   }
 
   override def create(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[TokenCreationData] = {
     for {
-
-      _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidClaimException("Invalid Target Identities or Groups", "Either have identities or groups"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
-      _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
-
-      groupsCheck <- if (tokenPurposedClaim.hasMaybeGroups) {
-        stateVerifier
-          .groups(tokenPurposedClaim.tenantId, accessToken.email)
-          .map { gs =>
-            tokenPurposedClaim.targetGroups match {
-              case Right(names) => gs.forall(x => names.contains(x.name))
-              case Left(uuids) => gs.forall(x => uuids.contains(x.id))
-            }
-          }
-      } else Task.delay(true)
-
+      _ <- localVerify(tokenPurposedClaim)
+      groupsCheck <- verifyGroupsForCreation(accessToken, tokenPurposedClaim)
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
@@ -122,36 +104,63 @@ class DefaultTokenService @Inject() (
   }
 
   override def verify(verificationRequest: VerificationRequest): Task[Boolean] = {
-
     for {
-      tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(verificationRequest.token, tokenKey.key.getPublicKey))
-      tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
-      tokenPurposedClaim <- Task.delay(jsonConverterService.fromJsonInput[TokenPurposedClaim](tokenString) { x =>
-        x.camelizeKeys.transformField { case ("sub", value) => ("tenantId", value) }
-      })
 
-      _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidClaimException("Invalid Target Identities or Groups", "Either have identities or groups"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
-      _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
-      _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
-
-      groupsCheck <- if (tokenPurposedClaim.hasMaybeGroups) {
-        stateVerifier
-          .groups(verificationRequest.identity)
-          .map { gs =>
-            tokenPurposedClaim.targetGroups match {
-              case Right(names) => gs.forall(x => names.contains(x.name))
-              case Left(uuids) => gs.forall(x => uuids.contains(x.id))
-            }
-          }
-      } else Task.delay(true)
+      tokenPurposedClaim <- buildTokenClaimFromVerificationRequest(verificationRequest)
+      _ <- localVerify(tokenPurposedClaim)
+      groupsCheck <- verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
 
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
     } yield {
       true
     }
-
   }
+
+  def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
+    for {
+      tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(verificationRequest.token, tokenKey.key.getPublicKey))
+      tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
+      tokenPurposedClaim <- Task.delay(jsonConverterService.fromJsonInput[TokenPurposedClaim](tokenString) { x =>
+        x.camelizeKeys.transformField { case ("sub", value) => ("tenantId", value) }
+      })
+    } yield {
+      tokenPurposedClaim
+    }
+  }
+
+  def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {
+    _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidClaimException("Invalid Target Identities or Groups", "Either have identities or groups"))
+    _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
+    _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
+    _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
+    _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
+  } yield true
+
+  def verifyGroupsForCreation(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+    if (tokenPurposedClaim.hasMaybeGroups) {
+      stateVerifier
+        .groups(tokenPurposedClaim.tenantId, accessToken.email)
+        .map { gs =>
+          tokenPurposedClaim.targetGroups match {
+            case Right(names) => gs.forall(x => names.contains(x.name))
+            case Left(uuids) => gs.forall(x => uuids.contains(x.id))
+          }
+        }
+    } else Task.delay(true)
+  }
+
+  def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+    if (tokenPurposedClaim.hasMaybeGroups) {
+      stateVerifier
+        .groups(verificationRequest.identity)
+        .map { gs =>
+          tokenPurposedClaim.targetGroups match {
+            case Right(names) => gs.forall(x => names.contains(x.name))
+            case Left(uuids) => gs.forall(x => uuids.contains(x.id))
+          }
+        }
+    } else Task.delay(true)
+  }
+
 }
