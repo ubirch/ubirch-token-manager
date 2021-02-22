@@ -12,14 +12,16 @@ This service knows about jwt tokens.
 8. [Verification Token Claims](#verification-token-claims)
 9. [Keycloak and Responses](#keycloak-token-and-responses)
 10. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
-11. [Swagger](#swagger)
-12. [Some Workflows](#some-workflows)
+11. [A Light SDK](#a-light-sdk)    
+12. [Swagger](#swagger)
+13. [Some Workflows](#some-workflows)
 
 ## Steps to prepare a request
 
 1. Get your keycloak token.
 2. Prepare the data object - when needed (creation).
 3. Prepare the request and send.
+4. Have fun.
 
 ## Token Claim Object
 
@@ -371,6 +373,15 @@ curl -s -X GET $host/api/tokens/v1/jwk | jq .
 
 This call returns a json object whose data field is the public key. This public key is in JWK format.
 
+## A Light SDK
+
+In order to facilitate the integration of some of the most important functions of the Token Manager when verifying Token in other Services, a light SDK has been included in the project.
+
+The interface offers these basic operations:
+
+* **decodeAndVerify** ->  It allows a basic verification. It verifies that the token is well-built, that its standard claims are checked. I
+* **getClaims** -> It the same as the previous operation but basically performing the verification on the header as it is.
+* **externalStateVerify**: Task[Boolean] -> Depending on the kinds of claims, there are some that require an external verification, this operations starts a verification against the Token Manager. Useful for groups and revocation claims.
 
 ## Swagger
 
