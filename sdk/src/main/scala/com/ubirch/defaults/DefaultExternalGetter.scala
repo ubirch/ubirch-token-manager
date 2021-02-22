@@ -2,13 +2,12 @@ package com.ubirch.defaults
 
 import com.typesafe.config.Config
 import com.ubirch.api.{ ExternalResponseData, ExternalStateGetter }
-import com.ubirch.utils.Paths
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.{ HttpPost, HttpUriRequest }
 import org.apache.http.impl.client.{ CloseableHttpClient, HttpClients }
 import org.apache.http.util.EntityUtils
-import javax.inject.{ Inject, Singleton }
 
+import javax.inject.{ Inject, Singleton }
 import org.apache.http.entity.ByteArrayEntity
 
 @Singleton

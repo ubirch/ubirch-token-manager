@@ -1,4 +1,4 @@
-package com.ubirch.utils
+package com.ubirch.api
 
 import com.google.inject.{ Guice, Injector, Module }
 import com.typesafe.scalalogging.LazyLogging

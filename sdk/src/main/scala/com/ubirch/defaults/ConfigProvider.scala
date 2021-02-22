@@ -1,8 +1,8 @@
-package com.ubirch.utils
-
-import javax.inject._
+package com.ubirch.defaults
 
 import com.typesafe.config.{ Config, ConfigFactory }
+
+import javax.inject._
 
 /**
   * Configuration Provider for the Configuration Component.
@@ -10,7 +10,7 @@ import com.typesafe.config.{ Config, ConfigFactory }
 @Singleton
 class ConfigProvider extends Provider[Config] {
 
-  val default = ConfigFactory.load()
+  val default: Config = ConfigFactory.load()
 
   def conf: Config = default
 

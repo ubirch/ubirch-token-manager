@@ -1,4 +1,4 @@
-package com.ubirch.utils
+package com.ubirch.defaults
 
 object Paths {
 

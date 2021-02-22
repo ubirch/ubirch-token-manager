@@ -1,15 +1,14 @@
 package com.ubirch.defaults
 
 import java.util.UUID
+
 import javax.inject.{ Inject, Singleton }
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.api._
-import com.ubirch.utils.Paths
 import pdi.jwt.{ Jwt, JwtAlgorithm }
 
 import scala.collection.JavaConverters._
-
 import scala.util.{ Failure, Try }
 
 @Singleton

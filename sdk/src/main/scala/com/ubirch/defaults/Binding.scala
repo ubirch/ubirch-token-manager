@@ -3,7 +3,6 @@ package com.ubirch.defaults
 import com.google.inject.AbstractModule
 import com.typesafe.config.Config
 import com.ubirch.api._
-import com.ubirch.utils.{ ConfigProvider, InjectorHelper }
 import org.json4s.Formats
 
 trait Binding {
