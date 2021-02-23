@@ -2,7 +2,7 @@ package com.ubirch.api
 
 import java.net.URL
 import java.security.PublicKey
-import java.util.UUID
+import java.util.{ Date, UUID }
 
 import com.ubirch.crypto.PubKey
 import monix.eval.Task
@@ -30,6 +30,7 @@ trait TokenVerification {
 trait HMAC {
   def getHMAC(data: Array[Byte], macKey: SecretKey): String
   def getHMAC(data: Array[Byte]): String
+  def getHMAC(data: Array[Byte], time: Date): String
 }
 
 trait JsonConverterService {

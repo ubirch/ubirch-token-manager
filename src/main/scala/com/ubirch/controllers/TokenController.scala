@@ -172,7 +172,11 @@ class TokenController @Inject() (
 
   post("/v1/verify", operation(getV1Verify)) {
 
-    asyncResult("verify_token") { _ => _ =>
+    asyncResult("verify_token") { implicit request => _ =>
+
+      println(request.getHeader("X-Ubirch-Timestamp"))
+      println(request.getHeader("X-Ubirch-Signature"))
+
       for {
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
         res <- tokenService.verify(readBody.extracted)

@@ -12,7 +12,6 @@ import org.apache.http.util.EntityUtils
 
 import javax.inject.{ Inject, Singleton }
 import org.apache.http.entity.ByteArrayEntity
-import org.bouncycastle.util.Arrays
 
 @Singleton
 class DefaultExternalGetter @Inject() (config: Config, HMAC: HMAC) extends ExternalStateGetter {
@@ -31,9 +30,9 @@ class DefaultExternalGetter @Inject() (config: Config, HMAC: HMAC) extends Exter
   }
 
   def calculateHmac(body: Array[Byte]): (String, String) = {
-    val time = new Date().getTime.toString
-    val hmac = HMAC.getHMAC(Arrays.concatenate(body, time.getBytes(StandardCharsets.UTF_8)))
-    (time, hmac)
+    val time = new Date()
+    val hmac = HMAC.getHMAC(body, time)
+    (time.getTime.toString, hmac)
   }
 
   override def verify(body: Array[Byte]): ExternalResponseData[Array[Byte]] = {
