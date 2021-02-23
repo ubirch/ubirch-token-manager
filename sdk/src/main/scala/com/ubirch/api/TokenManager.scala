@@ -29,7 +29,6 @@ trait TokenVerification {
 
 trait HMAC {
   def getHMAC(data: Array[Byte], macKey: SecretKey): String
-  def getHMAC(data: Array[Byte]): String
   def getHMAC(data: Array[Byte], time: Date): String
 }
 

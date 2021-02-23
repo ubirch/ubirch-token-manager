@@ -24,11 +24,9 @@ class DefaultHMAC @Inject() (config: Config) extends HMAC {
   private final val SECRET_KEY: String = SECRET.tail.headOption.getOrElse("")
   private final val MAC_KEY = new SecretKeySpec(Base64.getDecoder.decode(SECRET_KEY), "HmacSHA256")
 
-  override def getHMAC(data: Array[Byte]): String = getHMAC(data, MAC_KEY)
-
   override def getHMAC(data: Array[Byte], time: Date): String = {
     val fullData = Arrays.concatenate(data, time.getTime.toString.getBytes(StandardCharsets.UTF_8))
-    getHMAC(fullData)
+    getHMAC(fullData, MAC_KEY)
   }
 
   def getHMAC(data: Array[Byte], macKey: SecretKey): String = {
