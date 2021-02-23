@@ -13,6 +13,7 @@ trait Binding {
       bind(classOf[TokenVerification]).to(classOf[DefaultTokenVerification])
       bind(classOf[ExternalStateGetter]).to(classOf[DefaultExternalGetter])
       bind(classOf[ExternalStateVerifier]).to(classOf[DefaultStateVerifier])
+      bind(classOf[HMAC]).to(classOf[DefaultHMAC])
 
       bind(classOf[Config]).toProvider(classOf[ConfigProvider])
       bind(classOf[Formats]).toProvider(classOf[JsonFormatsProvider])

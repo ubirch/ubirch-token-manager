@@ -143,8 +143,8 @@ class DefaultTokenService @Inject() (
         .groups(tokenPurposedClaim.tenantId, accessToken.email)
         .map { gs =>
           tokenPurposedClaim.targetGroups match {
-            case Right(names) => gs.forall(x => names.contains(x.name))
-            case Left(uuids) => gs.forall(x => uuids.contains(x.id))
+            case Right(names) => names.forall(x => gs.exists(_.name == x))
+            case Left(uuids) => uuids.forall(x => gs.exists(_.id == x))
           }
         }
     } else Task.delay(true)
