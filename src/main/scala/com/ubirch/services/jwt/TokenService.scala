@@ -106,6 +106,7 @@ class DefaultTokenService @Inject() (
   override def verify(verificationRequest: VerificationRequest): Task[Boolean] = {
     for {
 
+      _ <- verifySig(verificationRequest)
       tokenPurposedClaim <- buildTokenClaimFromVerificationRequest(verificationRequest)
       _ <- localVerify(tokenPurposedClaim)
       groupsCheck <- verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
@@ -127,6 +128,10 @@ class DefaultTokenService @Inject() (
     } yield {
       tokenPurposedClaim
     }
+  }
+
+  def verifySig(verificationRequest: VerificationRequest) = {
+    Task.delay(true)
   }
 
   def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {

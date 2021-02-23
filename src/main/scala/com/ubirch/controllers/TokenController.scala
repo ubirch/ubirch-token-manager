@@ -174,12 +174,11 @@ class TokenController @Inject() (
 
     asyncResult("verify_token") { implicit request => _ =>
 
-      println(request.getHeader("X-Ubirch-Timestamp"))
-      println(request.getHeader("X-Ubirch-Signature"))
-
       for {
+        reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp"))
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
-        res <- tokenService.verify(readBody.extracted)
+        res <- tokenService.verify(readBody.extracted.copy(signature = Some(reqSig), time = Some(reqTimestamp)))
           .map { tkv => Ok(Good(tkv)) }
           .onErrorHandle {
             case e: ServiceException =>

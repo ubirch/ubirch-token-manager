@@ -51,10 +51,15 @@ object ConfPaths {
     final val REALM_NAME = "tokenSystem.externalStateGetter.realmName"
   }
 
+  trait TokenClientsPaths {
+    final val TOKEN_CLIENTS_FILE_PATH = "tokenSystem.tokenClientsFile"
+  }
+
   object GenericConfPaths extends GenericConfPaths
   object HttpServerConfPaths extends HttpServerConfPaths
   object TokenGenPaths extends TokenGenPaths
   object TokenVerificationPaths extends TokenVerificationPaths
   object ExternalStateGetterPaths extends ExternalStateGetterPaths
+  object TokenClientsPaths extends TokenClientsPaths
 
 }
