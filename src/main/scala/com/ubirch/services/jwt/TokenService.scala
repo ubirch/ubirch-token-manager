@@ -131,7 +131,7 @@ class DefaultTokenService @Inject() (
   }
 
   def verifySig(verificationRequest: VerificationRequest) = {
-    Task.delay(true)
+    Task.delay(verificationRequest).map(_ => true)
   }
 
   def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {

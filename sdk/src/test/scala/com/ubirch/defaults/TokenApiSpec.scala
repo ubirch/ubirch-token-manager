@@ -3,8 +3,6 @@ package com.ubirch.defaults
 import com.ubirch.TestBase
 import java.util.UUID
 
-import com.ubirch.api.TokenSDKException
-
 import scala.util.{ Failure, Success }
 
 class TokenApiSpec extends TestBase {
