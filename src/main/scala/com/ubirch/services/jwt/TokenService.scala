@@ -105,7 +105,6 @@ class DefaultTokenService @Inject() (
 
   override def verify(verificationRequest: VerificationRequest): Task[Boolean] = {
     for {
-
       _ <- verifySig(verificationRequest)
       tokenPurposedClaim <- buildTokenClaimFromVerificationRequest(verificationRequest)
       _ <- localVerify(tokenPurposedClaim)
@@ -114,6 +113,12 @@ class DefaultTokenService @Inject() (
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
     } yield {
+      true
+    }
+  }
+
+  def verifySig(verificationRequest: VerificationRequest) = {
+    Task.delay(verificationRequest).map { _ =>
       true
     }
   }
@@ -128,10 +133,6 @@ class DefaultTokenService @Inject() (
     } yield {
       tokenPurposedClaim
     }
-  }
-
-  def verifySig(verificationRequest: VerificationRequest) = {
-    Task.delay(verificationRequest).map(_ => true)
   }
 
   def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {
