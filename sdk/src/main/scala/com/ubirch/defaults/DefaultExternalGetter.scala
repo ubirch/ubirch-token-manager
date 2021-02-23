@@ -1,6 +1,5 @@
 package com.ubirch.defaults
 
-import java.nio.charset.StandardCharsets
 import java.util.Date
 
 import com.typesafe.config.Config

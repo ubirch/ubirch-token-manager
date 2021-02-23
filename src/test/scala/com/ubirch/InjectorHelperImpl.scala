@@ -10,9 +10,11 @@ import monix.eval.Task
 
 import javax.inject.{ Inject, Provider, Singleton }
 
+import com.ubirch.services.key.KeyPoolService
+
 @Singleton
-class FakeDefaultPublicKeyPoolService @Inject() (privKey: PrivKey, config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService)
-  extends DefaultPublicKeyPoolService(config, publicKeyDiscoveryService) {
+class FakeDefaultPublicKeyPoolService @Inject() (privKey: PrivKey, config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService, keyPoolService: KeyPoolService)
+  extends DefaultPublicKeyPoolService(config, publicKeyDiscoveryService, keyPoolService) {
 
   override def getKeyFromDiscoveryService(kid: String): Task[Option[Key]] = Task {
     kid match {

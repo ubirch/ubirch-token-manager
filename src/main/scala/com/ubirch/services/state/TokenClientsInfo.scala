@@ -14,6 +14,11 @@ import scala.collection.JavaConverters._
 
 case class TokenClient(client: Symbol, secret: String) {
   override def toString: String = " client=" + client.name
+
+  def secretParts: Array[String] = secret.split("-", 2)
+  def secretPointer: String = secretParts.headOption.getOrElse("")
+  def secretKey: String = secretParts.tail.headOption.getOrElse("")
+
 }
 
 trait TokenClientsInfo {

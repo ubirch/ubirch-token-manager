@@ -8,9 +8,10 @@ import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
 import com.ubirch.services.jwt._
+import com.ubirch.services.key.{ DefaultKeyPoolService, KeyPoolService }
 import com.ubirch.services.lifeCycle.{ DefaultJVMHook, DefaultLifecycle, JVMHook, Lifecycle }
 import com.ubirch.services.rest.SwaggerProvider
-import com.ubirch.services.state.{ DefaultExternalGetter, DefaultStateVerifier, DefaultTokenClientsInfo, ExternalStateGetter, StateVerifier, TokenClientsInfo }
+import com.ubirch.services.state.{ DefaultExternalGetter, DefaultSecretKeyPoolService, DefaultStateVerifier, DefaultTokenClientsInfo, ExternalStateGetter, SecretKeyPoolService, StateVerifier, TokenClientsInfo }
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra.swagger.Swagger
@@ -36,12 +37,14 @@ class Binder
   def TokenService: ScopedBindingBuilder = bind(classOf[TokenService]).to(classOf[DefaultTokenService])
   def TokenEncodingService: ScopedBindingBuilder = bind(classOf[TokenEncodingService]).to(classOf[DefaultTokenEncodingService])
   def TokenDecodingService: ScopedBindingBuilder = bind(classOf[TokenDecodingService]).to(classOf[DefaultTokenDecodingService])
+  def KeyPoolService: ScopedBindingBuilder = bind(classOf[KeyPoolService]).to(classOf[DefaultKeyPoolService])
   def PublicKeyDiscoveryService: ScopedBindingBuilder = bind(classOf[PublicKeyDiscoveryService]).to(classOf[DefaultPublicKeyDiscoveryService])
   def PublicKeyPoolService: ScopedBindingBuilder = bind(classOf[PublicKeyPoolService]).to(classOf[DefaultPublicKeyPoolService])
   def TokenKeyService: ScopedBindingBuilder = bind(classOf[TokenKeyService]).to(classOf[DefaultTokenKeyService])
   def ExternalStateGetter: ScopedBindingBuilder = bind(classOf[ExternalStateGetter]).to(classOf[DefaultExternalGetter])
   def StateVerifier: ScopedBindingBuilder = bind(classOf[StateVerifier]).to(classOf[DefaultStateVerifier])
   def TokenClientsInfo: ScopedBindingBuilder = bind(classOf[TokenClientsInfo]).to(classOf[DefaultTokenClientsInfo])
+  def SecretKeyPoolService: ScopedBindingBuilder = bind(classOf[SecretKeyPoolService]).to(classOf[DefaultSecretKeyPoolService])
 
   def configure(): Unit = {
     Config
@@ -57,12 +60,14 @@ class Binder
     TokenService
     TokenEncodingService
     TokenDecodingService
+    KeyPoolService
     PublicKeyDiscoveryService
     PublicKeyPoolService
     TokenKeyService
     ExternalStateGetter
     StateVerifier
     TokenClientsInfo
+    SecretKeyPoolService
     ()
   }
 

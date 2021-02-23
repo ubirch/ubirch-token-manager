@@ -1,7 +1,5 @@
 package com.ubirch.controllers.concerns
 
-import java.security.PublicKey
-
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import org.json4s.JsonAST
 import org.scalatra.ScalatraBase
