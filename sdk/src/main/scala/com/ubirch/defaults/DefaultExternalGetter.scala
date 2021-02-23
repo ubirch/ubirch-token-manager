@@ -19,7 +19,7 @@ class DefaultExternalGetter @Inject() (config: Config, HMAC: HMAC) extends Exter
 
   private val httpclient: CloseableHttpClient = HttpClients.createDefault
 
-  private final val TOKEN_MANAGER_ENDPOINT: String = config.getString(Paths.VALID_ISSUER_PATH)
+  private final val TOKEN_MANAGER_ENDPOINT: String = config.getString(Paths.TOKEN_SERVICE_PATH)
 
   def execute(request: HttpUriRequest): ExternalResponseData[Array[Byte]] = {
     httpclient.execute(request, (httpResponse: HttpResponse) =>
