@@ -24,7 +24,7 @@ class DefaultHMACVerifier @Inject() (secretKeyPoolService: SecretKeyPoolService,
           verificationRequest.time.map(x => new Date(x.toLong)).getOrElse(new Date()),
           key.asInstanceOf[SecretKey]
         )
-      }.contains(verificationRequest.signed.getOrElse("WOT"))
+      }.contains(verificationRequest.signature)
 
   }
 

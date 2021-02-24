@@ -108,7 +108,9 @@ class DefaultTokenService @Inject() (
 
   override def verify(verificationRequest: VerificationRequest): Task[Boolean] = {
     for {
-      _ <- Task.delay(HMACVerifier.verify(verificationRequest))
+      sigOK <- Task.delay(HMACVerifier.verify(verificationRequest))
+      _ <- earlyResponseIf(!sigOK)(InvalidClaimException("Invalid Request Signature", "The hmac verification failed"))
+
       tokenPurposedClaim <- buildTokenClaimFromVerificationRequest(verificationRequest)
       _ <- localVerify(tokenPurposedClaim)
       groupsCheck <- verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
