@@ -1,6 +1,10 @@
 [
   {
     "client":  "verification-service",
-    "secret": "judgDg3jaCDM-QwKFZpTiEcXnLdbbGEdzcO57/yoIVGOpixXfeKGLDdg="
+    "secret": "judgDg3jaCDM-WjQqQ1dFfqFL3i9myrPMUPUUVQzgnDx5keE7r6WBTzHP"
+  },
+  {
+    "client":  "thing-api",
+    "secret": "Wx09O1MJ1YGs-l62pTF8aJNNkAJisXDIYmRw9WpwATowTNPDNzLqSA9F5"
   }
 ]

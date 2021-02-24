@@ -2,9 +2,11 @@ package com.ubirch.services.state
 
 import java.security.Key
 import java.util.Base64
+
+import com.ubirch.crypto.utils.Utils
+
 import javax.crypto.spec.SecretKeySpec
 import javax.inject.{ Inject, Singleton }
-
 import com.ubirch.services.key.KeyPoolService
 import monix.eval.Task
 
@@ -31,4 +33,12 @@ class DefaultSecretKeyPoolService @Inject() (tokenClientsInfo: TokenClientsInfo,
     } yield keys
   }
 
+}
+
+object DefaultSecretKeyPoolService {
+  def main(args: Array[String]): Unit = {
+    val key = Base64.getEncoder.encodeToString(Utils.secureRandomBytes(9)) + "-" + Base64.getEncoder.encodeToString(Utils.secureRandomBytes(33))
+    println(key)
+
+  }
 }
