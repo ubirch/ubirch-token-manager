@@ -146,12 +146,7 @@ class DefaultTokenService @Inject() (
     if (tokenPurposedClaim.hasMaybeGroups) {
       stateVerifier
         .groups(tokenPurposedClaim.tenantId, accessToken.email)
-        .map { gs =>
-          tokenPurposedClaim.targetGroups match {
-            case Right(names) => names.forall(x => gs.exists(_.name == x))
-            case Left(uuids) => uuids.forall(x => gs.exists(_.id == x))
-          }
-        }
+        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
     } else Task.delay(true)
   }
 
@@ -159,13 +154,16 @@ class DefaultTokenService @Inject() (
     if (tokenPurposedClaim.hasMaybeGroups) {
       stateVerifier
         .groups(verificationRequest.identity)
-        .map { gs =>
-          tokenPurposedClaim.targetGroups match {
-            case Right(names) => gs.forall(x => names.contains(x.name))
-            case Left(uuids) => gs.forall(x => uuids.contains(x.id))
-          }
-        }
+        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
     } else Task.delay(true)
+  }
+
+  def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
+    tokenPurposedClaim.targetGroups match {
+      case Right(names) if currentGroups.nonEmpty => currentGroups.forall(x => names.contains(x.name))
+      case Left(uuids) if currentGroups.nonEmpty => currentGroups.forall(x => uuids.contains(x.id))
+      case _ => false
+    }
   }
 
 }
