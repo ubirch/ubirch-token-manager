@@ -10,9 +10,11 @@ import com.ubirch.models._
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidClaimException, TokenEncodingException }
 import monix.eval.Task
+
 import javax.inject.{ Inject, Singleton }
 
 import com.ubirch.services.formats.JsonConverterService
+import com.ubirch.services.key.HMACVerifier
 import com.ubirch.services.state.StateVerifier
 
 trait TokenService {
@@ -32,6 +34,7 @@ class DefaultTokenService @Inject() (
     tokenDecodingService: TokenDecodingService,
     stateVerifier: StateVerifier,
     tokensDAO: TokensDAO,
+    HMACVerifier: HMACVerifier,
     jsonConverterService: JsonConverterService
 ) extends TokenService with TaskHelpers with LazyLogging {
 
@@ -105,7 +108,7 @@ class DefaultTokenService @Inject() (
 
   override def verify(verificationRequest: VerificationRequest): Task[Boolean] = {
     for {
-      _ <- verifySig(verificationRequest)
+      _ <- Task.delay(HMACVerifier.verify(verificationRequest))
       tokenPurposedClaim <- buildTokenClaimFromVerificationRequest(verificationRequest)
       _ <- localVerify(tokenPurposedClaim)
       groupsCheck <- verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
@@ -113,12 +116,6 @@ class DefaultTokenService @Inject() (
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
     } yield {
-      true
-    }
-  }
-
-  def verifySig(verificationRequest: VerificationRequest) = {
-    Task.delay(verificationRequest).map { _ =>
       true
     }
   }

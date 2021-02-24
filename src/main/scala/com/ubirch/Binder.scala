@@ -8,7 +8,7 @@ import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
 import com.ubirch.services.jwt._
-import com.ubirch.services.key.{ DefaultKeyPoolService, KeyPoolService }
+import com.ubirch.services.key.{ DefaultHMAC, DefaultHMACVerifier, DefaultKeyPoolService, HMAC, HMACVerifier, KeyPoolService }
 import com.ubirch.services.lifeCycle.{ DefaultJVMHook, DefaultLifecycle, JVMHook, Lifecycle }
 import com.ubirch.services.rest.SwaggerProvider
 import com.ubirch.services.state.{ DefaultExternalGetter, DefaultSecretKeyPoolService, DefaultStateVerifier, DefaultTokenClientsInfo, ExternalStateGetter, SecretKeyPoolService, StateVerifier, TokenClientsInfo }
@@ -45,6 +45,8 @@ class Binder
   def StateVerifier: ScopedBindingBuilder = bind(classOf[StateVerifier]).to(classOf[DefaultStateVerifier])
   def TokenClientsInfo: ScopedBindingBuilder = bind(classOf[TokenClientsInfo]).to(classOf[DefaultTokenClientsInfo])
   def SecretKeyPoolService: ScopedBindingBuilder = bind(classOf[SecretKeyPoolService]).to(classOf[DefaultSecretKeyPoolService])
+  def HMAC: ScopedBindingBuilder = bind(classOf[HMAC]).to(classOf[DefaultHMAC])
+  def HMACVerifier: ScopedBindingBuilder = bind(classOf[HMACVerifier]).to(classOf[DefaultHMACVerifier])
 
   def configure(): Unit = {
     Config
@@ -68,6 +70,8 @@ class Binder
     StateVerifier
     TokenClientsInfo
     SecretKeyPoolService
+    HMAC
+    HMACVerifier
     ()
   }
 
