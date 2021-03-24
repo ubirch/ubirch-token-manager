@@ -25,9 +25,9 @@ This service knows about jwt tokens.
 
 ## Token Claim Object
 
-![Data Model](DataModel.png)
-
 This object is meant to be used in the creation of purposed claims. A purposed claim is an access token that has a purpose and contains scopes.
+
+![Data Model](DataModel.png)
 
 **Fields**
 
@@ -379,7 +379,7 @@ The interface offers these basic operations:
 
 * **decodeAndVerify** ->  It allows a basic verification. It verifies that the token is well-built, that its standard claims are checked. I
 * **getClaims** -> It the same as the previous operation but basically performing the verification on the header as it is.
-* **externalStateVerify**: Task[Boolean] -> Depending on the kinds of claims, there are some that require an external verification, this operations starts a verification against the Token Manager. Useful for groups and revocation claims.
+* **externalStateVerify**: -> Depending on the kinds of claims, there are some that require an external verification, this operations starts a verification against the Token Manager. Useful for groups and revocation claims.
 
         <dependency>
             <groupId>com.ubirch</groupId>
