@@ -391,8 +391,12 @@ The interface offers these basic operations:
 
 Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 
-## Some Workflows
+## Workflows
 
-[Token workflows](token_verification_workflows.md)
+### Token Creation
+![Token Creation](token_creation.png)
+
+### Verification Token
+![Verification Token](token_verification_usage.png)
 
 [Token Scenarios](token_scenarios.md)
