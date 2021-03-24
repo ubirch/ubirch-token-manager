@@ -11,12 +11,12 @@
   "iat": 1613479063,
   "jti": "407f29ab-ac74-42c7-81e9-107a53f3de36",
   "purpose": "King Dude - Concert",
-  "target_identities": ["List of UUIDs <or>", "List with single Wildcard * <or>"],
-  "target_groups": ["List of Group UUIDs <or>", "List of Group Names"],
-  "origin_domains": [
+  "tid": ["List of UUIDs <or>", "List with single Wildcard * <or>"],
+  "tgp": ["List of Group UUIDs <or>", "List of Group Names"],
+  "ord": [
     "http://verification.dev.ubirch.com"
   ],
-  "scopes": [
+  "scp": [
      "upp:anchor",
      "upp:verify",
      "thing:create",

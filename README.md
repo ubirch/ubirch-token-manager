@@ -19,7 +19,7 @@ This service knows about jwt tokens.
 ## Steps to prepare a request
 
 1. Get your keycloak token.
-2. Prepare the data object - when needed (creation).
+2. Prepare the data object - when needed (creation of token).
 3. Prepare the request and send.
 4. Have fun.
 
@@ -27,9 +27,11 @@ This service knows about jwt tokens.
 
 ![Data Model](DataModel.png)
 
+This object is meant to be used in the creation of purposed claims. A purposed claim is an access token that has a purpose and contains scopes.
+
 **Fields**
 
-_`tenantId`_: it is the keycloak id of the logged in user.
+_`tenantId`_: it is the keycloak id of the logged-in user.
  
 _`purpose`_: it is a description for the token.  Min characters are 6
 
@@ -71,6 +73,8 @@ NOTE: Don't send `targetIdentities` and `targetGroups`. Send only one at a time.
 
 #### Keycloak Token
 
+This is a command that can be used to get a keycloak token. Note that you will need the username, password and client secret for the correspondig keycloak instance.
+
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
@@ -81,13 +85,12 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 {
   "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
   "purpose":"King Dude - Concert",
-  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+  "targetIdentities":["e21552f8-0353-41e3-b86e-0d3e92935d46"],
   "expiration": 6311390400,
   "notBefore":null,
   "originDomains": ["http://verification.dev.ubirch.com"],
   "scopes": ["upp:verify"]
 }
-
 ```
 
 #### Post Request
@@ -107,19 +110,19 @@ curl -s -X POST \
   "version": "1.0",
   "ok": true,
   "data": {
-    "id": "407f29ab-ac74-42c7-81e9-107a53f3de36",
+    "id": "726aa795-a2dc-4354-9559-41a2c86615a1",
     "jwtClaim": {
-      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":[\"840b7e21-03e9-4de7-bb31-0b9524f3b500\"],\"origin_domains\":[\"http://verification.dev.ubirch.com\"],\"scopes\":[\"upp:verify\"]}",
+      "content": "{\"scp\":[\"upp:verify\"],\"pur\":\"King Dude - Concert\",\"tgp\":[],\"tid\":[\"e21552f8-0353-41e3-b86e-0d3e92935d46\"],\"ord\":[\"http://verification.dev.ubirch.com\"]}",
       "issuer": "https://token.dev.ubirch.com",
       "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
       "audience": [
         "https://verify.dev.ubirch.com"
       ],
-      "expiration": 7924869463,
-      "issuedAt": 1613479063,
-      "jwtId": "407f29ab-ac74-42c7-81e9-107a53f3de36"
+      "expiration": 7927995641,
+      "issuedAt": 1616605241,
+      "jwtId": "726aa795-a2dc-4354-9559-41a2c86615a1"
     },
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MjQ4Njk0NjMsImlhdCI6MTYxMzQ3OTA2MywianRpIjoiNDA3ZjI5YWItYWM3NC00MmM3LTgxZTktMTA3YTUzZjNkZTM2IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwib3JpZ2luX2RvbWFpbnMiOlsiaHR0cDovL3ZlcmlmaWNhdGlvbi5kZXYudWJpcmNoLmNvbSJdLCJzY29wZXMiOlsidXBwOnZlcmlmeSJdfQ.sSelvdqPV82dJTPaLxw6bJAH9XlnO8YK8cG8WPwlQWfhI_pjw0qJX0DHLUzK3awT2LtAa-8nkJr_cUoo5XCMHg"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU2NDEsImlhdCI6MTYxNjYwNTI0MSwianRpIjoiNzI2YWE3OTUtYTJkYy00MzU0LTk1NTktNDFhMmM4NjYxNWExIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyJlMjE1NTJmOC0wMzUzLTQxZTMtYjg2ZS0wZDNlOTI5MzVkNDYiXSwib3JkIjpbImh0dHA6Ly92ZXJpZmljYXRpb24uZGV2LnViaXJjaC5jb20iXX0.etW9msaDVae1SC_BJTA0H6Hqo0m2inKi4SYKjOmJgqbPEmlWxtDvd0MP1rf5GYpfGqizbH3uUgRxESS6qqXSTQ"
   }
 }
 ```
@@ -163,19 +166,19 @@ curl -s -X POST \
   "version": "1.0",
   "ok": true,
   "data": {
-    "id": "740eefa9-5566-49df-839d-70416e57aa96",
+    "id": "92d60695-e6a2-4c6c-8173-6f8f1496dbb3",
     "jwtClaim": {
-      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":[\"*\"],\"origin_domains\":[\"http://verification.dev.ubirch.com\"],\"scopes\":[\"upp:verify\"]}",
+      "content": "{\"scp\":[\"upp:verify\"],\"pur\":\"King Dude - Concert\",\"tgp\":[],\"tid\":[\"*\"],\"ord\":[\"http://verification.dev.ubirch.com\"]}",
       "issuer": "https://token.dev.ubirch.com",
       "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
       "audience": [
         "https://verify.dev.ubirch.com"
       ],
-      "expiration": 7924869565,
-      "issuedAt": 1613479165,
-      "jwtId": "740eefa9-5566-49df-839d-70416e57aa96"
+      "expiration": 7927995850,
+      "issuedAt": 1616605450,
+      "jwtId": "92d60695-e6a2-4c6c-8173-6f8f1496dbb3"
     },
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MjQ4Njk1NjUsImlhdCI6MTYxMzQ3OTE2NSwianRpIjoiNzQwZWVmYTktNTU2Ni00OWRmLTgzOWQtNzA0MTZlNTdhYTk2IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyIqIl0sIm9yaWdpbl9kb21haW5zIjpbImh0dHA6Ly92ZXJpZmljYXRpb24uZGV2LnViaXJjaC5jb20iXSwic2NvcGVzIjpbInVwcDp2ZXJpZnkiXX0.OfZqlftYl0kMflOKDm39fXneJ3R1aWLXB4WaJhPVl4W3F4koCzIoXFupB-9U2xwCCl7eA6uTy8E7fGNm9aFWVg"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU4NTAsImlhdCI6MTYxNjYwNTQ1MCwianRpIjoiOTJkNjA2OTUtZTZhMi00YzZjLTgxNzMtNmY4ZjE0OTZkYmIzIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyIqIl0sIm9yZCI6WyJodHRwOi8vdmVyaWZpY2F0aW9uLmRldi51YmlyY2guY29tIl19.-zcsKmqc0dimFfZO71l-eBnNufbUIRxykOIGyHsRFPmGVShYRwAZaH6CxtIPL60uvtokfyNumbNGIg7LILRiFA"
   }
 }
 ```
@@ -199,16 +202,11 @@ This token has the following header:
   "exp": 7924869463,
   "iat": 1613479063,
   "jti": "407f29ab-ac74-42c7-81e9-107a53f3de36",
-  "purpose": "King Dude - Concert",
-  "target_identities": [
-    "840b7e21-03e9-4de7-bb31-0b9524f3b500"
-  ],
-  "origin_domains": [
-    "http://verification.dev.ubirch.com"
-  ],
-  "scopes": [
-    "upp:verify"
-  ]
+  "pur": "King Dude - Concert",
+  "tid": ["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+  "tgp": [],
+  "ord": ["http://verification.dev.ubirch.com"],
+  "scp": ["upp:verify"]
 }
 ```
 
@@ -220,9 +218,10 @@ Where
     'exp' is the expiration time
     'iat' is the initial time
     'jti' is a unique uuid id for the token
-    'purpose' is a description of the main usage for this token, like a concert or artist show
-    'target_identities': it is the entities for which the subject can perform the action on the target audience system
-    'scopes' is set of actions allowed per resource for this token.
+    'pur' is a description of the main usage for this token, like a concert or artist show
+    'tid': it is the entities for which the subject can perform the action on the target audience system
+    'tgp': it is the groups (keycloak groups) that can be used to aggregate devices.
+    'scp' is set of actions allowed per resource for this token.
 ```
 
 ## List your Tokens 
@@ -246,22 +245,22 @@ curl -s -X GET \
 
 ```json
 {
-  "version":"1.0",
-  "ok":true,
-  "data":[
+  "version": "1.0",
+  "ok": true,
+  "data": [
     {
-      "id":"163e22a2-bbd6-4536-a8f6-db0356c67a07",
-      "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-      "tokenValue":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MTc4MDcwNzUsImlhdCI6MTYwNjQxNjY3NSwianRpIjoiMTYzZTIyYTItYmJkNi00NTM2LWE4ZjYtZGIwMzU2YzY3YTA3IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwicm9sZSI6InZlcmlmaWVyIn0.GIv9n3C6nEEnHZlHMZa_saaENv51MeWH1586UBQUP8GlwMcjbWU6mTXe3LRXjTLHRJXpuGrH5fcNe3fLC7MqzA",
-      "category":"verification",
-      "createdAt":"2020-11-26T18:51:15.700Z"
+      "id": "726aa795-a2dc-4354-9559-41a2c86615a1",
+      "ownerId": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "tokenValue": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU2NDEsImlhdCI6MTYxNjYwNTI0MSwianRpIjoiNzI2YWE3OTUtYTJkYy00MzU0LTk1NTktNDFhMmM4NjYxNWExIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyJlMjE1NTJmOC0wMzUzLTQxZTMtYjg2ZS0wZDNlOTI5MzVkNDYiXSwib3JkIjpbImh0dHA6Ly92ZXJpZmljYXRpb24uZGV2LnViaXJjaC5jb20iXX0.etW9msaDVae1SC_BJTA0H6Hqo0m2inKi4SYKjOmJgqbPEmlWxtDvd0MP1rf5GYpfGqizbH3uUgRxESS6qqXSTQ",
+      "category": "purposed_claim",
+      "createdAt": "2021-03-24T17:00:41.329Z"
     },
     {
-      "id":"2b7df15a-e170-4e5b-be7a-d548a3330d73",
-      "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-      "tokenValue":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiIiLCJzdWIiOiIiLCJhdWQiOiIiLCJpYXQiOjE2MDQ0MTU1NjQsImp0aSI6IjJiN2RmMTVhLWUxNzAtNGU1Yi1iZTdhLWQ1NDhhMzMzMGQ3MyIsIm93bmVySWQiOiI5NjM5OTVlZC1jZTEyLTRlYTUtODlkYy1iMTgxNzAxZDFkN2IifQ.Fk3Cqr3QzIpbBkE8NVY_m8LVVfwxTuOtDja4F7jpWu26YlH0v2wh1hg7iv9o9_hAchK3qc7LtyI43lhUA0nkIg",
-      "category":"generic",
-      "createdAt":"2020-11-03T14:59:24.323Z"
+      "id": "92d60695-e6a2-4c6c-8173-6f8f1496dbb3",
+      "ownerId": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "tokenValue": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU4NTAsImlhdCI6MTYxNjYwNTQ1MCwianRpIjoiOTJkNjA2OTUtZTZhMi00YzZjLTgxNzMtNmY4ZjE0OTZkYmIzIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyIqIl0sIm9yZCI6WyJodHRwOi8vdmVyaWZpY2F0aW9uLmRldi51YmlyY2guY29tIl19.-zcsKmqc0dimFfZO71l-eBnNufbUIRxykOIGyHsRFPmGVShYRwAZaH6CxtIPL60uvtokfyNumbNGIg7LILRiFA",
+      "category": "purposed_claim",
+      "createdAt": "2021-03-24T17:04:10.397Z"
     }
   ]
 }
@@ -322,7 +321,6 @@ The <response> codes could be:
 5. <500 Internal Server Error> When an internal error happened from which it is not possible to recover.
 ```
 
-
 ## Available Scopes
 
 The scopes have this definition:
@@ -365,7 +363,7 @@ This call returns a json object whose data field is an array of scopes.
 ## Verifying an Ubirch JWT Token
 
 The Ubirch Token Manager offers an endpoint that can be used to retrieve the public key for the tokens in order to be able to verify the generated token.
-This endpoint doesn't require of a access token. 
+This endpoint doesn't require of an access token. 
 
 ```shell script
 curl -s -X GET $host/api/tokens/v1/jwk | jq .
@@ -382,6 +380,12 @@ The interface offers these basic operations:
 * **decodeAndVerify** ->  It allows a basic verification. It verifies that the token is well-built, that its standard claims are checked. I
 * **getClaims** -> It the same as the previous operation but basically performing the verification on the header as it is.
 * **externalStateVerify**: Task[Boolean] -> Depending on the kinds of claims, there are some that require an external verification, this operations starts a verification against the Token Manager. Useful for groups and revocation claims.
+
+        <dependency>
+            <groupId>com.ubirch</groupId>
+            <artifactId>ubirch-token-sdk</artifactId>
+            <version>0.6.5-SNAPSHOT</version>
+        </dependency>
 
 ## Swagger
 
