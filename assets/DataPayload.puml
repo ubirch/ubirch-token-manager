@@ -10,7 +10,7 @@
   "exp": 7924869463,
   "iat": 1613479063,
   "jti": "407f29ab-ac74-42c7-81e9-107a53f3de36",
-  "purpose": "King Dude - Concert",
+  "pur": "King Dude - Concert",
   "tid": ["List of UUIDs <or>", "List with single Wildcard * <or>"],
   "tgp": ["List of Group UUIDs <or>", "List of Group Names"],
   "ord": [
