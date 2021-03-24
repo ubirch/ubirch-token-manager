@@ -126,11 +126,11 @@ object Claims {
   final val ISSUED_AT = "iat"
   final val JWT_ID = "jti"
 
-  final val PURPOSE_KEY = 'purpose
-  final val TARGET_IDENTITIES_KEY = 'target_identities
-  final val TARGET_GROUPS_KEY = 'target_groups
-  final val ORIGIN_KEY = 'origin_domains
-  final val SCOPES_KEY = 'scopes
+  final val PURPOSE_KEY = 'pur
+  final val TARGET_IDENTITIES_KEY = 'tid
+  final val TARGET_GROUPS_KEY = 'tgp
+  final val ORIGIN_KEY = 'ord
+  final val SCOPES_KEY = 'scp
 
   def extractString(key: String, obj: JValue): String = {
     (for {

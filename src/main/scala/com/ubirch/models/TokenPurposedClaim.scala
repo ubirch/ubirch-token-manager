@@ -67,7 +67,7 @@ case class TokenPurposedClaim(
 
   def toTokenClaim(ENV: String): TokenClaim = {
     val purposeKey = TokenPurposedClaim.PURPOSE_KEY -> purpose
-    val targetIdentitiesKey = TokenPurposedClaim.TARGET_GROUPS_KEY -> targetIdentities.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
+    val targetIdentitiesKey = TokenPurposedClaim.TARGET_IDENTITIES_KEY -> targetIdentities.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val targetGroupsKey = TokenPurposedClaim.TARGET_GROUPS_KEY -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val originKey = TokenPurposedClaim.ORIGIN_KEY -> originDomains.distinct.map(_.toString)
     val typedScopes = scopes.sorted.flatMap(x => Scopes.fromString(x)).distinct
@@ -88,10 +88,10 @@ case class TokenPurposedClaim(
 }
 
 object TokenPurposedClaim {
-  val PURPOSE_KEY = 'purpose
-  val TARGET_IDENTITIES_KEY = 'target_identities
-  val TARGET_GROUPS_KEY = 'target_groups
-  val ORIGIN_KEY = 'origin_domains
-  val SCOPES_KEY = 'scopes
+  final val PURPOSE_KEY = 'pur
+  final val TARGET_IDENTITIES_KEY = 'tid
+  final val TARGET_GROUPS_KEY = 'tgp
+  final val ORIGIN_KEY = 'ord
+  final val SCOPES_KEY = 'scp
 }
 
