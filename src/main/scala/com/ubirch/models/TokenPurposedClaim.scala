@@ -66,12 +66,12 @@ case class TokenPurposedClaim(
   }
 
   def toTokenClaim(ENV: String): TokenClaim = {
-    val purposeKey = 'purpose -> purpose
-    val targetIdentitiesKey = 'target_identities -> targetIdentities.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
-    val targetGroupsKey = 'target_groups -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
-    val originKey = 'origin_domains -> originDomains.distinct.map(_.toString)
+    val purposeKey = TokenPurposedClaim.PURPOSE_KEY -> purpose
+    val targetIdentitiesKey = TokenPurposedClaim.TARGET_GROUPS_KEY -> targetIdentities.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
+    val targetGroupsKey = TokenPurposedClaim.TARGET_GROUPS_KEY -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
+    val originKey = TokenPurposedClaim.ORIGIN_KEY -> originDomains.distinct.map(_.toString)
     val typedScopes = scopes.sorted.flatMap(x => Scopes.fromString(x)).distinct
-    val scopesKey = 'scopes -> typedScopes.map(Scopes.asString)
+    val scopesKey = TokenPurposedClaim.SCOPES_KEY -> typedScopes.map(Scopes.asString)
 
     TokenClaim(
       ownerId = tenantId,
@@ -85,5 +85,13 @@ case class TokenPurposedClaim(
     )
   }
 
+}
+
+object TokenPurposedClaim {
+  val PURPOSE_KEY = 'purpose
+  val TARGET_IDENTITIES_KEY = 'target_identities
+  val TARGET_GROUPS_KEY = 'target_groups
+  val ORIGIN_KEY = 'origin_domains
+  val SCOPES_KEY = 'scopes
 }
 

@@ -69,23 +69,23 @@ class Claims(val token: String, val all: JValue) {
     case Nil => List(extractString(AUDIENCE, all))
     case xs => xs
   }
-  val purpose: String = extractString("purpose", all)
-  val targetIdentities: Either[List[UUID], List[String]] = extractListUUID("target_identities", all) match {
-    case Nil => Right(extractListString("target_identities", all).distinct)
+  val purpose: String = extractString(PURPOSE_KEY.name, all)
+  val targetIdentities: Either[List[UUID], List[String]] = extractListUUID(TARGET_IDENTITIES_KEY.name, all) match {
+    case Nil => Right(extractListString(TARGET_IDENTITIES_KEY.name, all).distinct)
     case xs => Left(xs.distinct)
   }
   val targetIdentitiesMerged: List[String] = targetIdentities.left.map(_.map(_.toString)).merge
   val isTargetIdentitiesStarWildCard: Boolean = targetIdentities.right.map(_.contains("*")).fold(_ => false, x => x)
   val hasMaybeTargetIdentities: Boolean = targetIdentitiesMerged.exists(_.nonEmpty)
 
-  val targetGroups: Either[List[UUID], List[String]] = extractListUUID("target_groups", all) match {
-    case Nil => Right(extractListString("target_groups", all).distinct)
+  val targetGroups: Either[List[UUID], List[String]] = extractListUUID(TARGET_GROUPS_KEY.name, all) match {
+    case Nil => Right(extractListString(TARGET_GROUPS_KEY.name, all).distinct)
     case xs => Left(xs.distinct)
   }
   val hasMaybeGroups: Boolean = targetGroups.left.map(_.map(_.toString)).merge.exists(_.nonEmpty)
 
-  val scopes: List[String] = extractListString("scopes", all)
-  val originDomains: List[URL] = extractListURL("origin_domains", all)
+  val scopes: List[String] = extractListString(SCOPES_KEY.name, all)
+  val originDomains: List[URL] = extractListURL(ORIGIN_KEY.name, all)
 
   def validatePurpose: Try[String] = Try(purpose.nonEmpty && purpose.length > 3).map(_ => purpose)
 
@@ -125,6 +125,12 @@ object Claims {
   final val NOT_BEFORE = "nbf"
   final val ISSUED_AT = "iat"
   final val JWT_ID = "jti"
+
+  final val PURPOSE_KEY = 'purpose
+  final val TARGET_IDENTITIES_KEY = 'target_identities
+  final val TARGET_GROUPS_KEY = 'target_groups
+  final val ORIGIN_KEY = 'origin_domains
+  final val SCOPES_KEY = 'scopes
 
   def extractString(key: String, obj: JValue): String = {
     (for {
