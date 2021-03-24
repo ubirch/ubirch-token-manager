@@ -1,5 +1,5 @@
 # Token Verification Workflow
 
-![token creation](token_creation.png)
+![token creation](assets/token_creation.png)
 
-![token usage](token_usage.png)
+![token usage](assets/token_usage.png)

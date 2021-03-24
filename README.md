@@ -27,7 +27,7 @@ This service is in charge of creating and managing purposed tokens. A purposed t
 
 This object is meant to be used in the creation of purposed claims. A purposed claim is an access token that has a purpose and contains scopes.
 
-![Data Model](DataModel.png)
+![Data Model](assets/DataModel.png)
 
 **Fields**
 
@@ -394,9 +394,9 @@ Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 ## Workflows
 
 ### Token Creation
-![Token Creation](token_creation.png)
+![Token Creation](assets/token_creation.png)
 
 ### Verification Token
-![Verification Token](token_verification_usage.png)
+![Verification Token](assets/token_verification_usage.png)
 
 [Token Scenarios](token_scenarios.md)
