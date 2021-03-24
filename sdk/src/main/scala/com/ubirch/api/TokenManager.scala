@@ -87,6 +87,12 @@ class Claims(val token: String, val all: JValue) {
   val scopes: List[String] = extractListString(SCOPES_KEY.name, all)
   val originDomains: List[URL] = extractListURL(ORIGIN_KEY.name, all)
 
+  def findScope(scope: String): Option[String] = scopes.find(_ == scope)
+
+  def hasScope(scope: String): Boolean = findScope(scope).isDefined
+
+  def hasScopes: Boolean = scopes.nonEmpty
+
   def validatePurpose: Try[String] = Try(purpose.nonEmpty && purpose.length > 3).map(_ => purpose)
 
   def validateIdentity(uuid: UUID): Try[UUID] = {

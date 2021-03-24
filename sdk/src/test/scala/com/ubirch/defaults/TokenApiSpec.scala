@@ -20,9 +20,13 @@ class TokenApiSpec extends TestBase {
           assert(claims.targetIdentities.isLeft)
           assert(!claims.hasMaybeGroups)
           assert(claims.issuer == "https://token.dev.ubirch.com")
+          assert(claims.audiences == List("https://api.console.dev.ubirch.com", "https://niomon.dev.ubirch.com", "https://verify.dev.ubirch.com"))
+          assert(claims.scopes == List("thing:create","upp:anchor","upp:verify"))
           assert(claims.validateIdentity(UUID.fromString("840b7e21-03e9-4de7-bb31-0b9524f3b500")).isSuccess)
           assert(claims.validateOrigin(Some("http://verification.dev.ubirch.com")).isSuccess)
           assert(claims.validatePurpose.filter(_ == "King Dude - Concert").isSuccess)
+          assert(claims.hasScope("thing:create"))
+          assert(claims.hasScopes)
 
         case Failure(exception) => fail(exception)
       }
