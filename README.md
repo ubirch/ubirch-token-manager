@@ -1,6 +1,6 @@
 # Ubirch Token Manager
 
-This service knows about jwt tokens.
+This service is in charge of creating and managing purposed tokens. A purposed token is a token that may have a hybrid nature. It is a self-verifiable token and reference token. This nature depends on the types of claims that might be included in its definition. This service allows defining purposes and scopes for the corresponding tokens. As a convenience mechanism to integrate verification on the systems that required the tokens, a light sdk is included.
 
 1. [Getting Started](#steps-to-prepare-a-request)
 2. [Token Claim Object](#token-claim-object)
@@ -14,7 +14,7 @@ This service knows about jwt tokens.
 10. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
 11. [A Light SDK](#a-light-sdk)    
 12. [Swagger](#swagger)
-13. [Some Workflows](#some-workflows)
+13. [Workflows](#workflows)
 
 ## Steps to prepare a request
 
