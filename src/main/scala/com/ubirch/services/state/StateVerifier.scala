@@ -59,7 +59,7 @@ class DefaultStateVerifier @Inject() (
       res <- liftTry(tokenEncodingService.encode(UUID.randomUUID(), tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
       (token, _) = res
 
-      res <- Task.delay(externalStateGetter.getDeviceGroups(token))
+      res <- externalStateGetter.getDeviceGroups(token)
 
       resBody <- Task(new String(res.body))
 
@@ -106,7 +106,7 @@ class DefaultStateVerifier @Inject() (
       res <- liftTry(tokenEncodingService.encode(UUID.randomUUID(), tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
       (token, _) = res
 
-      res <- Task.delay(externalStateGetter.getUserGroups(token))
+      res <- externalStateGetter.getUserGroups(token)
 
       resBody <- Task(new String(res.body))
 
