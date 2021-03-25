@@ -379,13 +379,15 @@ The interface offers these basic operations:
 
 * **decodeAndVerify** ->  It allows a basic verification. It verifies that the token is well-built, that its standard claims are checked. I
 * **getClaims** -> It the same as the previous operation but basically performing the verification on the header as it is.
-* **externalStateVerify**: -> Depending on the kinds of claims, there are some that require an external verification, this operations starts a verification against the Token Manager. Useful for groups and revocation claims.
+* **externalStateVerify**: -> Depending on the kinds of claims, there are some that require an external verification, these operations starts a verification against the Token Manager. Useful for groups and revocation claims.
 
         <dependency>
             <groupId>com.ubirch</groupId>
             <artifactId>ubirch-token-sdk</artifactId>
             <version>0.6.5-SNAPSHOT</version>
         </dependency>
+
+Note that every system that might use the Light SDK and that performs externalities has to be explicitly known to the token manager. Every client has to configure their secret.
 
 ## Swagger
 
