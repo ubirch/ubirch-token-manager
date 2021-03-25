@@ -25,19 +25,19 @@ case object Verify extends Action
 case object Create extends Action
 case object GetInfo extends Action
 
-object Scopes {
+case class Scope(resource: Resource, action: Action)
 
-  type Scope = (Resource, Action)
-  final val UPP_Anchor: Scope = (UPP, Anchor)
-  final val UPP_Verify: Scope = (UPP, Verify)
-  final val Thing_Create: Scope = (Thing, Create)
-  final val Thing_GetInfo: Scope = (Thing, GetInfo)
-  final val User_GetInfo: Scope = (User, GetInfo)
+object Scope {
+
+  final val UPP_Anchor: Scope = Scope(UPP, Anchor)
+  final val UPP_Verify: Scope = Scope(UPP, Verify)
+  final val Thing_Create: Scope = Scope(Thing, Create)
+  final val Thing_GetInfo: Scope = Scope(Thing, GetInfo)
+  final val User_GetInfo: Scope = Scope(User, GetInfo)
   final val list = List(UPP_Anchor, UPP_Verify, Thing_Create, Thing_GetInfo, User_GetInfo)
 
   def asString(scope: Scope): String = {
-    val (resource, action) = scope
-    s"${resource.toString.toLowerCase}:${action.toString.toLowerCase}"
+    s"${scope.resource.toString.toLowerCase}:${scope.action.toString.toLowerCase}"
   }
 
   def fromString(value: String): List[Scope] = {
@@ -50,7 +50,7 @@ object Scopes {
           for {
             resource <- Resource.fromString(r)
             action <- Action.fromString(a)
-            maybeScope = (resource, action)
+            maybeScope = Scope(resource, action)
             scope <- list.find(_ == maybeScope)
           } yield {
             scope
@@ -59,13 +59,13 @@ object Scopes {
       }
   }
 
-  def audience(scope: Scopes.Scope, ENV: String): Option[URL] = {
+  def audience(scope: Scope, ENV: String): Option[URL] = {
     scope match {
-      case Scopes.UPP_Anchor => Option(new URL(s"https://niomon.$ENV.ubirch.com"))
-      case Scopes.UPP_Verify => Option(new URL(s"https://verify.$ENV.ubirch.com"))
-      case Scopes.Thing_Create => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
-      case Scopes.Thing_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
-      case Scopes.User_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
+      case UPP_Anchor => Option(new URL(s"https://niomon.$ENV.ubirch.com"))
+      case UPP_Verify => Option(new URL(s"https://verify.$ENV.ubirch.com"))
+      case Thing_Create => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
+      case Thing_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
+      case User_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
       case _ => None
     }
   }

@@ -313,6 +313,15 @@ class TokenControllerSpec
 
     }
 
+    "get available scopes" taggedAs Tag("macadamias") in {
+
+      get("/v1/scopes") {
+        status should equal(200)
+        assert(body == """{"version":"1.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","user:getinfo"]}""".stripMargin)
+      }
+
+    }
+
   }
 
   override protected def beforeEach(): Unit = {

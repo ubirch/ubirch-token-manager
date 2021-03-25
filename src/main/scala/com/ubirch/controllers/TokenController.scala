@@ -16,7 +16,7 @@ import org.json4s.Formats
 import org.scalatra._
 import org.scalatra.swagger.{ ResponseMessage, Swagger, SwaggerSupportSyntax }
 
-import javax.inject._
+import javax.inject.{ Inject, Singleton, Scope => _ }
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -288,7 +288,7 @@ class TokenController @Inject() (
 
   get("/v1/scopes", operation(getV1Scopes)) {
     asyncResult("get_scopes") { _ => _ =>
-      Task.delay(Ok(Good(Scopes.list.map(Scopes.asString))))
+      Task.delay(Ok(Good(Scope.list.map(Scope.asString))))
         .onErrorRecover {
           case e: Exception =>
             logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)

@@ -62,7 +62,7 @@ case class TokenPurposedClaim(
 
   def validateScopes: Boolean = scopes match {
     case Nil => false
-    case _ => scopes.flatMap(x => Scopes.fromString(x)).distinct.map(Scopes.asString).nonEmpty
+    case _ => scopes.flatMap(x => Scope.fromString(x)).distinct.map(Scope.asString).nonEmpty
   }
 
   def toTokenClaim(ENV: String): TokenClaim = {
@@ -70,14 +70,14 @@ case class TokenPurposedClaim(
     val targetIdentitiesKey = TokenPurposedClaim.TARGET_IDENTITIES_KEY -> targetIdentities.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val targetGroupsKey = TokenPurposedClaim.TARGET_GROUPS_KEY -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val originKey = TokenPurposedClaim.ORIGIN_KEY -> originDomains.distinct.map(_.toString)
-    val typedScopes = scopes.sorted.flatMap(x => Scopes.fromString(x)).distinct
-    val scopesKey = TokenPurposedClaim.SCOPES_KEY -> typedScopes.map(Scopes.asString)
+    val typedScopes = scopes.sorted.flatMap(x => Scope.fromString(x)).distinct
+    val scopesKey = TokenPurposedClaim.SCOPES_KEY -> typedScopes.map(Scope.asString)
 
     TokenClaim(
       ownerId = tenantId,
       issuer = s"https://token.$ENV.ubirch.com",
       subject = tenantId.toString,
-      audience = typedScopes.flatMap(x => Scopes.audience(x, ENV).toList).map(_.toString),
+      audience = typedScopes.flatMap(x => Scope.audience(x, ENV).toList).map(_.toString),
       expiration = expiration,
       notBefore = notBefore,
       issuedAt = None,

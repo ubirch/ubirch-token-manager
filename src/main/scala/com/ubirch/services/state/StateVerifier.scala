@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.{ ExternalStateGetterPaths, GenericConfPaths }
 import com.ubirch.{ StateVerifierException, TokenEncodingException }
-import com.ubirch.models.{ Group, Scopes, TokenPurposedClaim }
+import com.ubirch.models.{ Group, Scope, TokenPurposedClaim }
 import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
@@ -49,7 +49,7 @@ class DefaultStateVerifier @Inject() (
         expiration = Some(60 * 5),
         notBefore = None,
         originDomains = Nil,
-        scopes = List(Scopes.asString(Scopes.Thing_GetInfo))
+        scopes = List(Scope.asString(Scope.Thing_GetInfo))
       ).toTokenClaim(ENV)
         .addContent(
           'realm_access -> "DEVICE",
@@ -95,7 +95,7 @@ class DefaultStateVerifier @Inject() (
         expiration = Some(60 * 5),
         notBefore = None,
         originDomains = Nil,
-        scopes = List(Scopes.asString(Scopes.User_GetInfo))
+        scopes = List(Scope.asString(Scope.User_GetInfo))
       ).toTokenClaim(ENV)
         .addContent(
           'realm_access -> "USER",
