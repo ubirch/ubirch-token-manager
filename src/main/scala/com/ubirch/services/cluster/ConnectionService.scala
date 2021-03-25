@@ -6,8 +6,8 @@ import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.CassandraClusterConfPaths
 import com.ubirch.services.lifeCycle.Lifecycle
 import io.getquill.{ CassandraStreamContext, NamingStrategy, SnakeCase }
-import javax.inject._
 
+import javax.inject._
 import scala.concurrent.Future
 
 /**

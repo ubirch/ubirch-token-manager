@@ -5,7 +5,7 @@
     <script>
         $(document).ready(function () {
             $.ajax({
-                url: "https://token.dev.ubirch.com/api/tokens/v1/verification/create",
+                url: "https://token.dev.ubirch.com/api/tokens/v1/create",
                 contentType: "application/json",
                 crossDomain: true,
                 method: "POST",
@@ -17,7 +17,8 @@
                         "purpose": "King Dude - Concert",
                         "targetIdentities": ["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
                         "expiration": 6311390400,
-                        "notBefore": null
+                        "notBefore": null,
+                        "scopes" : ["upp:verify"]
                     }
                 )
             }).done(function (data) {

@@ -4,14 +4,17 @@ import java.util.UUID
 
 import com.ubirch.models.Good
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.PublicKeyPoolService
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
+import org.jose4j.jwk.PublicJsonWebKey
+import org.json4s.JsonAST.{ JArray, JField, JObject, JString }
 import org.scalatest.{ BeforeAndAfterEach, Tag }
 import org.scalatra.test.scalatest.ScalatraWordSpec
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.{ Failure, Success }
 
 /**
   * Test for the Key Controller
@@ -27,6 +30,7 @@ class TokenVerificationControllerSpec
 
   private lazy val Injector = new InjectorHelperImpl() {}
   private val jsonConverter = Injector.get[JsonConverterService]
+  private val tokenDecodingService = Injector.get[TokenDecodingService]
 
   "Token Manager -Verification Tokens-" must {
 
@@ -39,15 +43,83 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "targetIdentities": "*",
+          |  "targetIdentities": ["*"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        val b = jsonConverter.as[Good](body).right.get
+        val data = b.data.asInstanceOf[Map[String, Any]]
+
+        data.get("token") match {
+          case Some(token: String) =>
+
+            val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
+            tokenDecodingService.decodeAndVerify(token, key) match {
+              case Failure(exception) => fail(exception)
+              case Success(value) =>
+
+                def complete(completeWith: Boolean = false)(list: List[Boolean]): List[Boolean] = list match {
+                  case Nil => List(completeWith)
+                  case _ => list
+                }
+
+                val issOK = complete()(for {
+                  JObject(child) <- value
+                  JField("iss", JString("https://token.dev.ubirch.com")) <- child
+                } yield true)
+
+                val subOK = complete()(for {
+                  JObject(child) <- value
+                  JField("sub", JString("963995ed-ce12-4ea5-89dc-b181701d1d7b")) <- child
+                } yield true)
+
+                val audOK = complete()(for {
+                  JObject(child) <- value
+                  JField("aud", JString("https://verify.dev.ubirch.com")) <- child
+                } yield true)
+
+                val tidOK = complete()(for {
+                  JObject(child) <- value
+                  JField("tid", JArray(tid)) <- child
+                  JString("*") <- tid
+                } yield true)
+
+                val tgpOK = complete()(for {
+                  JObject(child) <- value
+                  JField("tgp", JArray(tid)) <- child
+                } yield tid.isEmpty)
+
+                val ordOK = complete()(for {
+                  JObject(child) <- value
+                  JField("ord", JArray(tid)) <- child
+                } yield tid.isEmpty)
+
+                val purposeOk = complete()(for {
+                  JObject(child) <- value
+                  JField("pur", JString("King Dude - Concert")) <- child
+                } yield true)
+
+                val scopesOk = complete()(for {
+                  JObject(child) <- value
+                  JField("scp", JArray(tid)) <- child
+                  JString("upp:verify") <- tid
+                } yield true)
+
+                val check = issOK ++ audOK ++ subOK ++ tidOK ++ tgpOK ++ ordOK ++ purposeOk ++ scopesOk
+
+                assert(check.forall(b => b) && check.nonEmpty)
+
+            }
+
+          case _ => fail("No Token Found")
+        }
+
+        assert(b.isInstanceOf[Good])
       }
 
     }
@@ -61,14 +133,15 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "targetIdentities": "*",
+          |  "targetIdentities": ["*"],
           |  "expiration": 2233738785,
           |  "notBefore":null,
-          |  "originDomains": ["https://meet.google.com", "https://simple.wikipedia.org"]
+          |  "originDomains": ["https://meet.google.com", "https://simple.wikipedia.org"],
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -84,14 +157,14 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "targetIdentities": "*",
+          |  "targetIdentities": ["*"],
           |  "expiration": 2233738785,
           |  "notBefore":null,
           |  "originDomains": ["ftp://meet.google.com", "https://simple.wikipedia.org"]
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
@@ -109,11 +182,12 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -135,7 +209,7 @@ class TokenVerificationControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
@@ -153,16 +227,17 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -188,11 +263,12 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         val bodyAsEither = jsonConverter.as[Good](body)
         val data = bodyAsEither.right.get.data.asInstanceOf[Map[String, Any]]
@@ -225,16 +301,17 @@ class TokenVerificationControllerSpec
           |  "purpose":"King Dude - Concert",
           |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
           |  "expiration": 2233738785,
-          |  "notBefore":null
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
@@ -269,7 +346,7 @@ class TokenVerificationControllerSpec
     "fail when no access token provided: create" taggedAs Tag("mandarina") in {
 
       val incomingBody = "{}"
-      post("/v1/verification/create", body = incomingBody) {
+      post("/v1/create", body = incomingBody) {
         status should equal(401)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
@@ -297,7 +374,7 @@ class TokenVerificationControllerSpec
     "fail when invalid access token provided: create" taggedAs Tag("durian") in {
 
       val incomingBody = "{}"
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
@@ -331,13 +408,13 @@ class TokenVerificationControllerSpec
           |{
           |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "purpose":"King Dude - Concert",
-          |  "targetIdentities": "other stuff",
+          |  "targetIdentities": ["other stuff"],
           |  "expiration": 2233738785,
           |  "notBefore":null
           |}
           |""".stripMargin
 
-      post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
@@ -348,7 +425,7 @@ class TokenVerificationControllerSpec
 
   override protected def beforeEach(): Unit = {
     CollectorRegistry.defaultRegistry.clear()
-    EmbeddedCassandra.truncateScript.forEachStatement(cassandra.connection.execute _)
+    EmbeddedCassandra.truncateScript.forEachStatement { x => val _ = cassandra.connection.execute(x) }
   }
 
   protected override def afterAll(): Unit = {

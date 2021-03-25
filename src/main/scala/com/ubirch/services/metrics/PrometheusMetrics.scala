@@ -8,8 +8,8 @@ import com.ubirch.ConfPaths.PrometheusConfPaths
 import com.ubirch.services.lifeCycle.Lifecycle
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
-import javax.inject._
 
+import javax.inject._
 import scala.annotation.tailrec
 import scala.concurrent.Future
 

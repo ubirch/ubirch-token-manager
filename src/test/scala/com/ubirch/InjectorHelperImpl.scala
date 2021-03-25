@@ -5,13 +5,16 @@ import com.google.inject.binder.ScopedBindingBuilder
 import com.typesafe.config.Config
 import com.ubirch.crypto.utils.Curve
 import com.ubirch.crypto.{ GeneratorKeyFactory, PrivKey }
-import com.ubirch.services.jwt.{ DefaultPublicKeyPoolService, PublicKeyDiscoveryService, PublicKeyPoolService, TokenCreationService }
-import javax.inject.{ Inject, Provider, Singleton }
+import com.ubirch.services.jwt.{ DefaultPublicKeyPoolService, PublicKeyDiscoveryService, PublicKeyPoolService, TokenEncodingService }
 import monix.eval.Task
 
+import javax.inject.{ Inject, Provider, Singleton }
+
+import com.ubirch.services.key.KeyPoolService
+
 @Singleton
-class FakeDefaultPublicKeyPoolService @Inject() (privKey: PrivKey, config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService)
-  extends DefaultPublicKeyPoolService(config, publicKeyDiscoveryService) {
+class FakeDefaultPublicKeyPoolService @Inject() (privKey: PrivKey, config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService, keyPoolService: KeyPoolService)
+  extends DefaultPublicKeyPoolService(config, publicKeyDiscoveryService, keyPoolService) {
 
   override def getKeyFromDiscoveryService(kid: String): Task[Option[Key]] = Task {
     kid match {
@@ -134,11 +137,11 @@ object FakeToken {
 }
 
 @Singleton
-class FakeTokenCreator @Inject() (val privKey: PrivKey, tokenCreationService: TokenCreationService) {
+class FakeTokenCreator @Inject() (val privKey: PrivKey, tokenEncodingService: TokenEncodingService) {
 
   def fakeToken(header: String, token: String): FakeToken = {
     FakeToken(
-      tokenCreationService.encode(header, token, privKey)
+      tokenEncodingService.encode(header, token, privKey)
         .getOrElse(throw new Exception("Error Creating Token"))
     )
   }
@@ -156,5 +159,6 @@ class InjectorHelperImpl() extends InjectorHelper(List(new Binder {
   override def configure(): Unit = {
     super.configure()
     bind(classOf[PrivKey]).toProvider(classOf[KeyPairProvider])
+    ()
   }
 }))

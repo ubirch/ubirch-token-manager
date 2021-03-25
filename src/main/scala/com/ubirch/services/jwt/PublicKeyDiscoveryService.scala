@@ -8,13 +8,13 @@ import com.typesafe.config.Config
 import com.ubirch.ConfPaths.TokenVerificationPaths
 import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
-import javax.inject._
 import monix.eval.{ Task, TaskApp }
 import monix.reactive.Observable
 import org.jose4j.jwk.PublicJsonWebKey
 import org.json4s.JsonAST.JArray
 import org.json4s.{ Formats, JString, JValue, JsonAST }
 
+import javax.inject._
 import scala.io.{ BufferedSource, Source }
 
 trait PublicKeyDiscoveryService {

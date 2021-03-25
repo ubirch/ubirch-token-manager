@@ -1,21 +1,22 @@
 package com.ubirch.controllers.concerns
 
 import java.io.{ ByteArrayInputStream, FileOutputStream }
+import java.nio.charset.StandardCharsets
 import java.util.Date
 
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.models.NOK
 import com.ubirch.util.ServiceMetrics
-import javax.servlet.http.{ HttpServletRequest, HttpServletRequestWrapper, HttpServletResponse }
-import javax.servlet.{ ReadListener, ServletInputStream }
 import monix.eval.Task
 import monix.execution.{ CancelableFuture, Scheduler }
-import org.apache.commons.codec.binary.Hex
 import org.apache.commons.compress.utils.IOUtils
 import org.json4s.JsonAST.JValue
 import org.scalatra._
 import org.scalatra.json.NativeJsonSupport
 import org.scalatra.swagger.SwaggerSupport
+
+import javax.servlet.http.{ HttpServletRequest, HttpServletRequestWrapper, HttpServletResponse }
+import javax.servlet.{ ReadListener, ServletInputStream }
 
 import scala.util.Try
 import scala.util.control.NoStackTrace
@@ -124,7 +125,7 @@ abstract class ControllerBase extends ScalatraServlet
 
     def getBodyAsBytes(implicit request: HttpServletRequest): Try[(Array[Byte], String)] = for {
       bytes <- Try(IOUtils.toByteArray(request.getInputStream))
-      bytesAsString <- Try(Hex.encodeHexString(bytes))
+      bytesAsString <- Try(new String(bytes, StandardCharsets.UTF_8))
     } yield (bytes, bytesAsString)
 
     def getBodyAsString(implicit request: HttpServletRequest): Try[String] = Try(request.body)

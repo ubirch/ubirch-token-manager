@@ -1,12 +1,13 @@
 package com.ubirch.controllers.concerns
 
+import java.util.{ Locale, UUID }
+
 import com.ubirch.models.NOK
 import org.json4s.JNothing
 import org.json4s.JsonAST.JValue
 import org.scalatra.ScalatraBase
 import org.scalatra.auth.{ ScentryConfig, ScentryStrategy, ScentrySupport }
 
-import java.util.{ Locale, UUID }
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import scala.language.implicitConversions
 import scala.util.Try

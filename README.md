@@ -1,72 +1,79 @@
 # Ubirch Token Manager
 
-This service knows about jwt tokens.
+This service is in charge of creating and managing purposed tokens. A purposed token is a token that may have a hybrid nature. It is a self-verifiable token and reference token. This nature depends on the types of claims that might be included in its definition. This service allows defining purposes and scopes for the corresponding tokens. As a convenience mechanism to integrate verification on the systems that required the tokens, a light sdk is included.
 
 1. [Getting Started](#steps-to-prepare-a-request)
-2. [TokenVerificationClaim Object](#token-verification-claim-object)
+2. [Token Claim Object](#token-claim-object)
 3. [Create Verification Token for Devices](#create-a-verification-token-for-specific-devices)
 4. [Create Verification Token with Wildcard](#create-a-verification-token-for-specific-devices)
 5. [List Your Tokens](#list-your-tokens)
 6. [Delete A Token](#delete-a-token)
-7. [Verification Token Claims](#verification-token-claims)
-8. [Keycloak and Responses](#keycloak-token-and-responses)
-9. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
-10. [Swagger](#swagger)
+7. [Available Scopes](#available-scopes)
+8. [Verification Token Claims](#verification-token-claims)
+9. [Keycloak and Responses](#keycloak-token-and-responses)
+10. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
+11. [A Light SDK](#a-light-sdk)    
+12. [Swagger](#swagger)
+13. [Workflows](#workflows)
 
 ## Steps to prepare a request
 
 1. Get your keycloak token.
-2. Prepare the data object - when needed (creation).
+2. Prepare the data object - when needed (creation of token).
 3. Prepare the request and send.
+4. Have fun.
 
-## Token Verification Claim Object
+## Token Claim Object
 
-```json
-{
-  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-  "purpose":"King Dude - Concert",
-  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"] | "*",
-  "expiration": 6311390400,
-  "notBefore":null,
-  "originDomains": ["https://verification.dev.ubirch.com"]
-}
-```
+This object is meant to be used in the creation of purposed claims. A purposed claim is an access token that has a purpose and contains scopes.
+
+![Data Model](assets/DataModel.png)
 
 **Fields**
 
-_tenantId_: it is the keycloak id of the logged in user.
+_`tenantId`_: it is the keycloak id of the logged-in user.
  
-_purpose_: it is a description for the token.  Min characters are 6
+_`purpose`_: it is a description for the token.  Min characters are 6
 
-_targetIdentities_: it is a list of device ids that belong to the user. It supports a list of specific devices or the wildcard *.
-If it is meant as wildcard, the field should be sent as a string.
+_`targetIdentities`_: it is a list of device ids that belong to the user. It supports a list of specific devices or the wildcard *.
+If it is meant as wildcard, the field should be sent as `["*"]`.
 
-_expiration_: the number of seconds after which the token will be considered expired.
+_`targetGroups`_: it is a list of uuids that correspond to identity groups or a list of the names of the groups.
+
+_`expiration`_: the number of seconds after which the token will be considered expired.
 That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server.
 If not set, it will not expire.
 
-_notBefore_: the number of seconds after which the token should be considered valid. 
+_`notBefore`_: the number of seconds after which the token should be considered valid. 
 That is to say: 'X seconds from now', where X == notBefore AND now == the current time calculated on the server.
 
-_originDomains_: list of domains from which the calls will be accepted from when verifying.
+_`originDomains`_: list of domains from which the calls will be accepted from when verifying.
+
+_`scopes`_: list of available scopes: "upp:anchor", "upp:verify", "thing:create", "thing:getinfo", "user:getinfo"
 
 **Mandatory Fields**
 
 * tenantId (uuid as string)
 * purpose (string) :: min characters are 6
-* targetIdentities (array of uuid as string) | (*)
+* targetIdentities (array of uuid as string) | (["*"])
+* targetGroups (array of uuids as string) | (array of group names)
 * originDomains (array of urls from which a verification can originate)
+* scopes (array of at least one scope)
 
 **Option Fields** 
 
 * expiration (number or null) in seconds
 * notBefore (number of null) in seconds
 
-Set as null or don't send the fields
+Set as null or don't send the fields.
+
+NOTE: Don't send `targetIdentities` and `targetGroups`. Send only one at a time.  
 
 ## Create a Verification Token for Specific Devices. 
 
 #### Keycloak Token
+
+This is a command that can be used to get a keycloak token. Note that you will need the username, password and client secret for the correspondig keycloak instance.
 
 ```json
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
@@ -78,9 +85,11 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 {
   "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
   "purpose":"King Dude - Concert",
-  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+  "targetIdentities":["e21552f8-0353-41e3-b86e-0d3e92935d46"],
   "expiration": 6311390400,
-  "notBefore":null
+  "notBefore":null,
+  "originDomains": ["http://verification.dev.ubirch.com"],
+  "scopes": ["upp:verify"]
 }
 ```
 
@@ -91,7 +100,7 @@ curl -s -X POST \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
     -d @createVerificationToken.json \
-    "${host}/api/tokens/v1/verification/create" | jq .
+    "${host}/api/tokens/v1/create" | jq .
 ```
 
 #### Post Response
@@ -101,19 +110,19 @@ curl -s -X POST \
   "version": "1.0",
   "ok": true,
   "data": {
-    "id": "b9107002-9a60-4230-9b8a-a43b4317de1c",
+    "id": "726aa795-a2dc-4354-9559-41a2c86615a1",
     "jwtClaim": {
-      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":[\"840b7e21-03e9-4de7-bb31-0b9524f3b500\"],\"role\":\"verifier\"}",
+      "content": "{\"scp\":[\"upp:verify\"],\"pur\":\"King Dude - Concert\",\"tgp\":[],\"tid\":[\"e21552f8-0353-41e3-b86e-0d3e92935d46\"],\"ord\":[\"http://verification.dev.ubirch.com\"]}",
       "issuer": "https://token.dev.ubirch.com",
       "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
       "audience": [
         "https://verify.dev.ubirch.com"
       ],
-      "expiration": 7918235892,
-      "issuedAt": 1606845492,
-      "jwtId": "b9107002-9a60-4230-9b8a-a43b4317de1c"
+      "expiration": 7927995641,
+      "issuedAt": 1616605241,
+      "jwtId": "726aa795-a2dc-4354-9559-41a2c86615a1"
     },
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MTgyMzU4OTIsImlhdCI6MTYwNjg0NTQ5MiwianRpIjoiYjkxMDcwMDItOWE2MC00MjMwLTliOGEtYTQzYjQzMTdkZTFjIiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwicm9sZSI6InZlcmlmaWVyIn0.7OiXbsoZMtNE6OaanUat7beuW3vZeKrJ8_fkW1iOwXHPXewq_p4kanDKJEmQkd-dV8dg3IfbdCndnnM6jpCQdA"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU2NDEsImlhdCI6MTYxNjYwNTI0MSwianRpIjoiNzI2YWE3OTUtYTJkYy00MzU0LTk1NTktNDFhMmM4NjYxNWExIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyJlMjE1NTJmOC0wMzUzLTQxZTMtYjg2ZS0wZDNlOTI5MzVkNDYiXSwib3JkIjpbImh0dHA6Ly92ZXJpZmljYXRpb24uZGV2LnViaXJjaC5jb20iXX0.etW9msaDVae1SC_BJTA0H6Hqo0m2inKi4SYKjOmJgqbPEmlWxtDvd0MP1rf5GYpfGqizbH3uUgRxESS6qqXSTQ"
   }
 }
 ```
@@ -132,9 +141,11 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 {
   "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
   "purpose":"King Dude - Concert",
-  "targetIdentities": "*",
+  "targetIdentities":["*"],
   "expiration": 6311390400,
-  "notBefore":null
+  "notBefore":null,
+  "originDomains": ["http://verification.dev.ubirch.com"],
+  "scopes": ["upp:verify"]
 }
 ```
 
@@ -145,7 +156,7 @@ curl -s -X POST \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
     -d @createVerificationToken.json \
-    "${host}/api/tokens/v1/verification/create" | jq .
+    "${host}/api/tokens/v1/create" | jq .
 ```
 
 #### Post Response
@@ -155,19 +166,19 @@ curl -s -X POST \
   "version": "1.0",
   "ok": true,
   "data": {
-    "id": "2d105274-1cb3-45bc-9aed-b7c444d25f2f",
+    "id": "92d60695-e6a2-4c6c-8173-6f8f1496dbb3",
     "jwtClaim": {
-      "content": "{\"purpose\":\"King Dude - Concert\",\"target_identities\":\"*\",\"role\":\"verifier\",\"scope\":\"ver\"}",
+      "content": "{\"scp\":[\"upp:verify\"],\"pur\":\"King Dude - Concert\",\"tgp\":[],\"tid\":[\"*\"],\"ord\":[\"http://verification.dev.ubirch.com\"]}",
       "issuer": "https://token.dev.ubirch.com",
       "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
       "audience": [
         "https://verify.dev.ubirch.com"
       ],
-      "expiration": 7921842955,
-      "issuedAt": 1610452555,
-      "jwtId": "2d105274-1cb3-45bc-9aed-b7c444d25f2f"
+      "expiration": 7927995850,
+      "issuedAt": 1616605450,
+      "jwtId": "92d60695-e6a2-4c6c-8173-6f8f1496dbb3"
     },
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MjE4NDI5NTUsImlhdCI6MTYxMDQ1MjU1NSwianRpIjoiMmQxMDUyNzQtMWNiMy00NWJjLTlhZWQtYjdjNDQ0ZDI1ZjJmIiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6IioiLCJyb2xlIjoidmVyaWZpZXIiLCJzY29wZSI6InZlciJ9.AE5njTtbWGXDr-6hyn7UJYJgD10vGznp3vof2B8Bs77HzUqC42xfLDk0f0Fhcb8sXb61i32jxQj9fG0OulPVAg"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU4NTAsImlhdCI6MTYxNjYwNTQ1MCwianRpIjoiOTJkNjA2OTUtZTZhMi00YzZjLTgxNzMtNmY4ZjE0OTZkYmIzIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyIqIl0sIm9yZCI6WyJodHRwOi8vdmVyaWZpY2F0aW9uLmRldi51YmlyY2guY29tIl19.-zcsKmqc0dimFfZO71l-eBnNufbUIRxykOIGyHsRFPmGVShYRwAZaH6CxtIPL60uvtokfyNumbNGIg7LILRiFA"
   }
 }
 ```
@@ -188,15 +199,14 @@ This token has the following header:
   "iss": "https://token.dev.ubirch.com",
   "sub": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
   "aud": "https://verify.dev.ubirch.com",
-  "exp": 7921535473,
-  "iat": 1610145073,
-  "jti": "f359eaf1-2a91-4462-962b-5c85523bafad",
-  "purpose": "Shark Tank - Mexico",
-  "target_identities": [
-    "7549acd8-91e1-4230-833a-2f386e09b96f"
-  ],
-  "role": "verifier",
-  "scope": "ver"
+  "exp": 7924869463,
+  "iat": 1613479063,
+  "jti": "407f29ab-ac74-42c7-81e9-107a53f3de36",
+  "pur": "King Dude - Concert",
+  "tid": ["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+  "tgp": [],
+  "ord": ["http://verification.dev.ubirch.com"],
+  "scp": ["upp:verify"]
 }
 ```
 
@@ -204,14 +214,14 @@ This token has the following header:
 Where 
     'iss' is Principal Entity that signs/issues the token: The Token Manager.
     'sub' is the purpose or subject for this token: The tenantId/UserId from Keycloak 
-    'aud' target entity: The target system, in this token, the Verfication Service.  
+    'aud' target entity: The target systems: Verfication Service, Niomon, or Thing API.  
     'exp' is the expiration time
     'iat' is the initial time
     'jti' is a unique uuid id for the token
-    'purpose' is a description of the main usage for this token, like a concert or artist show
-    'target_identities': it is the entities for which the subject can perform the action on the target audience system
-    'role' is the role that was assigned to this token
-    'scope' is the action allowed for this token.
+    'pur' is a description of the main usage for this token, like a concert or artist show
+    'tid': it is the entities for which the subject can perform the action on the target audience system
+    'tgp': it is the groups (keycloak groups) that can be used to aggregate devices.
+    'scp' is set of actions allowed per resource for this token.
 ```
 
 ## List your Tokens 
@@ -235,22 +245,22 @@ curl -s -X GET \
 
 ```json
 {
-  "version":"1.0",
-  "ok":true,
-  "data":[
+  "version": "1.0",
+  "ok": true,
+  "data": [
     {
-      "id":"163e22a2-bbd6-4536-a8f6-db0356c67a07",
-      "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-      "tokenValue":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5MTc4MDcwNzUsImlhdCI6MTYwNjQxNjY3NSwianRpIjoiMTYzZTIyYTItYmJkNi00NTM2LWE4ZjYtZGIwMzU2YzY3YTA3IiwicHVycG9zZSI6IktpbmcgRHVkZSAtIENvbmNlcnQiLCJ0YXJnZXRfaWRlbnRpdGllcyI6WyI4NDBiN2UyMS0wM2U5LTRkZTctYmIzMS0wYjk1MjRmM2I1MDAiXSwicm9sZSI6InZlcmlmaWVyIn0.GIv9n3C6nEEnHZlHMZa_saaENv51MeWH1586UBQUP8GlwMcjbWU6mTXe3LRXjTLHRJXpuGrH5fcNe3fLC7MqzA",
-      "category":"verification",
-      "createdAt":"2020-11-26T18:51:15.700Z"
+      "id": "726aa795-a2dc-4354-9559-41a2c86615a1",
+      "ownerId": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "tokenValue": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU2NDEsImlhdCI6MTYxNjYwNTI0MSwianRpIjoiNzI2YWE3OTUtYTJkYy00MzU0LTk1NTktNDFhMmM4NjYxNWExIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyJlMjE1NTJmOC0wMzUzLTQxZTMtYjg2ZS0wZDNlOTI5MzVkNDYiXSwib3JkIjpbImh0dHA6Ly92ZXJpZmljYXRpb24uZGV2LnViaXJjaC5jb20iXX0.etW9msaDVae1SC_BJTA0H6Hqo0m2inKi4SYKjOmJgqbPEmlWxtDvd0MP1rf5GYpfGqizbH3uUgRxESS6qqXSTQ",
+      "category": "purposed_claim",
+      "createdAt": "2021-03-24T17:00:41.329Z"
     },
     {
-      "id":"2b7df15a-e170-4e5b-be7a-d548a3330d73",
-      "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-      "tokenValue":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiIiLCJzdWIiOiIiLCJhdWQiOiIiLCJpYXQiOjE2MDQ0MTU1NjQsImp0aSI6IjJiN2RmMTVhLWUxNzAtNGU1Yi1iZTdhLWQ1NDhhMzMzMGQ3MyIsIm93bmVySWQiOiI5NjM5OTVlZC1jZTEyLTRlYTUtODlkYy1iMTgxNzAxZDFkN2IifQ.Fk3Cqr3QzIpbBkE8NVY_m8LVVfwxTuOtDja4F7jpWu26YlH0v2wh1hg7iv9o9_hAchK3qc7LtyI43lhUA0nkIg",
-      "category":"generic",
-      "createdAt":"2020-11-03T14:59:24.323Z"
+      "id": "92d60695-e6a2-4c6c-8173-6f8f1496dbb3",
+      "ownerId": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "tokenValue": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJleHAiOjc5Mjc5OTU4NTAsImlhdCI6MTYxNjYwNTQ1MCwianRpIjoiOTJkNjA2OTUtZTZhMi00YzZjLTgxNzMtNmY4ZjE0OTZkYmIzIiwic2NwIjpbInVwcDp2ZXJpZnkiXSwicHVyIjoiS2luZyBEdWRlIC0gQ29uY2VydCIsInRncCI6W10sInRpZCI6WyIqIl0sIm9yZCI6WyJodHRwOi8vdmVyaWZpY2F0aW9uLmRldi51YmlyY2guY29tIl19.-zcsKmqc0dimFfZO71l-eBnNufbUIRxykOIGyHsRFPmGVShYRwAZaH6CxtIPL60uvtokfyNumbNGIg7LILRiFA",
+      "category": "purposed_claim",
+      "createdAt": "2021-03-24T17:04:10.397Z"
     }
   ]
 }
@@ -311,10 +321,49 @@ The <response> codes could be:
 5. <500 Internal Server Error> When an internal error happened from which it is not possible to recover.
 ```
 
+## Available Scopes
+
+The scopes have this definition:
+
+`[RESOURCE]:[ACTION]`
+
+RESOURCE: Represents the entity in the system that needs to be regulated. For example: DEVICE or USER or UPP
+ACTION: Represents the verb/action that is regulated for the given resource. For example: verify or anchor
+
+```shell script
+curl -s -X GET $host/api/tokens/v1/scopes | jq .
+```
+
+**upp:anchor**  :: it allows anchoring upps
+
+**upp:verify**  :: it allows verifying upps
+
+**thing:create**:: it allows creating/registering devices or things.
+
+**thing:getinfo**:: it allows querying info about a device or thing.
+
+**user:getinfo**:: it allows querying info about a user.
+
+This call returns a json object whose data field is an array of scopes.
+
+```json
+{
+  "version": "1.0",
+  "ok": true,
+  "data": [
+    "upp:anchor",
+    "upp:verify",
+    "thing:create",
+    "thing:getinfo",
+    "user:getinfo"
+  ]
+}
+```
+
 ## Verifying an Ubirch JWT Token
 
 The Ubirch Token Manager offers an endpoint that can be used to retrieve the public key for the tokens in order to be able to verify the generated token.
-This endpoint doesn't require of a access token. 
+This endpoint doesn't require of an access token. 
 
 ```shell script
 curl -s -X GET $host/api/tokens/v1/jwk | jq .
@@ -322,9 +371,32 @@ curl -s -X GET $host/api/tokens/v1/jwk | jq .
 
 This call returns a json object whose data field is the public key. This public key is in JWK format.
 
+## A Light SDK
+
+In order to facilitate the integration of some of the most important functions of the Token Manager when verifying Token in other Services, a light SDK has been included in the project.
+
+The interface offers these basic operations:
+
+* **decodeAndVerify** ->  It allows a basic verification. It verifies that the token is well-built, that its standard claims are checked. I
+* **getClaims** -> It the same as the previous operation but basically performing the verification on the header as it is.
+* **externalStateVerify**: -> Depending on the kinds of claims, there are some that require an external verification, this operations starts a verification against the Token Manager. Useful for groups and revocation claims.
+
+        <dependency>
+            <groupId>com.ubirch</groupId>
+            <artifactId>ubirch-token-sdk</artifactId>
+            <version>0.6.5-SNAPSHOT</version>
+        </dependency>
 
 ## Swagger
 
 Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 
+## Workflows
 
+### Token Creation
+![Token Creation](assets/token_creation.png)
+
+### Verification Token
+![Verification Token](assets/token_verification_usage.png)
+
+[Token Scenarios](token_scenarios.md)

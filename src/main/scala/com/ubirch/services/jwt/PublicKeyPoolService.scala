@@ -5,10 +5,11 @@ import java.security.Key
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.TokenVerificationPaths
-import javax.inject._
 import monix.eval.Task
 
-import scala.collection.concurrent.TrieMap
+import javax.inject._
+
+import com.ubirch.services.key.KeyPoolService
 
 trait PublicKeyPoolService {
   def getKey(kid: String): Option[Key]
@@ -17,13 +18,11 @@ trait PublicKeyPoolService {
 }
 
 @Singleton
-class DefaultPublicKeyPoolService @Inject() (config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService) extends PublicKeyPoolService with LazyLogging {
+class DefaultPublicKeyPoolService @Inject() (config: Config, publicKeyDiscoveryService: PublicKeyDiscoveryService, keyPoolService: KeyPoolService) extends PublicKeyPoolService with LazyLogging {
 
   final val acceptedKids = List(config.getString(TokenVerificationPaths.KID))
 
-  private final val cache = new TrieMap[String, Key]()
-
-  override def getKey(kid: String): Option[Key] = cache.find(_._1 == kid).map(_._2)
+  override def getKey(kid: String): Option[Key] = keyPoolService.getKey(kid)
 
   override def getDefaultKey: Option[Key] = acceptedKids.headOption.flatMap(x => getKey(x))
 
@@ -37,7 +36,7 @@ class DefaultPublicKeyPoolService @Inject() (config: Config, publicKeyDiscoveryS
         } yield {
 
           val res = maybeKey match {
-            case Some(value) => cache.put(kid, value).map(x => (kid, x))
+            case Some(value) => keyPoolService.addKey(kid, value).map(x => (kid, x))
             case None =>
               logger.warn("kid_not_found={}", kid)
               None
