@@ -1,5 +1,5 @@
 import com.ubirch.Service
-import com.ubirch.controllers.{ InfoController, ResourcesController, TokenControllerV2 }
+import com.ubirch.controllers.{ InfoController, ResourcesController, TokenControllerV1, TokenControllerV2 }
 import org.scalatra.LifeCycle
 
 import javax.servlet.ServletContext
@@ -10,6 +10,7 @@ import javax.servlet.ServletContext
 class ScalatraBootstrap extends LifeCycle {
 
   lazy val infoController: InfoController = Service.get[InfoController]
+  lazy val tokenControllerV1: TokenControllerV1 = Service.get[TokenControllerV1]
   lazy val tokenControllerV2: TokenControllerV2 = Service.get[TokenControllerV2]
   lazy val resourceController: ResourcesController = Service.get[ResourcesController]
 
@@ -22,6 +23,11 @@ class ScalatraBootstrap extends LifeCycle {
       handler = infoController,
       urlPattern = "/",
       name = "Info"
+    )
+    context.mount(
+      handler = tokenControllerV1,
+      urlPattern = "/api/tokens/v1",
+      name = "Tokens V1"
     )
     context.mount(
       handler = tokenControllerV2,

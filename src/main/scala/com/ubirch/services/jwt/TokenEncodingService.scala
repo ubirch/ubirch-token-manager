@@ -16,7 +16,7 @@ trait TokenEncodingService {
   def create[T <: Any](
       id: UUID,
       by: String,
-      to: Set[String],
+      to: Either[Set[String], String],
       about: String,
       expiresIn: Option[Long],
       notBefore: Option[Long],
@@ -35,7 +35,7 @@ class DefaultTokenEncodingService extends TokenEncodingService with TaskHelpers 
   override def create[T <: Any](
       id: UUID,
       by: String,
-      to: Set[String],
+      to: Either[Set[String], String],
       about: String,
       expiresIn: Option[Long],
       notBefore: Option[Long],
@@ -44,12 +44,16 @@ class DefaultTokenEncodingService extends TokenEncodingService with TaskHelpers 
 
     for {
       jwtClaim <- Try {
-        JwtClaim()
+        val jc = JwtClaim()
           .by(by)
-          .to(to)
           .about(about)
           .issuedNow
           .withId(id.toString)
+
+        to match {
+          case Left(aud) => jc.to(aud)
+          case Right(aud) => jc.to(aud)
+        }
       }
         .map { x => expiresIn.map(x.expiresIn(_)).getOrElse(x) }
         .map { x => notBefore.map(x.startsIn(_)).getOrElse(x) }
@@ -81,11 +85,16 @@ class DefaultTokenEncodingService extends TokenEncodingService with TaskHelpers 
 
   override def encode(id: UUID, tokenClaim: TokenClaim, privKey: PrivKey): Try[(String, JwtClaim)] = {
 
+    val aud: Either[Set[String], String] = tokenClaim.audience match {
+      case List("") => Right("")
+      case list => Left(list.toSet)
+    }
+
     for {
       claims <- create(
         id = id,
         by = tokenClaim.issuer,
-        to = tokenClaim.audience.toSet,
+        to = aud,
         about = tokenClaim.subject,
         expiresIn = tokenClaim.expiration,
         notBefore = tokenClaim.notBefore,

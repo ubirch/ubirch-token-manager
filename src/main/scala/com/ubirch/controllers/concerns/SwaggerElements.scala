@@ -9,7 +9,7 @@ object SwaggerElements {
 
   val TAG_WELCOME = "Welcome"
   val TAG_HEALTH = "Health"
-  val TAG_TOKEN_SERVICE = "Token Manager"
+  val TAG_TOKEN_SERVICE_V1 = "Token Manager V1"
+  val TAG_TOKEN_SERVICE_V2 = "Token Manager V2"
 
-  val ERROR_RESPONSE: String = "version: '1.0' status: NOK\n" + "errorType: FindTrustedError\n" + "message: failed to query trusted keys"
 }
