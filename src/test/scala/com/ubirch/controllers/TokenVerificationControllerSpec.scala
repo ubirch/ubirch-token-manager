@@ -1,12 +1,15 @@
 package com.ubirch.controllers
 
+import java.security.PublicKey
 import java.util.UUID
 
 import com.ubirch.models.Good
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.PublicKeyPoolService
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenVerificationService }
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
+import org.jose4j.jwk.PublicJsonWebKey
+import org.json4s.JsonAST.{ JArray, JField, JObject, JString }
 import org.scalatest.{ BeforeAndAfterEach, Tag }
 import org.scalatra.test.scalatest.ScalatraWordSpec
 
@@ -27,6 +30,7 @@ class TokenVerificationControllerSpec
 
   private lazy val Injector = new InjectorHelperImpl() {}
   private val jsonConverter = Injector.get[JsonConverterService]
+  private val tokenDecodingService = Injector.get[TokenVerificationService]
 
   "Token Manager -Verification Tokens-" must {
 
@@ -47,6 +51,74 @@ class TokenVerificationControllerSpec
 
       post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
+
+        val b = jsonConverter.as[Good](body).right.get
+        val data = b.data.asInstanceOf[Map[String, Any]]
+
+        data.get("token") match {
+          case Some(token: String) =>
+
+            val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
+            tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey]) match {
+              case None => fail(new Exception("Failed"))
+              case Some(value) =>
+
+                def complete(completeWith: Boolean = false)(list: List[Boolean]): List[Boolean] = list match {
+                  case Nil => List(completeWith)
+                  case _ => list
+                }
+
+                assert(value.children.size == 11)
+
+                val issOK = complete()(for {
+                  JObject(child) <- value
+                  JField("iss", JString("https://token.dev.ubirch.com")) <- child
+                } yield true)
+
+                val subOK = complete()(for {
+                  JObject(child) <- value
+                  JField("sub", JString("963995ed-ce12-4ea5-89dc-b181701d1d7b")) <- child
+                } yield true)
+
+                val audOK = complete()(for {
+                  JObject(child) <- value
+                  JField("aud", JString("https://verify.dev.ubirch.com")) <- child
+                } yield true)
+
+                val tidOK = complete()(for {
+                  JObject(child) <- value
+                  JField("target_identities", JString("*")) <- child
+                } yield true)
+
+                val ordOK = complete()(for {
+                  JObject(child) <- value
+                  JField("origin_domains", JArray(tid)) <- child
+                } yield tid.isEmpty)
+
+                val purposeOk = complete()(for {
+                  JObject(child) <- value
+                  JField("purpose", JString("King Dude - Concert")) <- child
+                } yield true)
+
+                val roleOk = complete()(for {
+                  JObject(child) <- value
+                  JField("role", JString("verifier")) <- child
+                } yield true)
+
+                val scopesOk = complete()(for {
+                  JObject(child) <- value
+                  JField("scope", JString("ver")) <- child
+                } yield true)
+
+                val check = issOK ++ audOK ++ subOK ++ tidOK ++ ordOK ++ purposeOk ++ roleOk ++ scopesOk
+
+                assert(check.forall(b => b) && check.nonEmpty)
+
+            }
+
+          case _ => fail("No Token Found")
+        }
+
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
@@ -115,6 +187,75 @@ class TokenVerificationControllerSpec
 
       post("/v1/verification/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
+
+        val b = jsonConverter.as[Good](body).right.get
+        val data = b.data.asInstanceOf[Map[String, Any]]
+
+        data.get("token") match {
+          case Some(token: String) =>
+
+            val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
+            tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey]) match {
+              case None => fail(new Exception("Failed"))
+              case Some(value) =>
+
+                def complete(completeWith: Boolean = false)(list: List[Boolean]): List[Boolean] = list match {
+                  case Nil => List(completeWith)
+                  case _ => list
+                }
+
+                assert(value.children.size == 11)
+
+                val issOK = complete()(for {
+                  JObject(child) <- value
+                  JField("iss", JString("https://token.dev.ubirch.com")) <- child
+                } yield true)
+
+                val subOK = complete()(for {
+                  JObject(child) <- value
+                  JField("sub", JString("963995ed-ce12-4ea5-89dc-b181701d1d7b")) <- child
+                } yield true)
+
+                val audOK = complete()(for {
+                  JObject(child) <- value
+                  JField("aud", JString("https://verify.dev.ubirch.com")) <- child
+                } yield true)
+
+                val tidOK = complete()(for {
+                  JObject(child) <- value
+                  JField("target_identities", JArray(tid)) <- child
+                  JString("840b7e21-03e9-4de7-bb31-0b9524f3b500") <- tid
+                } yield true)
+
+                val ordOK = complete()(for {
+                  JObject(child) <- value
+                  JField("origin_domains", JArray(tid)) <- child
+                } yield tid.isEmpty)
+
+                val purposeOk = complete()(for {
+                  JObject(child) <- value
+                  JField("purpose", JString("King Dude - Concert")) <- child
+                } yield true)
+
+                val roleOk = complete()(for {
+                  JObject(child) <- value
+                  JField("role", JString("verifier")) <- child
+                } yield true)
+
+                val scopesOk = complete()(for {
+                  JObject(child) <- value
+                  JField("scope", JString("ver")) <- child
+                } yield true)
+
+                val check = issOK ++ audOK ++ subOK ++ tidOK ++ ordOK ++ purposeOk ++ roleOk ++ scopesOk
+
+                assert(check.forall(b => b) && check.nonEmpty)
+
+            }
+
+          case _ => fail("No Token Found")
+        }
+
         assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
       }
 
