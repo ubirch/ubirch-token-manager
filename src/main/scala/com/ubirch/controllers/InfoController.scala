@@ -3,7 +3,7 @@ package com.ubirch.controllers
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, SwaggerElements }
-import com.ubirch.models.{ Good, NOK }
+import com.ubirch.models.{ Good, NOK, Response }
 import io.prometheus.client.Counter
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -24,6 +24,7 @@ import scala.concurrent.ExecutionContext
 class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: Formats)(implicit val executor: ExecutionContext, scheduler: Scheduler)
   extends ControllerBase {
 
+  override val version: Symbol = Response.v2
   override protected val applicationDescription = "Info Controller"
   override protected implicit def jsonFormats: Formats = jFormats
 
@@ -70,7 +71,7 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
   get("/", operation(getSimpleCheck)) {
     asyncResult("root") { _ => _ =>
       Task {
-        Ok(Good("Hallo, Hola, Hello, Salut, Hej, this is the Ubirch Token Manager."))
+        Ok(Good(version, "Hallo, Hola, Hello, Salut, Hej, this is the Ubirch Token Manager."))
       }
     }
   }
@@ -83,7 +84,7 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
     asyncResult("not_found") { _ => _ =>
       Task {
         logger.info("controller=InfoController route_not_found={} query_string={}", requestPath, request.getQueryString)
-        NotFound(NOK.noRouteFound(requestPath + " might exist in another universe"))
+        NotFound(NOK.noRouteFound(version, requestPath + " might exist in another universe"))
       }
     }
   }

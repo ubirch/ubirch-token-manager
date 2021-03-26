@@ -4,11 +4,16 @@ package com.ubirch.models
   * Represents a simple Response object. Used for HTTP responses.
   */
 abstract class Response[T] {
-  val version: String
+  val version: Symbol
   val ok: T
 }
 object Response {
-  val version = "1.0"
+  final val v1 = Symbol("1.0")
+  final val v2 = Symbol("2.0")
+}
+
+trait WithVersion {
+  val version: Symbol
 }
 
 /**
@@ -18,7 +23,7 @@ object Response {
   * @param errorType the error type
   * @param errorMessage the message for the response
   */
-case class NOK(version: String, ok: Boolean, errorType: Symbol, errorMessage: String) extends Response[Boolean]
+case class NOK(version: Symbol, ok: Boolean, errorType: Symbol, errorMessage: String) extends Response[Boolean]
 
 /**
   * Companion object for the NOK response
@@ -33,20 +38,20 @@ object NOK {
   final val TOKEN_LISTING_ERROR = 'TokenListingError
   final val AUTHENTICATION_ERROR = 'AuthenticationError
 
-  def apply(errorType: Symbol, errorMessage: String): NOK = new NOK(Response.version, ok = false, errorType, errorMessage)
+  def apply(version: Symbol, errorType: Symbol, errorMessage: String): NOK = new NOK(version, ok = false, errorType, errorMessage)
 
-  def serverError(errorMessage: String): NOK = NOK(SERVER_ERROR, errorMessage)
-  def parsingError(errorMessage: String): NOK = NOK(PARSING_ERROR, errorMessage)
-  def noRouteFound(errorMessage: String): NOK = NOK(NO_ROUTE_FOUND_ERROR, errorMessage)
-  def tokenDeleteError(errorMessage: String): NOK = NOK(DELETE_ERROR, errorMessage)
-  def tokenCreationError(errorMessage: String): NOK = NOK(TOKEN_CREATION_ERROR, errorMessage)
-  def tokenListingError(errorMessage: String): NOK = NOK(TOKEN_LISTING_ERROR, errorMessage)
-  def authenticationError(errorMessage: String): NOK = NOK(AUTHENTICATION_ERROR, errorMessage)
+  def serverError(version: Symbol, errorMessage: String): NOK = NOK(version, SERVER_ERROR, errorMessage)
+  def parsingError(version: Symbol, errorMessage: String): NOK = NOK(version, PARSING_ERROR, errorMessage)
+  def noRouteFound(version: Symbol, errorMessage: String): NOK = NOK(version, NO_ROUTE_FOUND_ERROR, errorMessage)
+  def tokenDeleteError(version: Symbol, errorMessage: String): NOK = NOK(version, DELETE_ERROR, errorMessage)
+  def tokenCreationError(version: Symbol, errorMessage: String): NOK = NOK(version, TOKEN_CREATION_ERROR, errorMessage)
+  def tokenListingError(version: Symbol, errorMessage: String): NOK = NOK(version, TOKEN_LISTING_ERROR, errorMessage)
+  def authenticationError(version: Symbol, errorMessage: String): NOK = NOK(version, AUTHENTICATION_ERROR, errorMessage)
 
 }
 
-case class Good(version: String, ok: Boolean, data: Any) extends Response[Boolean]
+case class Good(version: Symbol, ok: Boolean, data: Any) extends Response[Boolean]
 object Good {
-  def apply(data: Any): Good = new Good(Response.version, ok = true, data)
+  def apply(version: Symbol, data: Any): Good = new Good(version, ok = true, data)
 }
 

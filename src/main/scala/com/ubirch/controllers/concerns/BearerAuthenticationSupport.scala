@@ -2,7 +2,7 @@ package com.ubirch.controllers.concerns
 
 import java.util.{ Locale, UUID }
 
-import com.ubirch.models.NOK
+import com.ubirch.models.{ NOK, WithVersion }
 import org.json4s.JNothing
 import org.json4s.JsonAST.JValue
 import org.scalatra.ScalatraBase
@@ -12,7 +12,7 @@ import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import scala.language.implicitConversions
 import scala.util.Try
 
-trait BearerAuthSupport[TokenType <: AnyRef] {
+trait BearerAuthSupport[TokenType <: AnyRef] extends WithVersion {
   self: ScalatraBase with ScentrySupport[TokenType] =>
 
   def realm: String
@@ -21,10 +21,10 @@ trait BearerAuthSupport[TokenType <: AnyRef] {
     val beReq = new BearerAuthStrategy.BearerAuthRequest(request)
     if (!beReq.providesAuth) {
       response.setHeader("WWW-Authenticate", "Bearer realm=\"%s\"" format realm)
-      halt(401, NOK.authenticationError("Unauthenticated"))
+      halt(401, NOK.authenticationError(version, "Unauthenticated"))
     }
     if (!beReq.isBearerAuth) {
-      halt(400, NOK.authenticationError("Invalid bearer token"))
+      halt(400, NOK.authenticationError(version, "Invalid bearer token"))
     }
 
     scentry.authenticate("Bearer")
@@ -35,7 +35,7 @@ trait BearerAuthSupport[TokenType <: AnyRef] {
     val predicates: Seq[TokenType => Boolean] = p
     bearerAuth() match {
       case Some(value) if predicates.forall(x => x(value)) => action(value)
-      case _ => halt(403, NOK.authenticationError("Forbidden"))
+      case _ => halt(403, NOK.authenticationError(version, "Forbidden"))
     }
   }
 

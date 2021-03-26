@@ -20,7 +20,7 @@ import javax.inject.{ Inject, Singleton, Scope => _ }
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class TokenController @Inject() (
+class TokenControllerV2 @Inject() (
     config: Config,
     val swagger: Swagger,
     jFormats: Formats,
@@ -32,7 +32,8 @@ class TokenController @Inject() (
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
   extends ControllerBase with KeycloakBearerAuthenticationSupport {
 
-  override protected val applicationDescription = "Token Controller"
+  override val version: Symbol = Response.v2
+  override protected val applicationDescription: String = "Token Controller " + version
   override protected implicit def jsonFormats: Formats = jFormats
 
   val service: String = config.getString(GenericConfPaths.NAME)
@@ -40,13 +41,13 @@ class TokenController @Inject() (
   val successCounter: Counter = Counter.build()
     .name("token_management_success")
     .help("Represents the number of token management successes")
-    .labelNames("service", "method")
+    .labelNames("service", "method", "version")
     .register()
 
   val errorCounter: Counter = Counter.build()
     .name("token_management_failures")
     .help("Represents the number of token management failures")
-    .labelNames("service", "method")
+    .labelNames("service", "method", "version")
     .register()
 
   before() {
@@ -74,33 +75,33 @@ class TokenController @Inject() (
         responseMessages (
           ResponseMessage(
             SwaggerElements.ERROR_REQUEST_CODE_400,
-            jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+            jsonConverterService.toString(NOK.tokenDeleteError(version, "Error creating token"))
               .right
               .getOrElse("Error creating token")
           ),
             ResponseMessage(
               SwaggerElements.INTERNAL_ERROR_CODE_500,
-              jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+              jsonConverterService.toString(NOK.serverError(version, "1.1 Sorry, something went wrong on our end"))
                 .right
                 .getOrElse("Sorry, something went wrong on our end")
             )
         ))
 
-  post("/v1/generic/create", operation(postV1TokenCreate)) {
+  post("/generic/create", operation(postV1TokenCreate)) {
 
     authenticated(_.isAdmin) { token =>
       asyncResult("create_generic_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
           res <- tokenService.create(token, readBody.extracted, 'generic)
-            .map { tkc => Ok(Good(tkc)) }
+            .map { tkc => Ok(Good(version, tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                BadRequest(NOK.tokenCreationError("Error creating token"))
+                BadRequest(NOK.tokenCreationError(version, "Error creating token"))
               case e: Exception =>
                 logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+                InternalServerError(NOK.serverError(version, "1.2 Sorry, something went wrong on our end"))
             }
 
         } yield {
@@ -127,33 +128,33 @@ class TokenController @Inject() (
           responseMessages (
             ResponseMessage(
               SwaggerElements.ERROR_REQUEST_CODE_400,
-              jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+              jsonConverterService.toString(NOK.tokenDeleteError(version, "Error creating token"))
                 .right
                 .getOrElse("Error creating token")
             ),
               ResponseMessage(
                 SwaggerElements.INTERNAL_ERROR_CODE_500,
-                jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+                jsonConverterService.toString(NOK.serverError(version, "1.1 Sorry, something went wrong on our end"))
                   .right
                   .getOrElse("Sorry, something went wrong on our end")
               )
           ))
 
-  post("/v1/create", operation(postV1TokenVerificationCreate)) {
+  post("/create", operation(postV1TokenVerificationCreate)) {
 
     authenticated() { token =>
       asyncResult("create_purpose_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenPurposedClaim](t => t.camelizeKeys))
           res <- tokenService.create(token, readBody.extracted)
-            .map { tkc => Ok(Good(tkc)) }
+            .map { tkc => Ok(Good(version, tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                BadRequest(NOK.tokenCreationError("Error creating token"))
+                BadRequest(NOK.tokenCreationError(version, "Error creating token"))
               case e: Exception =>
                 logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+                InternalServerError(NOK.serverError(version, "1.2 Sorry, something went wrong on our end"))
             }
 
         } yield {
@@ -170,7 +171,7 @@ class TokenController @Inject() (
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters swaggerTokenAsHeader)
 
-  post("/v1/verify", operation(getV1Verify)) {
+  post("/verify", operation(getV1Verify)) {
 
     asyncResult("verify_token") { implicit request => _ =>
 
@@ -179,14 +180,14 @@ class TokenController @Inject() (
         reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
         res <- tokenService.verify(readBody.extracted.copy(signed = Some(readBody.asString), signatureRaw = Some(reqSig), time = Some(reqTimestamp)))
-          .map { tkv => Ok(Good(tkv)) }
+          .map { tkv => Ok(Good(version, tkv)) }
           .onErrorHandle {
             case e: ServiceException =>
               logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              BadRequest(Ok(Good(false)))
+              BadRequest(Ok(Good(version, false)))
             case e: Exception =>
               logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+              InternalServerError(NOK.serverError(version, "1.2 Sorry, something went wrong on our end"))
           }
 
       } yield {
@@ -202,20 +203,20 @@ class TokenController @Inject() (
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters swaggerTokenAsHeader)
 
-  get("/v1", operation(getV1TokenList)) {
+  get("/", operation(getV1TokenList)) {
 
     authenticated() { token =>
       asyncResult("list_tokens") { _ => _ =>
         for {
           res <- tokenService.list(token)
-            .map { tks => Ok(Good(tks)) }
+            .map { tks => Ok(Good(version, tks)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                BadRequest(NOK.tokenListingError("Error getting tokens"))
+                BadRequest(NOK.tokenListingError(version, "Error getting tokens"))
               case e: Exception =>
                 logger.error("1.2 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+                InternalServerError(NOK.serverError(version, "1.2 Sorry, something went wrong on our end"))
             }
 
         } yield {
@@ -232,7 +233,7 @@ class TokenController @Inject() (
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters swaggerTokenAsHeader)
 
-  get("/v1/:id", operation(getV1Token)) {
+  get("/:id", operation(getV1Token)) {
 
     authenticated() { token =>
       asyncResult("get_token") { _ => _ =>
@@ -242,14 +243,14 @@ class TokenController @Inject() (
             .onErrorHandle(_ => throw InvalidParamException("Invalid OwnerId", "Wrong owner param"))
 
           res <- tokenService.get(token, id)
-            .map { tks => Ok(Good(tks.orNull)) }
+            .map { tks => Ok(Good(version, tks.orNull)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                BadRequest(NOK.tokenListingError("Error getting token"))
+                BadRequest(NOK.tokenListingError(version, "Error getting token"))
               case e: Exception =>
                 logger.error("1.2 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+                InternalServerError(NOK.serverError(version, "1.2 Sorry, something went wrong on our end"))
             }
 
         } yield {
@@ -265,17 +266,17 @@ class TokenController @Inject() (
       description "returns the jwk for the current token verification"
       tags SwaggerElements.TAG_TOKEN_SERVICE)
 
-  get("/v1/jwk", operation(getV1JWK)) {
+  get("/jwk", operation(getV1JWK)) {
     asyncResult("get_jwk") { _ => _ =>
       (for {
         key <- Task.fromEither(jsonConverterService.as[Map[String, String]](tokenKeyService.publicJWK.toJson))
-        res <- Task.delay(Ok(Good(key)))
+        res <- Task.delay(Ok(Good(version, key)))
       } yield {
         res
       }).onErrorRecover {
         case e: Exception =>
           logger.error("1.1 Error getting jwk: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-          InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+          InternalServerError(NOK.serverError(version, "1.1 Sorry, something went wrong on our end"))
       }
     }
   }
@@ -286,13 +287,13 @@ class TokenController @Inject() (
       description "returns the list of available scopes"
       tags SwaggerElements.TAG_TOKEN_SERVICE)
 
-  get("/v1/scopes", operation(getV1Scopes)) {
+  get("/scopes", operation(getV1Scopes)) {
     asyncResult("get_scopes") { _ => _ =>
-      Task.delay(Ok(Good(Scope.list.map(Scope.asString))))
+      Task.delay(Ok(Good(version, Scope.list.map(Scope.asString))))
         .onErrorRecover {
           case e: Exception =>
             logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-            InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+            InternalServerError(NOK.serverError(version, "1.1 Sorry, something went wrong on our end"))
         }
     }
   }
@@ -309,19 +310,19 @@ class TokenController @Inject() (
         responseMessages (
           ResponseMessage(
             SwaggerElements.ERROR_REQUEST_CODE_400,
-            jsonConverterService.toString(NOK.tokenDeleteError("Error deleting token"))
+            jsonConverterService.toString(NOK.tokenDeleteError(version, "Error deleting token"))
               .right
               .getOrElse("Error deleting token")
           ),
             ResponseMessage(
               SwaggerElements.INTERNAL_ERROR_CODE_500,
-              jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+              jsonConverterService.toString(NOK.serverError(version, "1.1 Sorry, something went wrong on our end"))
                 .right
                 .getOrElse("Sorry, something went wrong on our end")
             )
         ))
 
-  delete("/v1/:tokenId", operation(deleteV1TokenId)) {
+  delete("/:tokenId", operation(deleteV1TokenId)) {
     authenticated() { accessToken =>
 
       asyncResult("delete") { implicit request => _ =>
@@ -333,16 +334,16 @@ class TokenController @Inject() (
 
           res <- tokenService.delete(accessToken, tokenId)
             .map { dr =>
-              if (dr) Ok(Good("Token deleted"))
-              else BadRequest(NOK.tokenDeleteError("Failed to delete token"))
+              if (dr) Ok(Good(version, "Token deleted"))
+              else BadRequest(NOK.tokenDeleteError(version, "Failed to delete token"))
             }
             .onErrorRecover {
               case e: ServiceException =>
                 logger.error("1.1 Error deleting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                BadRequest(NOK.tokenDeleteError("Error deleting token"))
+                BadRequest(NOK.tokenDeleteError(version, "Error deleting token"))
               case e: Exception =>
                 logger.error("1.1 Error deleting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-                InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+                InternalServerError(NOK.serverError(version, "1.1 Sorry, something went wrong on our end"))
             }
 
         } yield {
@@ -358,7 +359,7 @@ class TokenController @Inject() (
     asyncResult("not_found") { _ => _ =>
       Task {
         logger.info("controller=TokenController route_not_found={} query_string={}", requestPath, request.getQueryString)
-        NotFound(NOK.noRouteFound(requestPath + " might exist in another universe"))
+        NotFound(NOK.noRouteFound(version, requestPath + " might exist in another universe"))
       }
     }
   }

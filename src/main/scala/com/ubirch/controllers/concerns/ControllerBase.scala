@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Date
 
 import com.typesafe.scalalogging.LazyLogging
-import com.ubirch.models.NOK
+import com.ubirch.models.{ NOK, WithVersion }
 import com.ubirch.util.ServiceMetrics
 import monix.eval.Task
 import monix.execution.{ CancelableFuture, Scheduler }
@@ -77,7 +77,8 @@ abstract class ControllerBase extends ScalatraServlet
   with SwaggerSupport
   with CorsSupport
   with ServiceMetrics
-  with LazyLogging {
+  with LazyLogging
+  with WithVersion {
 
   def actionResult(body: HttpServletRequest => HttpServletResponse => Task[ActionResult])(implicit request: HttpServletRequest, response: HttpServletResponse): Task[ActionResult] = {
     for {
@@ -87,14 +88,14 @@ abstract class ControllerBase extends ScalatraServlet
           case FailedExtractionException(_, rawBody, e) =>
             val msg = s"Couldn't parse [$rawBody] due to exception=${e.getClass.getCanonicalName} message=${e.getMessage}"
             logger.error(msg)
-            BadRequest(NOK.parsingError(msg))
+            BadRequest(NOK.parsingError(version, msg))
         }
         .onErrorHandle { e =>
           val name = e.getClass.getCanonicalName
           val cause = Try(e.getCause.getMessage).getOrElse(e.getMessage)
           logger.error("Error 0.1 ", e)
           logger.error("Error 0.1 exception={} message={}", name, cause)
-          InternalServerError(NOK.serverError("Sorry, something happened"))
+          InternalServerError(NOK.serverError(version, "Sorry, something happened"))
 
         }
     } yield {
