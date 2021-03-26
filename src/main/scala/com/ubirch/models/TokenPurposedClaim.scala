@@ -61,7 +61,7 @@ case class TokenPurposedClaim(
   def validatePurpose: Boolean = purpose.nonEmpty && purpose.length > 5
 
   def validateScopes: Boolean = scopes match {
-    case Nil => false
+    case Nil => true
     case _ => scopes.flatMap(x => Scope.fromString(x)).distinct.map(Scope.asString).nonEmpty
   }
 

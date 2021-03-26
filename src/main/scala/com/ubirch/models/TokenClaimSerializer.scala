@@ -25,7 +25,16 @@ class TokenClaimSerializer(implicit formats: Formats) extends CustomSerializer[T
         val issuedAt: Option[Long] = (jsonObj \ "issuedAt").extractOpt[Long]
         val content: Map[Symbol, Any] = (jsonObj \ "content").extract[Map[Symbol, Any]]
 
-        TokenClaim(ownerId, issuer, subject, audience, expiration, notBefore, issuedAt, content)
+        TokenClaim(
+          ownerId = ownerId,
+          issuer = issuer,
+          subject = subject,
+          audience = audience,
+          expiration = expiration,
+          notBefore = notBefore,
+          issuedAt = issuedAt,
+          content = content
+        )
 
       } catch {
         case NonFatal(e) =>

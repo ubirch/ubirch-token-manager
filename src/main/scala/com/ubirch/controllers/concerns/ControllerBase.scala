@@ -113,7 +113,7 @@ abstract class ControllerBase extends ScalatraServlet
   }
 
   def logRequestInfo(implicit request: HttpServletRequest): Unit = {
-    val path = request.getPathInfo
+    val path = request.getRequestURI
     val method = request.getMethod
     val headers = request.headers.toList.map { case (k, v) => k + ":" + v }.mkString(",")
     logger.info("Path[{}]:{} {}", method, path, headers)
