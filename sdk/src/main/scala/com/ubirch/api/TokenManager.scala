@@ -6,16 +6,21 @@ import java.util.{ Date, UUID }
 
 import com.ubirch.crypto.PubKey
 import monix.eval.Task
+import monix.execution.Scheduler
+import monix.execution.schedulers.CanBlock
 import org.json4s.JsonAST.{ JArray, JField }
 import org.json4s.{ JObject, JString, JValue, JsonInput }
 
 import javax.crypto.SecretKey
+
+import scala.concurrent.duration.Duration
 import scala.util.{ Failure, Success, Try }
 
 trait TokenManager {
   def decodeAndVerify(jwt: String): Try[Claims]
   def getClaims(token: String): Try[Claims]
   def externalStateVerify(accessToken: String, identity: UUID): Task[Boolean]
+  def externalStateVerifySync(accessToken: String, identity: UUID)(timeout: Duration)(implicit s: Scheduler, permit: CanBlock): Either[Throwable, Boolean]
 }
 
 trait TokenPublicKey {
