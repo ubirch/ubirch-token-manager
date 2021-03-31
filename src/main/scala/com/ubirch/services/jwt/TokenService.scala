@@ -24,6 +24,7 @@ trait TokenService {
   def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
   def verify(verificationRequest: VerificationRequest): Task[Boolean]
+  def processBootstrapToken(verificationRequest: VerificationRequest): Task[List[TokenCreationData]]
 }
 
 @Singleton
@@ -121,6 +122,8 @@ class DefaultTokenService @Inject() (
       true
     }
   }
+
+  override def processBootstrapToken(verificationRequest: VerificationRequest): Task[List[TokenCreationData]] = ???
 
   def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
     for {
