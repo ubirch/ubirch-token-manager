@@ -14,7 +14,11 @@ In order to facilitate the integration of some of the most important functions o
             <version>0.6.5-SNAPSHOT</version>
         </dependency>
 
-Note that every system that might use the Light SDK and that performs externalities has to be explicitly known to the token manager. Every client has to configure their secret.
+Note that every system that might use the Light SDK and that performs externalities has to be explicitly known to the token manager. Every client has to configure their secret in their configuration file and the token manager must know of it.
+
+The secret for a client is a 2 part string. For example _`iHPDCXCTw1n0-Zcr1A/ZscwJWoi9oJK0XDOSnKJuDAfgSMLlV9hCIGSl8`_
+
+Where the first part is 9 random bytes; and the second part is 33 random bytes. Both encoded in base64 and concatenated with "-".
 
 ## Configurations Example:
 
