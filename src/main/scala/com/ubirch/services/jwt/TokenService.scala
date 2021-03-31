@@ -125,7 +125,7 @@ class DefaultTokenService @Inject() (
 
   override def processBootstrapToken(verificationRequest: VerificationRequest): Task[List[TokenCreationData]] = ???
 
-  def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
+  private def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
     for {
       tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(verificationRequest.token, tokenKey.key.getPublicKey))
       tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
@@ -137,7 +137,7 @@ class DefaultTokenService @Inject() (
     }
   }
 
-  def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {
+  private def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {
     _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidClaimException("Invalid Target Identities or Groups", "Either have identities or groups"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
     _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
@@ -145,7 +145,7 @@ class DefaultTokenService @Inject() (
     _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
   } yield true
 
-  def verifyGroupsForCreation(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+  private def verifyGroupsForCreation(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
     if (tokenPurposedClaim.hasMaybeGroups) {
       stateVerifier
         .groups(tokenPurposedClaim.tenantId, accessToken.email)
@@ -153,7 +153,7 @@ class DefaultTokenService @Inject() (
     } else Task.delay(true)
   }
 
-  def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+  private def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
     if (tokenPurposedClaim.hasMaybeGroups) {
       stateVerifier
         .groups(verificationRequest.identity)
@@ -161,7 +161,7 @@ class DefaultTokenService @Inject() (
     } else Task.delay(true)
   }
 
-  def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
+  private def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
     tokenPurposedClaim.targetGroups match {
       case Right(names) if currentGroups.nonEmpty => currentGroups.forall(x => names.contains(x.name))
       case Left(uuids) if currentGroups.nonEmpty => currentGroups.forall(x => uuids.contains(x.id))
