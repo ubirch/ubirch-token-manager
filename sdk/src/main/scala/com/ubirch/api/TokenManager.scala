@@ -103,10 +103,13 @@ class Claims(val token: String, val all: JValue) {
   def validateIdentity(uuid: UUID): Try[UUID] = {
     val res =
       if (isTargetIdentitiesStarWildCard) true
-      else targetIdentities.left.map(_.contains(uuid)).isLeft
+      else targetIdentities.left.map(_.contains(uuid)) match {
+        case Left(validation) => validation
+        case Right(_) => false
+      }
 
     if (res) Success(uuid)
-    else Failure(InvalidClaimException("Invalid UUID", s"upp_uuid_not_equals_target_identities=${uuid} != ${targetIdentitiesMerged.mkString(",")}"))
+    else Failure(InvalidClaimException("Invalid UUID", s"upp_uuid_not_equals_target_identities=$uuid != ${targetIdentitiesMerged.mkString(",")}"))
   }
 
   def validateOrigin(maybeOrigin: Option[String]): Try[List[URL]] = {
