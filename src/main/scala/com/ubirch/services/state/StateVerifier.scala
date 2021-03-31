@@ -19,8 +19,8 @@ import net.logstash.logback.argument.StructuredArguments.v
 import javax.inject.{ Inject, Singleton }
 
 trait StateVerifier {
-  def groups(identityUUID: UUID): Task[List[Group]]
-  def groups(tenantId: UUID, username: String): Task[List[Group]]
+  def identityGroups(identityUUID: UUID): Task[List[Group]]
+  def tenantGroups(tenantId: UUID, username: String): Task[List[Group]]
 }
 
 @Singleton
@@ -36,7 +36,7 @@ class DefaultStateVerifier @Inject() (
   private final val ENV = config.getString(GenericConfPaths.ENV)
   private final val REALM_NAME: String = config.getString(ExternalStateGetterPaths.REALM_NAME)
 
-  override def groups(identityUUID: UUID): Task[List[Group]] = {
+  override def identityGroups(identityUUID: UUID): Task[List[Group]] = {
     for {
 
       _ <- Task.unit
@@ -82,7 +82,7 @@ class DefaultStateVerifier @Inject() (
     }
   }
 
-  override def groups(tenantId: UUID, username: String): Task[List[Group]] = {
+  override def tenantGroups(tenantId: UUID, username: String): Task[List[Group]] = {
     for {
 
       _ <- Task.unit
@@ -157,7 +157,7 @@ object DefaultStateVerifier extends {
 
     //val res = await(stateVerifier.groups(UUID.fromString("bdab47d0-fcf9-429e-a118-3dae0773cac2")), 5 seconds)
 
-    val res = await(stateVerifier.groups(UUID.fromString("963995ed-ce12-4ea5-89dc-b181701d1d7b"), "carlos.sanchez@ubirch.com"), 5 seconds)
+    val res = await(stateVerifier.tenantGroups(UUID.fromString("963995ed-ce12-4ea5-89dc-b181701d1d7b"), "carlos.sanchez@ubirch.com"), 5 seconds)
 
     println(res)
 

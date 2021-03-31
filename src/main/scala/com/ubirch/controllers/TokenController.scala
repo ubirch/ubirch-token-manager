@@ -163,14 +163,14 @@ class TokenController @Inject() (
     }
   }
 
-  val getV1Verify: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Boolean]("getV1Verify")
+  val postV1Verify: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Boolean]("postV1Verify")
       summary "Verifies Ubirch Token"
       description "verifies token and identity"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters swaggerTokenAsHeader)
 
-  post("/v1/verify", operation(getV1Verify)) {
+  post("/v1/verify", operation(postV1Verify)) {
 
     asyncResult("verify_token") { implicit request => _ =>
 
@@ -186,6 +186,29 @@ class TokenController @Inject() (
               BadRequest(Ok(Good(false)))
             case e: Exception =>
               logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+              InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+          }
+
+      } yield {
+        res
+      }
+    }
+  }
+
+  post("/v1/bootstrap") {
+
+    asyncResult("bootstrap_token") { implicit request => _ =>
+
+      for {
+        bootstrapToken <- Task.delay(request.getHeader("Authorization"))
+        res <- tokenService.processBootstrapToken(bootstrapToken)
+          .map { tkv => Ok(Good(tkv)) }
+          .onErrorHandle {
+            case e: ServiceException =>
+              logger.error("1.1 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+              BadRequest(Ok(Good(false)))
+            case e: Exception =>
+              logger.error("1.2 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
               InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
           }
 

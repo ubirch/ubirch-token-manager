@@ -24,7 +24,7 @@ trait TokenService {
   def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
   def verify(verificationRequest: VerificationRequest): Task[Boolean]
-  def processBootstrapToken(verificationRequest: VerificationRequest): Task[List[TokenCreationData]]
+  def processBootstrapToken(bootstrapToken: String): Task[BootstrapToken]
 }
 
 @Singleton
@@ -123,7 +123,15 @@ class DefaultTokenService @Inject() (
     }
   }
 
-  override def processBootstrapToken(verificationRequest: VerificationRequest): Task[List[TokenCreationData]] = ???
+  override def processBootstrapToken(bootstrapToken: String): Task[BootstrapToken] = {
+
+    def thingCreate:TokenCreationData = ???
+    def thingAnchor: TokenCreationData = ???
+    def thingVerify: TokenCreationData = ???
+
+    Task.delay(BootstrapToken(thingCreate, thingAnchor, thingVerify))
+
+  }
 
   private def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
     for {
@@ -148,7 +156,7 @@ class DefaultTokenService @Inject() (
   private def verifyGroupsForCreation(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
     if (tokenPurposedClaim.hasMaybeGroups) {
       stateVerifier
-        .groups(tokenPurposedClaim.tenantId, accessToken.email)
+        .tenantGroups(tokenPurposedClaim.tenantId, accessToken.email)
         .map { gs => verifyGroups(tokenPurposedClaim, gs) }
     } else Task.delay(true)
   }
@@ -156,7 +164,7 @@ class DefaultTokenService @Inject() (
   private def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
     if (tokenPurposedClaim.hasMaybeGroups) {
       stateVerifier
-        .groups(verificationRequest.identity)
+        .identityGroups(verificationRequest.identity)
         .map { gs => verifyGroups(tokenPurposedClaim, gs) }
     } else Task.delay(true)
   }
