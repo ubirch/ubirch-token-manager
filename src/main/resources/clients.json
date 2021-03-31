@@ -6,5 +6,13 @@
   {
     "client":  "thing-api",
     "secret": "Wx09O1MJ1YGs-l62pTF8aJNNkAJisXDIYmRw9WpwATowTNPDNzLqSA9F5"
+  },
+  {
+    "client":  "niomon-auth",
+    "secret": "iRhFQF7aeepc-taO1MEidHhRdUCBl0dR5NJK3Mb1vE7lAlQjoD7zaekzx"
+  },
+  {
+    "client":  "niomon-enricher",
+    "secret": "baO4L74O4SZE-B7LqicyRUZPFcyn5NeypcB5L438bXuzaKMX2CrWFwtH9"
   }
 ]
