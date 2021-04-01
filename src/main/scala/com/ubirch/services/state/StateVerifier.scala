@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.{ ExternalStateGetterPaths, GenericConfPaths }
 import com.ubirch.{ StateVerifierException, TokenEncodingException }
-import com.ubirch.models.{ Group, Key, Scope, TokenPurposedClaim }
+import com.ubirch.models.{ Group, Key, Scope, TokenPurposedClaim, VerificationRequest }
 import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
@@ -15,13 +15,16 @@ import com.ubirch.util.TaskHelpers
 import monix.eval.Task
 import monix.execution.Scheduler
 import net.logstash.logback.argument.StructuredArguments.v
-
 import javax.inject.{ Inject, Singleton }
 
 trait StateVerifier {
+  def verifyGroupsTokenPurposedClaim(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean]
+  def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean]
+  def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean
+
   def identityGroups(identityUUID: UUID): Task[List[Group]]
   def tenantGroups(tenantId: UUID): Task[List[Group]]
-  def identityKey(identityUUID: UUID): Task[List[Key]]
+  def identityKey(identityUUID: UUID): Task[Option[Key]]
 }
 
 @Singleton
@@ -126,7 +129,29 @@ class DefaultStateVerifier @Inject() (
     }
   }
 
-  override def identityKey(identityUUID: UUID): Task[List[Key]] = {
+  override def verifyGroupsTokenPurposedClaim(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+    if (tokenPurposedClaim.hasMaybeGroups) {
+      tenantGroups(tokenPurposedClaim.tenantId)
+        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
+    } else Task.delay(true)
+  }
+
+  override def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+    if (tokenPurposedClaim.hasMaybeGroups) {
+      identityGroups(verificationRequest.identity)
+        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
+    } else Task.delay(true)
+  }
+
+  override def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
+    tokenPurposedClaim.targetGroups match {
+      case Right(names) if currentGroups.nonEmpty => currentGroups.map(_.name).intersect(names).sorted == names.sorted
+      case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
+      case _ => false
+    }
+  }
+
+  override def identityKey(identityUUID: UUID): Task[Option[Key]] = {
 
     for {
       res <- keyGetter.byIdentityId(identityUUID)
@@ -139,10 +164,10 @@ class DefaultStateVerifier @Inject() (
         v("identityId", identityUUID)
       )
 
-      keys <- Task.delay(jsonConverterService.fromJsonInput[List[Key]](resBody)(_ \ "pubKeyInfo"))
+      key <- Task.delay(jsonConverterService.fromJsonInput[List[Key]](resBody)(_ \ "pubKeyInfo").headOption)
 
     } yield {
-      keys
+      key
     }
 
   }

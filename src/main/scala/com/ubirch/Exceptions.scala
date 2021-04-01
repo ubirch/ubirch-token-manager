@@ -21,3 +21,5 @@ case class InvalidClaimException(message: String, value: String) extends Service
 case class InvalidParamException(message: String, reason: String) extends ServiceException(message)
 
 case class StateVerifierException(message: String) extends ServiceException(message)
+
+case class NoCurveException(message: String) extends ServiceException(message)

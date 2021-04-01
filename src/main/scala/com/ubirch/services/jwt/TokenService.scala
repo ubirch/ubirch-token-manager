@@ -54,7 +54,7 @@ class DefaultTokenService @Inject() (
   override def create(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[TokenCreationData] = {
     for {
       _ <- localVerify(tokenPurposedClaim)
-      groupsCheck <- verifyGroupsForCreation(tokenPurposedClaim)
+      groupsCheck <- stateVerifier.verifyGroupsTokenPurposedClaim(tokenPurposedClaim)
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
@@ -102,7 +102,7 @@ class DefaultTokenService @Inject() (
 
       tokenPurposedClaim <- buildTokenClaimFromVerificationRequest(verificationRequest)
       _ <- localVerify(tokenPurposedClaim)
-      groupsCheck <- verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
+      groupsCheck <- stateVerifier.verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
 
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
@@ -191,29 +191,5 @@ class DefaultTokenService @Inject() (
     _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException(s"Invalid Scopes :: ${tokenPurposedClaim.scopes}", "Scopes are empty or invalid"))
   } yield true
-
-  private def verifyGroupsForCreation(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
-    if (tokenPurposedClaim.hasMaybeGroups) {
-      stateVerifier
-        .tenantGroups(tokenPurposedClaim.tenantId)
-        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
-    } else Task.delay(true)
-  }
-
-  private def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
-    if (tokenPurposedClaim.hasMaybeGroups) {
-      stateVerifier
-        .identityGroups(verificationRequest.identity)
-        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
-    } else Task.delay(true)
-  }
-
-  private def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
-    tokenPurposedClaim.targetGroups match {
-      case Right(names) if currentGroups.nonEmpty => currentGroups.map(_.name).intersect(names).sorted == names.sorted
-      case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
-      case _ => false
-    }
-  }
 
 }
