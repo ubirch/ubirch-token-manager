@@ -127,7 +127,7 @@ class DefaultTokenService @Inject() (
     for {
       isValid <- stateVerifier.verifyIdentitySignature(bootstrapRequest.identity, bootstrapRequest.signedRaw, bootstrapRequest.signatureRaw)
         .onErrorRecover {
-          case e: Exception => throw InvalidClaimException("Invalid Key Signature", e.getMessage)
+          case e: Exception => throw InvalidClaimException("Invalid Key Signature Internal", e.getMessage)
         }
       _ <- earlyResponseIf(!isValid)(InvalidClaimException("Invalid Key Signature", "Invalid key"))
       thingCreate <- createClaim(Scope.Thing_Create)
