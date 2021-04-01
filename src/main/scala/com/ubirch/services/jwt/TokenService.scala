@@ -113,7 +113,7 @@ class DefaultTokenService @Inject() (
 
   override def processBootstrapToken(verificationRequest: VerificationRequest): Task[BootstrapToken] = {
 
-    def go(scope: Scope): Task[TokenCreationData] = {
+    def createClaim(scope: Scope): Task[TokenCreationData] = {
       for {
         tokenPurposedClaim <- buildTokenClaimFromUbirchTokenAsString(verificationRequest.token)
         tokenClaim = tokenPurposedClaim
@@ -127,9 +127,9 @@ class DefaultTokenService @Inject() (
     for {
       keys <- stateVerifier.identityKey(verificationRequest.identity)
       _ <- earlyResponseIf(keys.isEmpty)(InvalidClaimException("Invalid Key Signature", "Invalid key"))
-      thingCreate <- go(Scope.Thing_Create)
-      thingAnchor <- go(Scope.UPP_Anchor)
-      thingVerify <- go(Scope.UPP_Verify)
+      thingCreate <- createClaim(Scope.Thing_Create)
+      thingAnchor <- createClaim(Scope.UPP_Anchor)
+      thingVerify <- createClaim(Scope.UPP_Verify)
     } yield {
       BootstrapToken(thingCreate, thingAnchor, thingVerify)
     }
