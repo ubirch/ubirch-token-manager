@@ -201,9 +201,9 @@ class TokenController @Inject() (
     asyncResult("bootstrap_token") { implicit request => _ =>
 
       for {
-        bearerRequest <- Task.delay(new BearerAuthRequest(request))
-        bootstrapToken <- Task.delay(bearerRequest.token)
-        res <- tokenService.processBootstrapToken(bootstrapToken)
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
+        readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
+        res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Some(readBody.asString), signatureRaw = Some(reqSig), time = None))
           .map { tkv => Ok(Good(tkv)) }
           .onErrorHandle {
             case e: ServiceException =>
