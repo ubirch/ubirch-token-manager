@@ -4,7 +4,6 @@ import java.util.UUID
 
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
-import com.ubirch.controllers.concerns.BearerAuthStrategy.BearerAuthRequest
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService

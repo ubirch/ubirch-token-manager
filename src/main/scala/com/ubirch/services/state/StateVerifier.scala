@@ -145,7 +145,8 @@ object DefaultStateVerifier extends {
     val config = new ConfigProvider get ()
     val e = new ExecutionProvider(config) get ()
     implicit val scheduler = new SchedulerProvider(e) get ()
-    val externalStateGetter = new DefaultExternalGetter(config)
+    val client = new DefaultHttpClient()
+    val externalStateGetter = new DefaultExternalGetter(config, client)
     val tokenKeyService = new DefaultTokenKeyService(config)
     val tokenEncodingService = new DefaultTokenEncodingService()
 

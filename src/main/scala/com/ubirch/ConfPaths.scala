@@ -51,6 +51,10 @@ object ConfPaths {
     final val REALM_NAME = "tokenSystem.externalStateGetter.realmName"
   }
 
+  trait KeyServicePaths {
+    final val KEY_BY_IDENTITY_ENDPOINT = "tokenSystem.keyService.keyByIdentityEndpoint"
+  }
+
   trait TokenClientsPaths {
     final val TOKEN_CLIENTS_FILE_PATH = "tokenSystem.tokenClientsFile"
   }
@@ -61,5 +65,6 @@ object ConfPaths {
   object TokenVerificationPaths extends TokenVerificationPaths
   object ExternalStateGetterPaths extends ExternalStateGetterPaths
   object TokenClientsPaths extends TokenClientsPaths
+  object KeyServicePaths extends KeyServicePaths
 
 }
