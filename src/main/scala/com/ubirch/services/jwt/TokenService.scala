@@ -6,6 +6,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
+import com.ubirch.models.Scope.asString
 import com.ubirch.models._
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidClaimException, TokenEncodingException }
@@ -53,7 +54,7 @@ class DefaultTokenService @Inject() (
   override def create(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[TokenCreationData] = {
     for {
       _ <- localVerify(tokenPurposedClaim)
-      groupsCheck <- verifyGroupsForCreation(accessToken, tokenPurposedClaim)
+      groupsCheck <- verifyGroupsForCreation(tokenPurposedClaim)
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
@@ -112,16 +113,28 @@ class DefaultTokenService @Inject() (
 
   override def processBootstrapToken(bootstrapToken: String): Task[BootstrapToken] = {
 
-    def thingCreate: TokenCreationData = ???
-    def thingAnchor: TokenCreationData = ???
-    def thingVerify: TokenCreationData = ???
+    def go(scope: Scope): Task[TokenCreationData] = {
+      for {
+        tokenPurposedClaim <- buildTokenClaimFromUbirchTokenAsString(bootstrapToken).map(_.copy())
+        tokenClaim = tokenPurposedClaim
+          .copy(scopes = List(asString(scope)))
+          .toTokenClaim(ENV)
 
-    Task.delay(BootstrapToken(thingCreate, thingAnchor, thingVerify))
+        tokeCreationData <- create(tokenClaim, 'purposed_claim)
+      } yield tokeCreationData
+    }
+
+    for {
+      thingCreate <- go(Scope.Thing_Create)
+      thingAnchor <- go(Scope.UPP_Anchor)
+      thingVerify <- go(Scope.UPP_Verify)
+    } yield {
+      BootstrapToken(thingCreate, thingAnchor, thingVerify)
+    }
 
   }
 
   ///// private stuff
-
   private def create(tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
     for {
       _ <- Task.unit // here to make the compiler happy
@@ -153,7 +166,16 @@ class DefaultTokenService @Inject() (
       tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(token, tokenKey.key.getPublicKey))
       tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
       tokenPurposedClaim <- Task.delay(jsonConverterService.fromJsonInput[TokenPurposedClaim](tokenString) { x =>
-        x.camelizeKeys.transformField { case ("sub", value) => ("tenantId", value) }
+        //We can improve this matcher later
+        x.camelizeKeys.transformField {
+          case ("sub", value) => ("tenantId", value)
+          case ("pur", value) => ("purpose", value)
+          case ("tid", value) => ("targetIdentities", value)
+          case ("tgp", value) => ("targetGroups", value)
+          case ("exp", value) => ("expiration", value)
+          case ("ord", value) => ("originDomains", value)
+          case ("scp", value) => ("scopes", value)
+        }
       })
     } yield {
       tokenPurposedClaim
@@ -165,13 +187,13 @@ class DefaultTokenService @Inject() (
     _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
     _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
-    _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
+    _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException(s"Invalid Scopes :: ${tokenPurposedClaim.scopes}", "Scopes are empty or invalid"))
   } yield true
 
-  private def verifyGroupsForCreation(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+  private def verifyGroupsForCreation(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
     if (tokenPurposedClaim.hasMaybeGroups) {
       stateVerifier
-        .tenantGroups(tokenPurposedClaim.tenantId, accessToken.email)
+        .tenantGroups(tokenPurposedClaim.tenantId)
         .map { gs => verifyGroups(tokenPurposedClaim, gs) }
     } else Task.delay(true)
   }
@@ -186,8 +208,8 @@ class DefaultTokenService @Inject() (
 
   private def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
     tokenPurposedClaim.targetGroups match {
-      case Right(names) if currentGroups.nonEmpty => currentGroups.forall(x => names.contains(x.name))
-      case Left(uuids) if currentGroups.nonEmpty => currentGroups.forall(x => uuids.contains(x.id))
+      case Right(names) if currentGroups.nonEmpty => currentGroups.map(_.name).intersect(names).sorted == names.sorted
+      case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
       case _ => false
     }
   }

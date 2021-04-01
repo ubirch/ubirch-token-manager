@@ -4,6 +4,7 @@ import java.util.UUID
 
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
+import com.ubirch.controllers.concerns.BearerAuthStrategy.BearerAuthRequest
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
@@ -200,7 +201,8 @@ class TokenController @Inject() (
     asyncResult("bootstrap_token") { implicit request => _ =>
 
       for {
-        bootstrapToken <- Task.delay(request.getHeader("Authorization"))
+        bearerRequest <- Task.delay(new BearerAuthRequest(request))
+        bootstrapToken <- Task.delay(bearerRequest.token)
         res <- tokenService.processBootstrapToken(bootstrapToken)
           .map { tkv => Ok(Good(tkv)) }
           .onErrorHandle {

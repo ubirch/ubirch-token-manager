@@ -15,10 +15,8 @@ case object User extends Resource
 
 sealed trait Action
 object Action {
-  final val list: List[Action] = List(Anchor, Verify, Create, GetInfo)
-  def fromString(value: String): Option[Action] = {
-    list.find(_.toString.toLowerCase == value)
-  }
+  final val list: List[Action] = List(Anchor, Verify, Create, GetInfo, Bootstrap)
+  def fromString(value: String): Option[Action] = list.find(_.toString.toLowerCase == value)
 }
 case object Anchor extends Action
 case object Verify extends Action
