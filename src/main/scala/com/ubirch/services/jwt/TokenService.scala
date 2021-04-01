@@ -44,22 +44,9 @@ class DefaultTokenService @Inject() (
   override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
     for {
       _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidClaimException(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
-
-      jwtID = UUID.randomUUID()
-
-      res <- liftTry(tokenEncodingService.encode(jwtID, tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
-      (token, claims) = res
-
-      _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
-      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, new Date())
-
-      insertion <- tokensDAO.insert(aRow).headOptionL
-
-      _ = if (insertion.isEmpty) logger.error("failed_token_insertion={}", tokenClaim.toString)
-      _ = if (insertion.isDefined) logger.info("token_insertion_succeeded={}", tokenClaim.toString)
-
+      tcd <- create(tokenClaim, category)
     } yield {
-      TokenCreationData(jwtID, claims, token)
+      tcd
     }
   }
 
@@ -125,12 +112,36 @@ class DefaultTokenService @Inject() (
 
   override def processBootstrapToken(bootstrapToken: String): Task[BootstrapToken] = {
 
-    def thingCreate:TokenCreationData = ???
+    def thingCreate: TokenCreationData = ???
     def thingAnchor: TokenCreationData = ???
     def thingVerify: TokenCreationData = ???
 
     Task.delay(BootstrapToken(thingCreate, thingAnchor, thingVerify))
 
+  }
+
+  ///// private stuff
+
+  private def create(tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
+    for {
+      _ <- Task.unit // here to make the compiler happy
+
+      jwtID = UUID.randomUUID()
+
+      res <- liftTry(tokenEncodingService.encode(jwtID, tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
+      (token, claims) = res
+
+      _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
+      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, new Date())
+
+      insertion <- tokensDAO.insert(aRow).headOptionL
+
+      _ = if (insertion.isEmpty) logger.error("failed_token_insertion={}", tokenClaim.toString)
+      _ = if (insertion.isDefined) logger.info("token_insertion_succeeded={}", tokenClaim.toString)
+
+    } yield {
+      TokenCreationData(jwtID, claims, token)
+    }
   }
 
   private def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
