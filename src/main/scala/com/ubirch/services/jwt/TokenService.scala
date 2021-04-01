@@ -125,6 +125,8 @@ class DefaultTokenService @Inject() (
     }
 
     for {
+      keys <- stateVerifier.identityKey(verificationRequest.identity)
+      _ <-  earlyResponseIf(keys.isEmpty)(InvalidClaimException("Invalid Key Signature", "Invalid key"))
       thingCreate <- go(Scope.Thing_Create)
       thingAnchor <- go(Scope.UPP_Anchor)
       thingVerify <- go(Scope.UPP_Verify)
