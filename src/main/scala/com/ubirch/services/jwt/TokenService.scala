@@ -145,8 +145,12 @@ class DefaultTokenService @Inject() (
   }
 
   private def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
+    buildTokenClaimFromUbirchTokenAsString(verificationRequest.token)
+  }
+
+  private def buildTokenClaimFromUbirchTokenAsString(token: String): Task[TokenPurposedClaim] = {
     for {
-      tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(verificationRequest.token, tokenKey.key.getPublicKey))
+      tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(token, tokenKey.key.getPublicKey))
       tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
       tokenPurposedClaim <- Task.delay(jsonConverterService.fromJsonInput[TokenPurposedClaim](tokenString) { x =>
         x.camelizeKeys.transformField { case ("sub", value) => ("tenantId", value) }
