@@ -6,12 +6,12 @@ import com.typesafe.config.Config
 import com.ubirch.ConfPaths.KeyServicePaths
 import com.ubirch.models.ExternalResponseData
 import com.ubirch.services.config.ConfigProvider
-import com.ubirch.services.execution.{ExecutionProvider, SchedulerProvider}
+import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.apache.http.client.methods.HttpGet
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 
 trait KeyGetter {
   def byIdentityId(uuid: UUID): Task[ExternalResponseData[Array[Byte]]]
@@ -43,18 +43,16 @@ object KeyGetterTest {
 
   def main(args: Array[String]): Unit = {
 
-    val config = new ConfigProvider get()
+    val config = new ConfigProvider get ()
     val e = new ExecutionProvider(config) get ()
     implicit val scheduler = new SchedulerProvider(e) get ()
 
     val client = new DefaultHttpClient()
     val keyGetter = new DefaultKeyGetter(config, client)
 
-
     val res = await(keyGetter.byIdentityId(UUID.fromString("9011a2de-8c69-45be-bc47-60fd58e121ce")), 5 seconds)
     println(res)
     println(new String(res.body))
   }
-
 
 }

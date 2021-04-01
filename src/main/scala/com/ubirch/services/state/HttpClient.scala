@@ -3,7 +3,7 @@ package com.ubirch.services.state
 import com.ubirch.models.ExternalResponseData
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpUriRequest
-import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.impl.client.{ CloseableHttpClient, HttpClients }
 import org.apache.http.util.EntityUtils
 
 import javax.inject.Singleton

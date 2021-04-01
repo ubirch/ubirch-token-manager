@@ -15,8 +15,8 @@ import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra._
 import org.scalatra.swagger.{ ResponseMessage, Swagger, SwaggerSupportSyntax }
-
 import javax.inject.{ Inject, Singleton, Scope => _ }
+
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -93,7 +93,7 @@ class TokenController @Inject() (
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
           res <- tokenService.create(token, readBody.extracted, 'generic)
-            .map { tkc => Ok(Good(tkc)) }
+            .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -146,7 +146,7 @@ class TokenController @Inject() (
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenPurposedClaim](t => t.camelizeKeys))
           res <- tokenService.create(token, readBody.extracted)
-            .map { tkc => Ok(Good(tkc)) }
+            .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -179,11 +179,11 @@ class TokenController @Inject() (
         reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
         res <- tokenService.verify(readBody.extracted.copy(signed = Some(readBody.asString), signatureRaw = Some(reqSig), time = Some(reqTimestamp)))
-          .map { tkv => Ok(Good(tkv)) }
+          .map { tkv => Ok(Return(tkv)) }
           .onErrorHandle {
             case e: ServiceException =>
               logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              BadRequest(Ok(Good(false)))
+              BadRequest(NOK.tokenVerifyingError("Error verifying token"))
             case e: Exception =>
               logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
               InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
@@ -203,11 +203,11 @@ class TokenController @Inject() (
         reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
         res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Some(readBody.asString), signatureRaw = Some(reqSig), time = None))
-          .map { tkv => Ok(Good(tkv)) }
+          .map { tkv => Ok(Return(tkv)) }
           .onErrorHandle {
             case e: ServiceException =>
               logger.error("1.1 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              BadRequest(Ok(Good(false)))
+              BadRequest(NOK.tokenBootstrappingError("Error bootstrapping token"))
             case e: Exception =>
               logger.error("1.2 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
               InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
@@ -232,7 +232,7 @@ class TokenController @Inject() (
       asyncResult("list_tokens") { _ => _ =>
         for {
           res <- tokenService.list(token)
-            .map { tks => Ok(Good(tks)) }
+            .map { tks => Ok(Return(tks)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -266,7 +266,7 @@ class TokenController @Inject() (
             .onErrorHandle(_ => throw InvalidParamException("Invalid OwnerId", "Wrong owner param"))
 
           res <- tokenService.get(token, id)
-            .map { tks => Ok(Good(tks.orNull)) }
+            .map { tks => Ok(Return(tks.orNull)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -293,7 +293,7 @@ class TokenController @Inject() (
     asyncResult("get_jwk") { _ => _ =>
       (for {
         key <- Task.fromEither(jsonConverterService.as[Map[String, String]](tokenKeyService.publicJWK.toJson))
-        res <- Task.delay(Ok(Good(key)))
+        res <- Task.delay(Ok(Return(key)))
       } yield {
         res
       }).onErrorRecover {
@@ -312,7 +312,7 @@ class TokenController @Inject() (
 
   get("/v1/scopes", operation(getV1Scopes)) {
     asyncResult("get_scopes") { _ => _ =>
-      Task.delay(Ok(Good(Scope.list.map(Scope.asString))))
+      Task.delay(Ok(Return(Scope.list.map(Scope.asString))))
         .onErrorRecover {
           case e: Exception =>
             logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -322,7 +322,7 @@ class TokenController @Inject() (
   }
 
   val deleteV1TokenId: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Good]("deleteV1TokenId")
+    (apiOperation[Return]("deleteV1TokenId")
       summary "Deletes a token"
       description "deletes a token"
       tags SwaggerElements.TAG_TOKEN_SERVICE
@@ -357,7 +357,7 @@ class TokenController @Inject() (
 
           res <- tokenService.delete(accessToken, tokenId)
             .map { dr =>
-              if (dr) Ok(Good("Token deleted"))
+              if (dr) Ok(Return("Token deleted"))
               else BadRequest(NOK.tokenDeleteError("Failed to delete token"))
             }
             .onErrorRecover {

@@ -6,7 +6,7 @@ import com.ubirch.models.ExternalResponseData
 import monix.eval.Task
 import org.apache.http.client.methods.HttpGet
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 
 trait ExternalStateGetter {
   def getDeviceGroups(accessToken: String): Task[ExternalResponseData[Array[Byte]]]

@@ -4,19 +4,19 @@ import java.util.UUID
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import com.ubirch.ConfPaths.{ExternalStateGetterPaths, GenericConfPaths}
-import com.ubirch.{StateVerifierException, TokenEncodingException}
-import com.ubirch.models.{Group, Key, Scope, TokenPurposedClaim}
+import com.ubirch.ConfPaths.{ ExternalStateGetterPaths, GenericConfPaths }
+import com.ubirch.{ StateVerifierException, TokenEncodingException }
+import com.ubirch.models.{ Group, Key, Scope, TokenPurposedClaim }
 import com.ubirch.services.config.ConfigProvider
-import com.ubirch.services.execution.{ExecutionProvider, SchedulerProvider}
-import com.ubirch.services.formats.{DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider}
-import com.ubirch.services.jwt.{DefaultTokenEncodingService, DefaultTokenKeyService, TokenEncodingService, TokenKeyService}
+import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
+import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
+import com.ubirch.services.jwt.{ DefaultTokenEncodingService, DefaultTokenKeyService, TokenEncodingService, TokenKeyService }
 import com.ubirch.util.TaskHelpers
 import monix.eval.Task
 import monix.execution.Scheduler
 import net.logstash.logback.argument.StructuredArguments.v
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 
 trait StateVerifier {
   def identityGroups(identityUUID: UUID): Task[List[Group]]
