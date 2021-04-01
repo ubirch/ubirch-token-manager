@@ -25,7 +25,7 @@ trait TokenService {
   def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
   def verify(verificationRequest: VerificationRequest): Task[Boolean]
-  def processBootstrapToken(verificationRequest: VerificationRequest): Task[BootstrapToken]
+  def processBootstrapToken(bootstrapRequest: BootstrapRequest): Task[BootstrapToken]
 }
 
 @Singleton
@@ -111,11 +111,11 @@ class DefaultTokenService @Inject() (
     }
   }
 
-  override def processBootstrapToken(verificationRequest: VerificationRequest): Task[BootstrapToken] = {
+  override def processBootstrapToken(bootstrapRequest: BootstrapRequest): Task[BootstrapToken] = {
 
     def createClaim(scope: Scope): Task[TokenCreationData] = {
       for {
-        tokenPurposedClaim <- buildTokenClaimFromUbirchTokenAsString(verificationRequest.token)
+        tokenPurposedClaim <- buildTokenClaimFromUbirchTokenAsString(bootstrapRequest.token)
         tokenClaim = tokenPurposedClaim
           .copy(scopes = List(asString(scope)))
           .toTokenClaim(ENV)
@@ -125,8 +125,11 @@ class DefaultTokenService @Inject() (
     }
 
     for {
-      keys <- stateVerifier.identityKey(verificationRequest.identity)
-      _ <- earlyResponseIf(keys.isEmpty)(InvalidClaimException("Invalid Key Signature", "Invalid key"))
+      isValid <- stateVerifier.verifyIdentitySignature(bootstrapRequest.identity, bootstrapRequest.signedRaw, bootstrapRequest.signatureRaw)
+        .onErrorRecover {
+          case e: Exception => throw InvalidClaimException("Invalid Key Signature", e.getMessage)
+        }
+      _ <- earlyResponseIf(!isValid)(InvalidClaimException("Invalid Key Signature", "Invalid key"))
       thingCreate <- createClaim(Scope.Thing_Create)
       thingAnchor <- createClaim(Scope.UPP_Anchor)
       thingVerify <- createClaim(Scope.UPP_Verify)

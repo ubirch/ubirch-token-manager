@@ -1,5 +1,6 @@
 package com.ubirch.services.state
 
+import java.security.MessageDigest
 import java.util.UUID
 
 import com.typesafe.config.Config
@@ -17,10 +18,13 @@ import monix.execution.Scheduler
 import net.logstash.logback.argument.StructuredArguments.v
 import javax.inject.{ Inject, Singleton }
 
+import scala.util.Success
+
 trait StateVerifier {
   def verifyGroupsTokenPurposedClaim(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean]
   def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean]
   def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean
+  def verifyIdentitySignature(identityUUID: UUID, signed: Array[Byte], signature: Array[Byte]): Task[Boolean]
 
   def identityGroups(identityUUID: UUID): Task[List[Group]]
   def tenantGroups(tenantId: UUID): Task[List[Group]]
@@ -40,6 +44,44 @@ class DefaultStateVerifier @Inject() (
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
   private final val REALM_NAME: String = config.getString(ExternalStateGetterPaths.REALM_NAME)
+
+  override def verifyGroupsTokenPurposedClaim(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+    if (tokenPurposedClaim.hasMaybeGroups) {
+      tenantGroups(tokenPurposedClaim.tenantId)
+        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
+    } else Task.delay(true)
+  }
+
+  override def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
+    if (tokenPurposedClaim.hasMaybeGroups) {
+      identityGroups(verificationRequest.identity)
+        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
+    } else Task.delay(true)
+  }
+
+  override def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
+    tokenPurposedClaim.targetGroups match {
+      case Right(names) if currentGroups.nonEmpty => currentGroups.map(_.name).intersect(names).sorted == names.sorted
+      case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
+      case _ => false
+    }
+  }
+
+  override def verifyIdentitySignature(identityUUID: UUID, signed: Array[Byte], signature: Array[Byte]): Task[Boolean] = {
+    for {
+      maybeKey <- identityKey(identityUUID).map(_.map(_.getPrivKey))
+    } yield {
+      maybeKey match {
+        case Some(Success(pubkey)) =>
+          val digest: MessageDigest = MessageDigest.getInstance("SHA-512")
+          digest.update(signed)
+          val dataToVerify = digest.digest
+          val ok = pubkey.verify(dataToVerify, signature)
+          ok
+        case _ => false
+      }
+    }
+  }
 
   override def identityGroups(identityUUID: UUID): Task[List[Group]] = {
     for {
@@ -126,28 +168,6 @@ class DefaultStateVerifier @Inject() (
 
     } yield {
       groups
-    }
-  }
-
-  override def verifyGroupsTokenPurposedClaim(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
-    if (tokenPurposedClaim.hasMaybeGroups) {
-      tenantGroups(tokenPurposedClaim.tenantId)
-        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
-    } else Task.delay(true)
-  }
-
-  override def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
-    if (tokenPurposedClaim.hasMaybeGroups) {
-      identityGroups(verificationRequest.identity)
-        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
-    } else Task.delay(true)
-  }
-
-  override def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
-    tokenPurposedClaim.targetGroups match {
-      case Right(names) if currentGroups.nonEmpty => currentGroups.map(_.name).intersect(names).sorted == names.sorted
-      case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
-      case _ => false
     }
   }
 

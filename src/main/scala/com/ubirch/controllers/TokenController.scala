@@ -8,6 +8,7 @@ import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrat
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService, TokenKeyService, TokenService }
+import com.ubirch.util.TaskHelpers
 import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
 import monix.eval.Task
@@ -30,7 +31,7 @@ class TokenController @Inject() (
     tokenService: TokenService,
     tokenKeyService: TokenKeyService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
-  extends ControllerBase with KeycloakBearerAuthenticationSupport {
+  extends ControllerBase with KeycloakBearerAuthenticationSupport with TaskHelpers {
 
   override protected val applicationDescription = "Token Controller"
   override protected implicit def jsonFormats: Formats = jFormats
@@ -178,7 +179,7 @@ class TokenController @Inject() (
         reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp"))
         reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
-        res <- tokenService.verify(readBody.extracted.copy(signed = Some(readBody.asString), signatureRaw = Some(reqSig), time = Some(reqTimestamp)))
+        res <- tokenService.verify(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = Option(reqSig), time = Option(reqTimestamp)))
           .map { tkv => Ok(Return(tkv)) }
           .onErrorHandle {
             case e: ServiceException =>
@@ -199,22 +200,20 @@ class TokenController @Inject() (
 
     asyncResult("bootstrap_token") { implicit request => _ =>
 
-      for {
-        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
-        readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
-        res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Some(readBody.asString), signatureRaw = Some(reqSig), time = None))
-          .map { tkv => Ok(Return(tkv)) }
-          .onErrorHandle {
-            case e: ServiceException =>
-              logger.error("1.1 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              BadRequest(NOK.tokenBootstrappingError("Error bootstrapping token"))
-            case e: Exception =>
-              logger.error("1.2 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
-          }
-
+      (for {
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply)
+        readBody <- Task.delay(ReadBody.readJson[BootstrapRequest](t => t.camelizeKeys))
+        _ <- earlyResponseIf(reqSig.isEmpty)(InvalidParamException("X-Ubirch-Signature", "No header found"))
+        res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signature = reqSig)).map { tkv => Ok(Return(tkv)) }
       } yield {
         res
+      }).onErrorHandle {
+        case e: ServiceException =>
+          logger.error("1.1 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          BadRequest(NOK.tokenBootstrappingError("Error bootstrapping token"))
+        case e: Exception =>
+          logger.error("1.2 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
       }
     }
   }
