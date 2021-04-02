@@ -63,7 +63,7 @@ class TokenControllerSpec
 
       get("/v1/jwk") {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
+        assert(body == """{"version":"2.0.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
       }
 
       val token = Injector.get[FakeTokenCreator]
@@ -119,7 +119,7 @@ class TokenControllerSpec
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(403)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Forbidden"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Forbidden"}""")
       }
 
     }
@@ -146,7 +146,7 @@ class TokenControllerSpec
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
 
     }
@@ -235,7 +235,7 @@ class TokenControllerSpec
       assert(toDelete.isDefined)
       delete("/v1/" + toDelete.get, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":"Token deleted"}""")
+        assert(body == """{"version":"2.0.0","ok":true,"data":"Token deleted"}""")
       }
 
       get("/v1", headers = Map("authorization" -> token.prepare)) {
@@ -253,7 +253,7 @@ class TokenControllerSpec
       val incomingBody = "{}"
       post("/v1/generic/create", body = incomingBody) {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -262,7 +262,7 @@ class TokenControllerSpec
 
       get("/v1") {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -271,7 +271,7 @@ class TokenControllerSpec
 
       delete("/v1/" + UUID.randomUUID().toString) {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -281,7 +281,7 @@ class TokenControllerSpec
       val incomingBody = "{}"
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -290,7 +290,7 @@ class TokenControllerSpec
 
       get("/v1", headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -299,7 +299,7 @@ class TokenControllerSpec
 
       delete("/v1/" + UUID.randomUUID().toString, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -308,7 +308,7 @@ class TokenControllerSpec
 
       get("/v1/jwk") {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
+        assert(body == """{"version":"2.0.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
       }
 
     }
@@ -317,7 +317,7 @@ class TokenControllerSpec
 
       get("/v1/scopes") {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","thing:bootstrap","user:getinfo"]}""".stripMargin)
+        assert(body == """{"version":"2.0.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","thing:bootstrap","user:getinfo"]}""".stripMargin)
       }
 
     }

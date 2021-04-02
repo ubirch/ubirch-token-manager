@@ -8,7 +8,7 @@ abstract class Response[T] {
   val ok: T
 }
 object Response {
-  val version = "v2.0.0"
+  val version = "2.0.0"
 }
 
 /**

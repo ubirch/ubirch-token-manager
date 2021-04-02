@@ -12,6 +12,7 @@
     "upp:verify",
     "thing:create",
     "thing:getinfo",
+    "thing:bootstrap",
     "user:getinfo"
   ]
 }

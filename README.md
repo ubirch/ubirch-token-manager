@@ -49,7 +49,7 @@ That is to say: 'X seconds from now', where X == notBefore AND now == the curren
 
 _`originDomains`_: list of domains from which the calls will be accepted from when verifying.
 
-_`scopes`_: list of available scopes: "upp:anchor", "upp:verify", "thing:create", "thing:getinfo", "user:getinfo"
+_`scopes`_: list of available scopes: "upp:anchor", "upp:verify", "thing:create", "thing:getinfo", "thing:bootstrap", "user:getinfo"
 
 **Mandatory Fields**
 
@@ -66,8 +66,6 @@ _`scopes`_: list of available scopes: "upp:anchor", "upp:verify", "thing:create"
 * notBefore (number of null) in seconds
 
 Set as null or don't send the fields.
-
-NOTE: Don't send `targetIdentities` and `targetGroups`. Send only one at a time.  
 
 ## Create a Verification Token for Specific Devices. 
 
@@ -107,7 +105,7 @@ curl -s -X POST \
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0.0",
   "ok": true,
   "data": {
     "id": "726aa795-a2dc-4354-9559-41a2c86615a1",
@@ -163,7 +161,7 @@ curl -s -X POST \
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0.0",
   "ok": true,
   "data": {
     "id": "92d60695-e6a2-4c6c-8173-6f8f1496dbb3",
@@ -245,7 +243,7 @@ curl -s -X GET \
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0.0",
   "ok": true,
   "data": [
     {
@@ -344,11 +342,14 @@ curl -s -X GET $host/api/tokens/v1/scopes | jq .
 
 **user:getinfo**:: it allows querying info about a user.
 
+**thing:bootstrap**:: it allows creatinga bootstrap token that would permit creating devices, anchoring upps and 
+verifying upps.
+
 This call returns a json object whose data field is an array of scopes.
 
 ```json
 {
-  "version": "1.0",
+  "version": "2.0.0",
   "ok": true,
   "data": [
     "upp:anchor",
@@ -385,7 +386,7 @@ The interface offers these basic operations:
         <dependency>
             <groupId>com.ubirch</groupId>
             <artifactId>ubirch-token-sdk</artifactId>
-            <version>0.6.5-SNAPSHOT</version>
+            <version>2.0.0-SNAPSHOT</version>
         </dependency>
 
 Note that every system that might use the Light SDK and that performs externalities has to be explicitly known to the token manager. Every client has to configure their secret in their configuration file and the token manager must know of it.

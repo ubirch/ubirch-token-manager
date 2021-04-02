@@ -166,7 +166,7 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
 
     }
@@ -211,7 +211,7 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
 
     }
@@ -330,7 +330,7 @@ class TokenVerificationControllerSpec
       assert(toDelete.isDefined)
       delete("/v1/" + toDelete.get, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":"Token deleted"}""")
+        assert(body == """{"version":"2.0.0","ok":true,"data":"Token deleted"}""")
       }
 
       get("/v1", headers = Map("authorization" -> token.prepare)) {
@@ -348,7 +348,7 @@ class TokenVerificationControllerSpec
       val incomingBody = "{}"
       post("/v1/create", body = incomingBody) {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -357,7 +357,7 @@ class TokenVerificationControllerSpec
 
       get("/v1") {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -366,7 +366,7 @@ class TokenVerificationControllerSpec
 
       delete("/v1/" + UUID.randomUUID().toString) {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -376,7 +376,7 @@ class TokenVerificationControllerSpec
       val incomingBody = "{}"
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -385,7 +385,7 @@ class TokenVerificationControllerSpec
 
       get("/v1", headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -394,7 +394,7 @@ class TokenVerificationControllerSpec
 
       delete("/v1/" + UUID.randomUUID().toString, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -416,7 +416,7 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
 
     }
