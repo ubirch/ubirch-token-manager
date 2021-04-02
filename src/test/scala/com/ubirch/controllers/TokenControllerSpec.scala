@@ -3,7 +3,7 @@ package com.ubirch.controllers
 import java.security.PublicKey
 import java.util.UUID
 
-import com.ubirch.models.Good
+import com.ubirch.models.Return
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import com.ubirch.{ EmbeddedCassandra, _ }
@@ -54,7 +54,7 @@ class TokenControllerSpec
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
     }
@@ -87,8 +87,8 @@ class TokenControllerSpec
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.admin.prepare)) {
         status should equal(200)
-        val good = jsonConverter.as[Good](body).right.get
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        val good = jsonConverter.as[Return](body).right.get
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
         val token = good.data.asInstanceOf[Map[String, String]]("token")
         val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
         val claims = tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
@@ -173,17 +173,17 @@ class TokenControllerSpec
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       get("/v1", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
@@ -213,18 +213,18 @@ class TokenControllerSpec
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       post("/v1/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       var current: List[Map[String, String]] = Nil
       get("/v1", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
@@ -240,7 +240,7 @@ class TokenControllerSpec
 
       get("/v1", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 1)
@@ -317,7 +317,7 @@ class TokenControllerSpec
 
       get("/v1/scopes") {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","user:getinfo"]}""".stripMargin)
+        assert(body == """{"version":"1.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","thing:bootstrap","user:getinfo"]}""".stripMargin)
       }
 
     }

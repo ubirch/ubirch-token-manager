@@ -2,7 +2,7 @@ package com.ubirch.controllers
 
 import java.util.UUID
 
-import com.ubirch.models.Good
+import com.ubirch.models.Return
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import com.ubirch.{ EmbeddedCassandra, _ }
@@ -52,7 +52,7 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val b = jsonConverter.as[Good](body).right.get
+        val b = jsonConverter.as[Return](body).right.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -119,7 +119,7 @@ class TokenVerificationControllerSpec
           case _ => fail("No Token Found")
         }
 
-        assert(b.isInstanceOf[Good])
+        assert(b.isInstanceOf[Return])
       }
 
     }
@@ -143,7 +143,7 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
     }
@@ -189,7 +189,7 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
     }
@@ -234,17 +234,17 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       get("/v1", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
@@ -270,16 +270,16 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val bodyAsEither = jsonConverter.as[Good](body)
+        val bodyAsEither = jsonConverter.as[Return](body)
         val data = bodyAsEither.right.get.data.asInstanceOf[Map[String, Any]]
         val id = data.get("id").map(x => UUID.fromString(x.toString))
 
-        assert(bodyAsEither.right.get.isInstanceOf[Good])
+        assert(bodyAsEither.right.get.isInstanceOf[Return])
         assert(id.isDefined)
 
         get("/v1/" + id.get, headers = Map("authorization" -> token.prepare)) {
           status should equal(200)
-          val res = jsonConverter.as[Good](body)
+          val res = jsonConverter.as[Return](body)
           assert(res.isRight)
           val data = res.right.get.data.asInstanceOf[Map[String, String]]
           val id2 = data.get("id").map(x => UUID.fromString(x))
@@ -308,18 +308,18 @@ class TokenVerificationControllerSpec
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       var current: List[Map[String, String]] = Nil
       get("/v1", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
@@ -335,7 +335,7 @@ class TokenVerificationControllerSpec
 
       get("/v1", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 1)

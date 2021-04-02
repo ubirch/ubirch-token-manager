@@ -1,0 +1,10 @@
+{
+  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+  "purpose":"Medway Laboratories",
+  "targetIdentities":[],
+  "targetGroups": ["Kitchen_Carlos"],
+  "expiration": 6311390400,
+  "notBefore":null,
+  "originDomains": [],
+  "scopes": ["thing:bootstrap"]
+}

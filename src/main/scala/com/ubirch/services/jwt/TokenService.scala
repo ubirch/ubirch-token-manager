@@ -6,6 +6,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.Token
+import com.ubirch.models.Scope.asString
 import com.ubirch.models._
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ InvalidClaimException, TokenEncodingException }
@@ -24,6 +25,7 @@ trait TokenService {
   def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
   def verify(verificationRequest: VerificationRequest): Task[Boolean]
+  def processBootstrapToken(bootstrapRequest: BootstrapRequest): Task[BootstrapToken]
 }
 
 @Singleton
@@ -43,29 +45,16 @@ class DefaultTokenService @Inject() (
   override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
     for {
       _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidClaimException(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
-
-      jwtID = UUID.randomUUID()
-
-      res <- liftTry(tokenEncodingService.encode(jwtID, tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
-      (token, claims) = res
-
-      _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
-      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, new Date())
-
-      insertion <- tokensDAO.insert(aRow).headOptionL
-
-      _ = if (insertion.isEmpty) logger.error("failed_token_insertion={}", tokenClaim.toString)
-      _ = if (insertion.isDefined) logger.info("token_insertion_succeeded={}", tokenClaim.toString)
-
+      tcd <- create(tokenClaim, category)
     } yield {
-      TokenCreationData(jwtID, claims, token)
+      tcd
     }
   }
 
   override def create(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[TokenCreationData] = {
     for {
       _ <- localVerify(tokenPurposedClaim)
-      groupsCheck <- verifyGroupsForCreation(accessToken, tokenPurposedClaim)
+      groupsCheck <- stateVerifier.verifyGroupsTokenPurposedClaim(tokenPurposedClaim)
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
@@ -113,7 +102,7 @@ class DefaultTokenService @Inject() (
 
       tokenPurposedClaim <- buildTokenClaimFromVerificationRequest(verificationRequest)
       _ <- localVerify(tokenPurposedClaim)
-      groupsCheck <- verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
+      groupsCheck <- stateVerifier.verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
 
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
 
@@ -122,48 +111,95 @@ class DefaultTokenService @Inject() (
     }
   }
 
-  def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
+  override def processBootstrapToken(bootstrapRequest: BootstrapRequest): Task[BootstrapToken] = {
+
+    def createClaim(scope: Scope, identity: UUID): Task[TokenClaim] = for {
+      tokenPurposedClaim <- buildTokenClaimFromUbirchTokenAsString(bootstrapRequest.token)
+      tokenClaim = tokenPurposedClaim.copy(
+        targetIdentities = Left(List(identity)),
+        scopes = List(asString(scope))
+      ).toTokenClaim(ENV)
+    } yield tokenClaim
+
     for {
-      tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(verificationRequest.token, tokenKey.key.getPublicKey))
+      isValid <- stateVerifier.verifyIdentitySignature(bootstrapRequest.identity, bootstrapRequest.signedRaw, bootstrapRequest.signatureRaw)
+        .onErrorRecover { case e: Exception => throw InvalidClaimException("Invalid Key Signature Internal", e.getMessage) }
+      _ <- earlyResponseIf(!isValid)(InvalidClaimException("Invalid Key Signature", "Invalid key"))
+
+      thingCreate <- createClaim(Scope.Thing_Create, bootstrapRequest.identity)
+        .map(_.copy(expiration = Some(60 * 15)))
+        .flatMap(create(_, 'purposed_claim))
+
+      thingAnchor <- createClaim(Scope.UPP_Anchor, bootstrapRequest.identity)
+        .map(_.copy(expiration = None))
+        .flatMap(create(_, 'purposed_claim))
+
+      thingVerify <- createClaim(Scope.UPP_Verify, bootstrapRequest.identity)
+        .map(_.copy(expiration = None))
+        .flatMap(create(_, 'purposed_claim))
+
+      _ = logger.debug("bootstrap_tokens_created create:{} anchor:{} verify:{}", thingCreate.token, thingAnchor.token, thingVerify.token)
+
+    } yield {
+      BootstrapToken(thingCreate, thingAnchor, thingVerify)
+    }
+
+  }
+
+  ///// private stuff
+  private def create(tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
+    for {
+      _ <- Task.unit // here to make the compiler happy
+
+      jwtID = UUID.randomUUID()
+
+      res <- liftTry(tokenEncodingService.encode(jwtID, tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
+      (token, claims) = res
+
+      _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
+      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, new Date())
+
+      insertion <- tokensDAO.insert(aRow).headOptionL
+
+      _ = if (insertion.isEmpty) logger.error("failed_token_insertion={}", tokenClaim.toString)
+      _ = if (insertion.isDefined) logger.info("token_insertion_succeeded={}", tokenClaim.toString)
+
+    } yield {
+      TokenCreationData(jwtID, claims, token)
+    }
+  }
+
+  private def buildTokenClaimFromVerificationRequest(verificationRequest: VerificationRequest): Task[TokenPurposedClaim] = {
+    buildTokenClaimFromUbirchTokenAsString(verificationRequest.token)
+  }
+
+  private def buildTokenClaimFromUbirchTokenAsString(token: String): Task[TokenPurposedClaim] = {
+    for {
+      tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(token, tokenKey.key.getPublicKey))
       tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
       tokenPurposedClaim <- Task.delay(jsonConverterService.fromJsonInput[TokenPurposedClaim](tokenString) { x =>
-        x.camelizeKeys.transformField { case ("sub", value) => ("tenantId", value) }
+        //We can improve this matcher later
+        x.camelizeKeys.transformField {
+          case ("sub", value) => ("tenantId", value)
+          case ("pur", value) => ("purpose", value)
+          case ("tid", value) => ("targetIdentities", value)
+          case ("tgp", value) => ("targetGroups", value)
+          case ("exp", value) => ("expiration", value)
+          case ("ord", value) => ("originDomains", value)
+          case ("scp", value) => ("scopes", value)
+        }
       })
     } yield {
       tokenPurposedClaim
     }
   }
 
-  def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {
+  private def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {
     _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && tokenPurposedClaim.hasMaybeIdentities)(InvalidClaimException("Invalid Target Identities or Groups", "Either have identities or groups"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
     _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
-    _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException("Invalid Scopes", "Scopes are empty or invalid"))
+    _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException(s"Invalid Scopes :: ${tokenPurposedClaim.scopes}", "Scopes are empty or invalid"))
   } yield true
-
-  def verifyGroupsForCreation(accessToken: Token, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
-    if (tokenPurposedClaim.hasMaybeGroups) {
-      stateVerifier
-        .groups(tokenPurposedClaim.tenantId, accessToken.email)
-        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
-    } else Task.delay(true)
-  }
-
-  def verifyGroupsForVerificationRequest(verificationRequest: VerificationRequest, tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
-    if (tokenPurposedClaim.hasMaybeGroups) {
-      stateVerifier
-        .groups(verificationRequest.identity)
-        .map { gs => verifyGroups(tokenPurposedClaim, gs) }
-    } else Task.delay(true)
-  }
-
-  def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
-    tokenPurposedClaim.targetGroups match {
-      case Right(names) if currentGroups.nonEmpty => currentGroups.forall(x => names.contains(x.name))
-      case Left(uuids) if currentGroups.nonEmpty => currentGroups.forall(x => uuids.contains(x.id))
-      case _ => false
-    }
-  }
 
 }

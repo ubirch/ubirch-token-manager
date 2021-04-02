@@ -75,7 +75,7 @@ NOTE: Don't send `targetIdentities` and `targetGroups`. Send only one at a time.
 
 This is a command that can be used to get a keycloak token. Note that you will need the username, password and client secret for the correspondig keycloak instance.
 
-```json
+```
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
@@ -131,7 +131,7 @@ curl -s -X POST \
 
 #### Keycloak Token
 
-```json
+```
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
@@ -228,7 +228,7 @@ Where
 
 #### Keycloak Token
 
-```json
+```
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
@@ -270,13 +270,13 @@ curl -s -X GET \
 
 #### Keycloak Token
 
-```json
+```
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
 ```
 
 #### Token
 
-```json
+```
 tokenId=UUID for the token id
 ```
 
@@ -355,6 +355,7 @@ This call returns a json object whose data field is an array of scopes.
     "upp:verify",
     "thing:create",
     "thing:getinfo",
+    "thing:bootstrap",
     "user:getinfo"
   ]
 }

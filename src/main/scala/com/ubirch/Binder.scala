@@ -11,7 +11,7 @@ import com.ubirch.services.jwt._
 import com.ubirch.services.key.{ DefaultHMAC, DefaultHMACVerifier, DefaultKeyPoolService, HMAC, HMACVerifier, KeyPoolService }
 import com.ubirch.services.lifeCycle.{ DefaultJVMHook, DefaultLifecycle, JVMHook, Lifecycle }
 import com.ubirch.services.rest.SwaggerProvider
-import com.ubirch.services.state.{ DefaultExternalGetter, DefaultSecretKeyPoolService, DefaultStateVerifier, DefaultTokenClientsInfo, ExternalStateGetter, SecretKeyPoolService, StateVerifier, TokenClientsInfo }
+import com.ubirch.services.state.{ DefaultExternalGetter, DefaultHttpClient, DefaultKeyGetter, DefaultSecretKeyPoolService, DefaultStateVerifier, DefaultTokenClientsInfo, ExternalStateGetter, HttpClient, KeyGetter, SecretKeyPoolService, StateVerifier, TokenClientsInfo }
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra.swagger.Swagger
@@ -47,6 +47,8 @@ class Binder
   def SecretKeyPoolService: ScopedBindingBuilder = bind(classOf[SecretKeyPoolService]).to(classOf[DefaultSecretKeyPoolService])
   def HMAC: ScopedBindingBuilder = bind(classOf[HMAC]).to(classOf[DefaultHMAC])
   def HMACVerifier: ScopedBindingBuilder = bind(classOf[HMACVerifier]).to(classOf[DefaultHMACVerifier])
+  def HttpClient: ScopedBindingBuilder = bind(classOf[HttpClient]).to(classOf[DefaultHttpClient])
+  def KeyGetter: ScopedBindingBuilder = bind(classOf[KeyGetter]).to(classOf[DefaultKeyGetter])
 
   def configure(): Unit = {
     Config
@@ -72,6 +74,8 @@ class Binder
     SecretKeyPoolService
     HMAC
     HMACVerifier
+    HttpClient
+    KeyGetter
     ()
   }
 

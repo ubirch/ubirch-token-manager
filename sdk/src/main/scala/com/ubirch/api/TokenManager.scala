@@ -146,12 +146,14 @@ object Claims {
   final val ORIGIN_KEY = 'ord
   final val SCOPES_KEY = 'scp
 
-  def extractString(key: String, obj: JValue): String = {
+  def extractStringAsOpt(key: String, obj: JValue): Option[String] = {
     (for {
       JObject(child) <- obj
       JField(k, JString(value)) <- child if k == key
-    } yield value).headOption.getOrElse("")
+    } yield value).headOption
   }
+
+  def extractString(key: String, obj: JValue): String = extractStringAsOpt(key, obj).getOrElse("")
 
   def extractListString(key: String, obj: JValue): List[String] = {
     for {

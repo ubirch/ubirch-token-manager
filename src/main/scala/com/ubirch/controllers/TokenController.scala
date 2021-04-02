@@ -8,6 +8,7 @@ import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrat
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService, TokenKeyService, TokenService }
+import com.ubirch.util.TaskHelpers
 import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
 import monix.eval.Task
@@ -15,8 +16,8 @@ import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra._
 import org.scalatra.swagger.{ ResponseMessage, Swagger, SwaggerSupportSyntax }
-
 import javax.inject.{ Inject, Singleton, Scope => _ }
+
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -30,7 +31,7 @@ class TokenController @Inject() (
     tokenService: TokenService,
     tokenKeyService: TokenKeyService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
-  extends ControllerBase with KeycloakBearerAuthenticationSupport {
+  extends ControllerBase with KeycloakBearerAuthenticationSupport with TaskHelpers {
 
   override protected val applicationDescription = "Token Controller"
   override protected implicit def jsonFormats: Formats = jFormats
@@ -93,7 +94,7 @@ class TokenController @Inject() (
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
           res <- tokenService.create(token, readBody.extracted, 'generic)
-            .map { tkc => Ok(Good(tkc)) }
+            .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -146,7 +147,7 @@ class TokenController @Inject() (
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenPurposedClaim](t => t.camelizeKeys))
           res <- tokenService.create(token, readBody.extracted)
-            .map { tkc => Ok(Good(tkc)) }
+            .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -163,34 +164,55 @@ class TokenController @Inject() (
     }
   }
 
-  val getV1Verify: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Boolean]("getV1Verify")
+  val postV1Verify: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Boolean]("postV1Verify")
       summary "Verifies Ubirch Token"
       description "verifies token and identity"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters swaggerTokenAsHeader)
 
-  post("/v1/verify", operation(getV1Verify)) {
+  post("/v1/verify", operation(postV1Verify)) {
 
     asyncResult("verify_token") { implicit request => _ =>
 
-      for {
-        reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp"))
-        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
+      (for {
+        reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp")).map(Option.apply).map(_.filter(_.nonEmpty))
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
-        res <- tokenService.verify(readBody.extracted.copy(signed = Some(readBody.asString), signatureRaw = Some(reqSig), time = Some(reqTimestamp)))
-          .map { tkv => Ok(Good(tkv)) }
-          .onErrorHandle {
-            case e: ServiceException =>
-              logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              BadRequest(Ok(Good(false)))
-            case e: Exception =>
-              logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
-          }
-
+        res <- tokenService
+          .verify(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = reqSig, time = reqTimestamp))
+          .map { tkv => Ok(Return(tkv)) }
       } yield {
         res
+      }).onErrorHandle {
+        case e: ServiceException =>
+          logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          BadRequest(NOK.tokenVerifyingError("Error verifying token"))
+        case e: Exception =>
+          logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+      }
+    }
+  }
+
+  post("/v1/bootstrap") {
+
+    asyncResult("bootstrap_token") { implicit request => _ =>
+
+      (for {
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
+        readBody <- Task.delay(ReadBody.readJson[BootstrapRequest](t => t.camelizeKeys))
+        _ <- earlyResponseIf(reqSig.isEmpty)(InvalidParamException("X-Ubirch-Signature", "No header found"))
+        res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signature = reqSig)).map { tkv => Ok(Return(tkv)) }
+      } yield {
+        res
+      }).onErrorHandle {
+        case e: ServiceException =>
+          logger.error("1.1 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          BadRequest(NOK.tokenBootstrappingError("Error bootstrapping token"))
+        case e: Exception =>
+          logger.error("1.2 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
       }
     }
   }
@@ -208,7 +230,7 @@ class TokenController @Inject() (
       asyncResult("list_tokens") { _ => _ =>
         for {
           res <- tokenService.list(token)
-            .map { tks => Ok(Good(tks)) }
+            .map { tks => Ok(Return(tks)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -242,7 +264,7 @@ class TokenController @Inject() (
             .onErrorHandle(_ => throw InvalidParamException("Invalid OwnerId", "Wrong owner param"))
 
           res <- tokenService.get(token, id)
-            .map { tks => Ok(Good(tks.orNull)) }
+            .map { tks => Ok(Return(tks.orNull)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -269,7 +291,7 @@ class TokenController @Inject() (
     asyncResult("get_jwk") { _ => _ =>
       (for {
         key <- Task.fromEither(jsonConverterService.as[Map[String, String]](tokenKeyService.publicJWK.toJson))
-        res <- Task.delay(Ok(Good(key)))
+        res <- Task.delay(Ok(Return(key)))
       } yield {
         res
       }).onErrorRecover {
@@ -288,7 +310,7 @@ class TokenController @Inject() (
 
   get("/v1/scopes", operation(getV1Scopes)) {
     asyncResult("get_scopes") { _ => _ =>
-      Task.delay(Ok(Good(Scope.list.map(Scope.asString))))
+      Task.delay(Ok(Return(Scope.list.map(Scope.asString))))
         .onErrorRecover {
           case e: Exception =>
             logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -298,7 +320,7 @@ class TokenController @Inject() (
   }
 
   val deleteV1TokenId: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Good]("deleteV1TokenId")
+    (apiOperation[Return]("deleteV1TokenId")
       summary "Deletes a token"
       description "deletes a token"
       tags SwaggerElements.TAG_TOKEN_SERVICE
@@ -333,7 +355,7 @@ class TokenController @Inject() (
 
           res <- tokenService.delete(accessToken, tokenId)
             .map { dr =>
-              if (dr) Ok(Good("Token deleted"))
+              if (dr) Ok(Return("Token deleted"))
               else BadRequest(NOK.tokenDeleteError("Failed to delete token"))
             }
             .onErrorRecover {
