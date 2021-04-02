@@ -175,23 +175,22 @@ class TokenController @Inject() (
 
     asyncResult("verify_token") { implicit request => _ =>
 
-      for {
-        reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp"))
-        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature"))
+      (for {
+        reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp")).map(Option.apply).map(_.filter(_.nonEmpty))
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
-        res <- tokenService.verify(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = Option(reqSig), time = Option(reqTimestamp)))
+        res <- tokenService
+          .verify(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = reqSig, time = reqTimestamp))
           .map { tkv => Ok(Return(tkv)) }
-          .onErrorHandle {
-            case e: ServiceException =>
-              logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              BadRequest(NOK.tokenVerifyingError("Error verifying token"))
-            case e: Exception =>
-              logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
-              InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
-          }
-
       } yield {
         res
+      }).onErrorHandle {
+        case e: ServiceException =>
+          logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          BadRequest(NOK.tokenVerifyingError("Error verifying token"))
+        case e: Exception =>
+          logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
       }
     }
   }
@@ -201,7 +200,7 @@ class TokenController @Inject() (
     asyncResult("bootstrap_token") { implicit request => _ =>
 
       (for {
-        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply)
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
         readBody <- Task.delay(ReadBody.readJson[BootstrapRequest](t => t.camelizeKeys))
         _ <- earlyResponseIf(reqSig.isEmpty)(InvalidParamException("X-Ubirch-Signature", "No header found"))
         res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signature = reqSig)).map { tkv => Ok(Return(tkv)) }
