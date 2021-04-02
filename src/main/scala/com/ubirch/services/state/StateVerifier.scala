@@ -1,6 +1,5 @@
 package com.ubirch.services.state
 
-import java.security.MessageDigest
 import java.util.UUID
 
 import com.typesafe.config.Config
@@ -12,7 +11,7 @@ import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
 import com.ubirch.services.jwt.{ DefaultTokenEncodingService, DefaultTokenKeyService, TokenEncodingService, TokenKeyService }
-import com.ubirch.util.TaskHelpers
+import com.ubirch.util.{ PublicKeyUtil, TaskHelpers }
 import monix.eval.Task
 import monix.execution.Scheduler
 import net.logstash.logback.argument.StructuredArguments.v
@@ -72,12 +71,7 @@ class DefaultStateVerifier @Inject() (
       maybeKey <- identityKey(identityUUID).map(_.map(_.getPrivKey))
     } yield {
       maybeKey match {
-        case Some(Success(pubkey)) =>
-          val digest: MessageDigest = MessageDigest.getInstance("SHA-512")
-          digest.update(signed)
-          val dataToVerify = digest.digest
-          val ok = pubkey.verify(dataToVerify, signature)
-          ok
+        case Some(Success(pubkey)) => PublicKeyUtil.verifySHA512(pubkey, signed, signature)
         case _ => false
       }
     }

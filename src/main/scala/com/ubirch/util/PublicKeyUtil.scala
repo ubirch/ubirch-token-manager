@@ -1,13 +1,11 @@
 package com.ubirch.util
 
-import java.security.KeyPairGenerator
-import java.security.spec.ECGenParameterSpec
+import java.security.MessageDigest
 
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.NoCurveException
+import com.ubirch.crypto.{ PrivKey, PubKey }
 import com.ubirch.crypto.utils.Curve
-import com.ubirch.crypto.{ GeneratorKeyFactory, PubKey }
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 import scala.util.{ Failure, Success, Try }
 
@@ -35,14 +33,18 @@ object PublicKeyUtil extends LazyLogging {
     }
   }
 
-  def pubKey(pubKeyBytes: Array[Byte], curve: Curve): PubKey = GeneratorKeyFactory.getPubKey(pubKeyBytes, curve)
+  def digestSHA512(privKey: PrivKey, data: Array[Byte]): Array[Byte] = {
+    val digest: MessageDigest = MessageDigest.getInstance("SHA-512")
+    digest.update(data)
+    val dataToSign = digest.digest
+    privKey.sign(dataToSign)
+  }
 
-  def provider = new BouncyCastleProvider
-
-  def keyPairGenerator: KeyPairGenerator = {
-    val kpg = KeyPairGenerator.getInstance("EC", provider)
-    kpg.initialize(new ECGenParameterSpec("PRIME256V1"))
-    kpg
+  def verifySHA512(pubKey: PubKey, signed: Array[Byte], signature: Array[Byte]): Boolean = {
+    val digest: MessageDigest = MessageDigest.getInstance("SHA-512")
+    digest.update(signed)
+    val dataToVerify = digest.digest
+    pubKey.verify(dataToVerify, signature)
   }
 
 }

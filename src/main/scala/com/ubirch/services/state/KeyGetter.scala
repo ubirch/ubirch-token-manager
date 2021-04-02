@@ -1,7 +1,6 @@
 package com.ubirch.services.state
 
 import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
 import java.util.{ Base64, UUID }
 
 import com.typesafe.config.Config
@@ -73,11 +72,7 @@ object KeySignTest {
   def main(args: Array[String]): Unit = {
 
     val privkey = GeneratorKeyFactory.getPrivKey(Base64.getDecoder.decode("L1qIoAosmLmaOh/W+a3YA4aJnWpoZ69NgRcE650T4hs="), PublicKeyUtil.associateCurve("ECC_ED25519").get)
-
-    val digest: MessageDigest = MessageDigest.getInstance("SHA-512")
-    digest.update("""{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly90b2tlbi5kZXYudWJpcmNoLmNvbSIsImV4cCI6NzkyODY3NjgzNiwiaWF0IjoxNjE3Mjg2NDM2LCJqdGkiOiJiZDc2MDE3NS01ODg4LTQ4MjUtYTExNi05MGQwMmNjYWRkMGUiLCJzY3AiOlsidGhpbmc6Ym9vdHN0cmFwIl0sInB1ciI6Ik1lZHdheSBMYWJvcmF0b3JpZXMiLCJ0Z3AiOlsiS2l0Y2hlbl9DYXJsb3MiXSwidGlkIjpbXSwib3JkIjpbXX0.S2OGWUTt6HFj0tByXwfEJRL1vfl5ctrU95QSLmYgFM7TWTY70dG7cO7RtU6y4KfIKaFiL-lg_Tvu3C98HTiVJg","identity":"d7a81058-ae97-4178-80ed-71aed46e88fa"}""".getBytes(StandardCharsets.UTF_8))
-    val dataToSign = digest.digest
-    val data = privkey.sign(dataToSign)
+    val data = PublicKeyUtil.digestSHA512(privkey, """{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly90b2tlbi5kZXYudWJpcmNoLmNvbSIsImV4cCI6NzkyODY3NjgzNiwiaWF0IjoxNjE3Mjg2NDM2LCJqdGkiOiJiZDc2MDE3NS01ODg4LTQ4MjUtYTExNi05MGQwMmNjYWRkMGUiLCJzY3AiOlsidGhpbmc6Ym9vdHN0cmFwIl0sInB1ciI6Ik1lZHdheSBMYWJvcmF0b3JpZXMiLCJ0Z3AiOlsiS2l0Y2hlbl9DYXJsb3MiXSwidGlkIjpbXSwib3JkIjpbXX0.S2OGWUTt6HFj0tByXwfEJRL1vfl5ctrU95QSLmYgFM7TWTY70dG7cO7RtU6y4KfIKaFiL-lg_Tvu3C98HTiVJg","identity":"d7a81058-ae97-4178-80ed-71aed46e88fa"}""".getBytes(StandardCharsets.UTF_8))
 
     println(Base64.getEncoder.encodeToString(data))
 
