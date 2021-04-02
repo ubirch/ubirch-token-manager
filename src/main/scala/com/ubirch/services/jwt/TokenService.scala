@@ -113,26 +113,28 @@ class DefaultTokenService @Inject() (
 
   override def processBootstrapToken(bootstrapRequest: BootstrapRequest): Task[BootstrapToken] = {
 
-    def createClaim(scope: Scope): Task[TokenCreationData] = {
-      for {
-        tokenPurposedClaim <- buildTokenClaimFromUbirchTokenAsString(bootstrapRequest.token)
-        tokenClaim = tokenPurposedClaim
-          .copy(scopes = List(asString(scope)))
-          .toTokenClaim(ENV)
-
-        tokeCreationData <- create(tokenClaim, 'purposed_claim)
-      } yield tokeCreationData
-    }
+    def createClaim(scope: Scope): Task[TokenClaim] = for {
+      tokenPurposedClaim <- buildTokenClaimFromUbirchTokenAsString(bootstrapRequest.token)
+      tokenClaim = tokenPurposedClaim.copy(scopes = List(asString(scope))).toTokenClaim(ENV)
+    } yield tokenClaim
 
     for {
       isValid <- stateVerifier.verifyIdentitySignature(bootstrapRequest.identity, bootstrapRequest.signedRaw, bootstrapRequest.signatureRaw)
-        .onErrorRecover {
-          case e: Exception => throw InvalidClaimException("Invalid Key Signature Internal", e.getMessage)
-        }
+        .onErrorRecover { case e: Exception => throw InvalidClaimException("Invalid Key Signature Internal", e.getMessage) }
       _ <- earlyResponseIf(!isValid)(InvalidClaimException("Invalid Key Signature", "Invalid key"))
+
       thingCreate <- createClaim(Scope.Thing_Create)
+        .map(_.copy(expiration = Some(60 * 15)))
+        .flatMap(create(_, 'purposed_claim))
+
       thingAnchor <- createClaim(Scope.UPP_Anchor)
+        .map(_.copy(expiration = None))
+        .flatMap(create(_, 'purposed_claim))
+
       thingVerify <- createClaim(Scope.UPP_Verify)
+        .map(_.copy(expiration = None))
+        .flatMap(create(_, 'purposed_claim))
+
     } yield {
       BootstrapToken(thingCreate, thingAnchor, thingVerify)
     }

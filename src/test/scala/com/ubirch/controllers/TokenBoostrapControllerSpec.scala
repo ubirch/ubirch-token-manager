@@ -190,6 +190,7 @@ class TokenBoostrapControllerSpec
 
                 post("/v1/bootstrap", body = br, headers = Map("X-Ubirch-Signature" -> signature)) {
                   status should equal(200)
+                  assert(jsonConverter.as[Return](body).isRight)
                 }
 
             }
