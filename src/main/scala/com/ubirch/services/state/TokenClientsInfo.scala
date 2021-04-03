@@ -10,6 +10,7 @@ import com.ubirch.ConfPaths.TokenClientsPaths
 import com.ubirch.services.config.ConfigProvider
 
 import javax.inject._
+import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
 case class TokenClient(client: Symbol, secret: String) {
@@ -28,11 +29,45 @@ trait TokenClientsInfo {
 @Singleton
 class DefaultTokenClientsInfo @Inject() (config: Config, jsonConverterService: JsonConverterService) extends TokenClientsInfo with LazyLogging {
 
-  private val file: String = config.getString(TokenClientsPaths.TOKEN_CLIENTS_FILE_PATH)
+  final val TOKEN_SVC_CLIENT_NAME = "TOKEN_SVC_CLIENT_NAME_"
+  final val TOKEN_SVC_CLIENT_SECRET = "TOKEN_SVC_CLIENT_SECRET_"
 
-  final val info: List[TokenClient] = loadInfo.map(x => toIdentities(x)).getOrElse(Nil)
+  final val info: List[TokenClient] = {
+    lazy val file: String = config.getString(TokenClientsPaths.TOKEN_CLIENTS_FILE_PATH)
+    lazy val isFileNull: Boolean = config.getIsNull(TokenClientsPaths.TOKEN_CLIENTS_FILE_PATH)
+    if (isFileNull) {
+      logger.info("clients_source={}", "ENV")
+      loadInfoFromEnv(getEnv)
+    } else {
+      logger.info("clients_source={}", "FILE")
+      loadInfoFromFile(file).map(x => toIdentities(x)).getOrElse(Nil)
+    }
+  }
 
-  private def loadInfo: Option[String] = {
+  def getEnv: Map[String, String] = sys.env
+
+  private def loadInfoFromEnv(envs: Map[String, String]): List[TokenClient] = {
+
+    def getId(index: Int): Option[TokenClient] = for {
+      role <- envs.get(TOKEN_SVC_CLIENT_NAME + index)
+      pass <- envs.get(TOKEN_SVC_CLIENT_SECRET + index)
+    } yield {
+      TokenClient(Symbol(role), pass)
+    }
+
+    @tailrec
+    def go(index: Int, identities: List[TokenClient]): List[TokenClient] = {
+      getId(index) match {
+        case Some(value) => go(index + 1, identities ++ List(value))
+        case None => identities
+      }
+    }
+
+    go(1, Nil)
+
+  }
+
+  private def loadInfoFromFile(file: String): Option[String] = {
     try {
       val path = Paths.get(file)
 

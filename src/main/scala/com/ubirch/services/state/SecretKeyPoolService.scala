@@ -3,6 +3,7 @@ package com.ubirch.services.state
 import java.security.Key
 import java.util.Base64
 
+import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.crypto.utils.Utils
 
 import javax.crypto.spec.SecretKeySpec
@@ -16,7 +17,7 @@ trait SecretKeyPoolService {
 }
 
 @Singleton
-class DefaultSecretKeyPoolService @Inject() (tokenClientsInfo: TokenClientsInfo, keyPoolService: KeyPoolService) extends SecretKeyPoolService {
+class DefaultSecretKeyPoolService @Inject() (tokenClientsInfo: TokenClientsInfo, keyPoolService: KeyPoolService) extends SecretKeyPoolService with LazyLogging {
 
   override def getKey(kid: String): Option[Key] = keyPoolService.getKey(kid)
 
@@ -25,6 +26,7 @@ class DefaultSecretKeyPoolService @Inject() (tokenClientsInfo: TokenClientsInfo,
   override def init: Task[List[(String, Key)]] = {
     for {
       clients <- Task.delay(tokenClientsInfo.info)
+      _ = logger.info("clients_found={} with={}", clients.size, clients.map(_.client).mkString(","))
       decKeys <- Task.delay(clients.map(x => (x, buildKey(x.secretKey))))
       keys <- Task.delay(decKeys.flatMap { case (cl, k) =>
         keyPoolService.addKey(cl.secretPointer, k)
