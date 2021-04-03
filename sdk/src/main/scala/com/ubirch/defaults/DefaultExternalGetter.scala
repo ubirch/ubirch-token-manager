@@ -36,7 +36,7 @@ class DefaultExternalGetter @Inject() (config: Config, HMAC: HMAC) extends Exter
 
   override def verify(body: Array[Byte]): ExternalResponseData[Array[Byte]] = {
     val (time, hmac) = calculateHmac(body)
-    val req = new HttpPost(TOKEN_MANAGER_ENDPOINT + "/api/tokens/v1/verify")
+    val req = new HttpPost(TOKEN_MANAGER_ENDPOINT + "/api/tokens/v2/verify")
     req.setHeader("Content-Type", "application/json")
     req.setHeader("X-Ubirch-Timestamp", time)
     req.setHeader("X-Ubirch-Signature", hmac)
