@@ -191,7 +191,7 @@ class TokenVerificationControllerSpec
       post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
 
-        val b = jsonConverter.as[Good](body).right.get
+        val b = jsonConverter.as[Return](body).right.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -199,8 +199,8 @@ class TokenVerificationControllerSpec
 
             val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
             tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey]) match {
-              case None => fail(new Exception("Failed"))
-              case Some(value) =>
+              case Failure(exception) => fail(exception)
+              case Success(value) =>
 
                 def complete(completeWith: Boolean = false)(list: List[Boolean]): List[Boolean] = list match {
                   case Nil => List(completeWith)
@@ -226,31 +226,27 @@ class TokenVerificationControllerSpec
 
                 val tidOK = complete()(for {
                   JObject(child) <- value
-                  JField("target_identities", JArray(tid)) <- child
+                  JField("tid", JArray(tid)) <- child
                   JString("840b7e21-03e9-4de7-bb31-0b9524f3b500") <- tid
                 } yield true)
 
                 val ordOK = complete()(for {
                   JObject(child) <- value
-                  JField("origin_domains", JArray(tid)) <- child
+                  JField("ord", JArray(tid)) <- child
                 } yield tid.isEmpty)
 
                 val purposeOk = complete()(for {
                   JObject(child) <- value
-                  JField("purpose", JString("King Dude - Concert")) <- child
-                } yield true)
-
-                val roleOk = complete()(for {
-                  JObject(child) <- value
-                  JField("role", JString("verifier")) <- child
+                  JField("pur", JString("King Dude - Concert")) <- child
                 } yield true)
 
                 val scopesOk = complete()(for {
                   JObject(child) <- value
-                  JField("scope", JString("ver")) <- child
+                  JField("scp", JArray(tid)) <- child
+                  JString("upp:verify") <- tid
                 } yield true)
 
-                val check = issOK ++ audOK ++ subOK ++ tidOK ++ ordOK ++ purposeOk ++ roleOk ++ scopesOk
+                val check = issOK ++ audOK ++ subOK ++ tidOK ++ ordOK ++ purposeOk ++ scopesOk
 
                 assert(check.forall(b => b) && check.nonEmpty)
 
