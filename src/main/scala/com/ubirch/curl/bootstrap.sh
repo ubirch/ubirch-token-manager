@@ -9,7 +9,7 @@ then
   host=$remote_host
 fi
 
-signature="XnzIs+NjXlVYANOvplFIApEbMCh1iuCSTmypupn+p2b37gT91ZAg//prZI4t11gS8jqBljo3O0ybqok4hiWHBg=="
+signature="ow4t3n9Qjnyuqg1MHMBi/uU2lgeW1EU+0o6GX+quSJr4IlfY+GW+yT1Fw171VNM+pCZo7BBo5XuJns4mDIZdAQ=="
 
 echo "=> host: $host"
 

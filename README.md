@@ -7,15 +7,16 @@ This service is in charge of creating and managing purposed tokens. A purposed t
 3. [Create Verification Token for Devices](#create-a-verification-token-for-specific-devices)
 4. [Create Verification Token with Wildcard](#create-a-verification-token-for-specific-devices)
 5. [Create Bootstrap Token for a Tenant Group](#create-a-bootstrap-token-for-a-tenant-group)
-6. [List Your Tokens](#list-your-tokens)
-7. [Delete A Token](#delete-a-token)
-8. [Available Scopes](#available-scopes)
-9. [Verification Token Claims](#verification-token-claims)
-10. [Keycloak and Responses](#keycloak-token-and-responses)
-11. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
-12. [A Light SDK](#a-light-sdk)    
-13. [Swagger](#swagger)
-14. [Workflows](#workflows)
+6. [Using a Bootstrap Token](#using-a-bootstrap-token)
+7. [List Your Tokens](#list-your-tokens)
+8. [Delete A Token](#delete-a-token)
+9. [Available Scopes](#available-scopes)
+10. [Verification Token Claims](#verification-token-claims)
+11. [Keycloak and Responses](#keycloak-token-and-responses)
+12. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
+13. [A Light SDK](#a-light-sdk)    
+14. [Swagger](#swagger)
+15. [Workflows](#workflows)
 
 ## Steps to prepare a request
 
@@ -279,6 +280,91 @@ curl -s -X POST \
   }
 }
 ```
+
+## Using a Bootstrap Token
+
+In order to use a bootstrap token, an existing public key is assumed to have already been registered on The Ubirch Identity Service.
+
+#### Data object
+
+```json
+{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly90b2tlbi5kZXYudWJpcmNoLmNvbSIsImV4cCI6NzkyODg2Mjg2MSwiaWF0IjoxNjE3NDcyNDYxLCJqdGkiOiI4MjBiNjE5Yi0xYmFiLTQzMmUtYmI0OS04YTk4NWYyMzZmZTYiLCJzY3AiOlsidGhpbmc6Ym9vdHN0cmFwIl0sInB1ciI6IktpdGNoZW5fQ2FybG9zIiwidGdwIjpbImQ2ZTUyNWMwLTQxZTItNGE3Ny05MjVjLTRkNmVhNGZiODQzMSJdLCJ0aWQiOltdLCJvcmQiOltdfQ.WJhq1ldCYBmzBIg_UeuZsTXALCfwFl5pLPh3s4NakDEN4ZGEuEjejxvR_8d5PaEz4Bjgv6J0ZGU9qy-OyhrAvQ","identity":"d7a81058-ae97-4178-80ed-71aed46e88fa"}
+```
+
+### X-Ubirch-Signature Header
+
+The Data Object should be signed with a valid ECDSA or EDDSA key. The Json object is assumed to be assigned in a compat fashion. 
+
+The signature is calculated like this:
+
+1. The SHA-512 digest is calculated.
+2. The digest is signed with the private key.
+3. The base64 string representation is calculated over the signature.
+4. This encoded signature put in the header.
+
+#### Post Request
+
+```shell script
+curl -s -X POST -H "X-Ubirch-Signature: $signature" -H "content-type: application/json" -d @bootstrap.json $host/api/tokens/v2/bootstrap | jq .
+```
+
+#### Post Response
+
+The data object has three fields, registration, anchoring and verification. The registration token has a experiation of 15 mins. By registration of the device, the device is assigned to the claimed group. Note that in order to anchor the device has to be registered.
+
+```json
+{
+  "version": "2.0.0",
+  "ok": true,
+  "data": {
+    "registration": {
+      "id": "006479e6-fb0b-40ef-ad17-e012913f4469",
+      "jwtClaim": {
+        "content": "{\"scp\":[\"thing:create\"],\"pur\":\"Kitchen_Carlos\",\"tgp\":[\"d6e525c0-41e2-4a77-925c-4d6ea4fb8431\"],\"tid\":[\"d7a81058-ae97-4178-80ed-71aed46e88fa\"],\"ord\":[]}",
+        "issuer": "https://token.dev.ubirch.com",
+        "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+        "audience": [
+          "https://api.console.dev.ubirch.com"
+        ],
+        "expiration": 1617476571,
+        "issuedAt": 1617475671,
+        "jwtId": "006479e6-fb0b-40ef-ad17-e012913f4469"
+      },
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly9hcGkuY29uc29sZS5kZXYudWJpcmNoLmNvbSIsImV4cCI6MTYxNzQ3NjU3MSwiaWF0IjoxNjE3NDc1NjcxLCJqdGkiOiIwMDY0NzllNi1mYjBiLTQwZWYtYWQxNy1lMDEyOTEzZjQ0NjkiLCJzY3AiOlsidGhpbmc6Y3JlYXRlIl0sInB1ciI6IktpdGNoZW5fQ2FybG9zIiwidGdwIjpbImQ2ZTUyNWMwLTQxZTItNGE3Ny05MjVjLTRkNmVhNGZiODQzMSJdLCJ0aWQiOlsiZDdhODEwNTgtYWU5Ny00MTc4LTgwZWQtNzFhZWQ0NmU4OGZhIl0sIm9yZCI6W119.x2VoQ34i1gC9pc_Q-d6T5RwBMAUPH7NvgTX1ZGq0dBnHkBjvW9yXFGa8Jwxn-VLXM_r6CVhON_eg_1h1fnPdiw"
+    },
+    "anchoring": {
+      "id": "fe38223a-2bc8-48cc-ae1d-e2245283c968",
+      "jwtClaim": {
+        "content": "{\"scp\":[\"upp:anchor\"],\"pur\":\"Kitchen_Carlos\",\"tgp\":[\"d6e525c0-41e2-4a77-925c-4d6ea4fb8431\"],\"tid\":[\"d7a81058-ae97-4178-80ed-71aed46e88fa\"],\"ord\":[]}",
+        "issuer": "https://token.dev.ubirch.com",
+        "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+        "audience": [
+          "https://niomon.dev.ubirch.com"
+        ],
+        "issuedAt": 1617475671,
+        "jwtId": "fe38223a-2bc8-48cc-ae1d-e2245283c968"
+      },
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly9uaW9tb24uZGV2LnViaXJjaC5jb20iLCJpYXQiOjE2MTc0NzU2NzEsImp0aSI6ImZlMzgyMjNhLTJiYzgtNDhjYy1hZTFkLWUyMjQ1MjgzYzk2OCIsInNjcCI6WyJ1cHA6YW5jaG9yIl0sInB1ciI6IktpdGNoZW5fQ2FybG9zIiwidGdwIjpbImQ2ZTUyNWMwLTQxZTItNGE3Ny05MjVjLTRkNmVhNGZiODQzMSJdLCJ0aWQiOlsiZDdhODEwNTgtYWU5Ny00MTc4LTgwZWQtNzFhZWQ0NmU4OGZhIl0sIm9yZCI6W119.X6NVe63gWo25Gd_h0fjO0okpLuV6V3-Qd87LsTXC2pIXn_WoDPg8rNwcKHqXUeR2OQBh79Vr6cxIUX2CmJP1RA"
+    },
+    "verification": {
+      "id": "74087a7f-efc9-4bb1-b781-326306629bf7",
+      "jwtClaim": {
+        "content": "{\"scp\":[\"upp:verify\"],\"pur\":\"Kitchen_Carlos\",\"tgp\":[\"d6e525c0-41e2-4a77-925c-4d6ea4fb8431\"],\"tid\":[\"d7a81058-ae97-4178-80ed-71aed46e88fa\"],\"ord\":[]}",
+        "issuer": "https://token.dev.ubirch.com",
+        "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+        "audience": [
+          "https://verify.dev.ubirch.com"
+        ],
+        "issuedAt": 1617475671,
+        "jwtId": "74087a7f-efc9-4bb1-b781-326306629bf7"
+      },
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly92ZXJpZnkuZGV2LnViaXJjaC5jb20iLCJpYXQiOjE2MTc0NzU2NzEsImp0aSI6Ijc0MDg3YTdmLWVmYzktNGJiMS1iNzgxLTMyNjMwNjYyOWJmNyIsInNjcCI6WyJ1cHA6dmVyaWZ5Il0sInB1ciI6IktpdGNoZW5fQ2FybG9zIiwidGdwIjpbImQ2ZTUyNWMwLTQxZTItNGE3Ny05MjVjLTRkNmVhNGZiODQzMSJdLCJ0aWQiOlsiZDdhODEwNTgtYWU5Ny00MTc4LTgwZWQtNzFhZWQ0NmU4OGZhIl0sIm9yZCI6W119.ucq7_c2r8qkuKx3r1kG8Z2msPLR6Er6kgCezJjeCWehsnao8l2WZ2jCbklb4i2KAFYcRut8y5qnBVz9GwglsXg"
+    }
+  }
+}
+
+```
+
 
 ## List your Tokens 
 
