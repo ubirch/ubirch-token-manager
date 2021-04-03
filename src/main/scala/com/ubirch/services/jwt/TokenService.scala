@@ -196,7 +196,9 @@ class DefaultTokenService @Inject() (
 
   private def localVerify(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = for {
     _ <- earlyResponseIf(!tokenPurposedClaim.validatePurpose)(InvalidClaimException("Invalid Purpose", "Purpose is not correct."))
-    _ <- earlyResponseIf(!tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
+    _ <- earlyResponseIf(!tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.hasMaybeIdentities && !tokenPurposedClaim.isIdentitiesWildcard)(InvalidClaimException("Invalid Target Identities and/or Groups", "Either have identities and/or groups"))
+    _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeIdentities && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
+    _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateGroups)(InvalidClaimException("Invalid Target Groups", "Target Groups are empty or invalid"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException(s"Invalid Scopes :: ${tokenPurposedClaim.scopes}", "Scopes are empty or invalid"))
   } yield true

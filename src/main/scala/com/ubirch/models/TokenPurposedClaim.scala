@@ -18,6 +18,12 @@ case class TokenPurposedClaim(
     scopes: List[String]
 ) {
 
+  def isIdentitiesWildcard: Boolean = {
+    targetIdentities.left
+      .map(_.map(_.toString))
+      .merge.contains("*")
+  }
+
   def hasMaybeGroups: Boolean = {
     targetGroups.left
       .map(_.map(_.toString))
