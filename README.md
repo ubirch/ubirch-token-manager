@@ -6,15 +6,16 @@ This service is in charge of creating and managing purposed tokens. A purposed t
 2. [Token Claim Object](#token-claim-object)
 3. [Create Verification Token for Devices](#create-a-verification-token-for-specific-devices)
 4. [Create Verification Token with Wildcard](#create-a-verification-token-for-specific-devices)
-5. [List Your Tokens](#list-your-tokens)
-6. [Delete A Token](#delete-a-token)
-7. [Available Scopes](#available-scopes)
-8. [Verification Token Claims](#verification-token-claims)
-9. [Keycloak and Responses](#keycloak-token-and-responses)
-10. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
-11. [A Light SDK](#a-light-sdk)    
-12. [Swagger](#swagger)
-13. [Workflows](#workflows)
+5. [Create Bootstrap Token for a Tenant Group](#create-a-bootstrap-token-for-a-tenant-group)
+6. [List Your Tokens](#list-your-tokens)
+7. [Delete A Token](#delete-a-token)
+8. [Available Scopes](#available-scopes)
+9. [Verification Token Claims](#verification-token-claims)
+10. [Keycloak and Responses](#keycloak-token-and-responses)
+11. [Verifying an Ubirch JWT Token (JWK)](#verifying-an-ubirch-jwt-token)
+12. [A Light SDK](#a-light-sdk)    
+13. [Swagger](#swagger)
+14. [Workflows](#workflows)
 
 ## Steps to prepare a request
 
@@ -220,6 +221,63 @@ Where
     'tid': it is the entities for which the subject can perform the action on the target audience system
     'tgp': it is the groups (keycloak groups) that can be used to aggregate devices.
     'scp' is set of actions allowed per resource for this token.
+```
+
+## Create a Bootstrap Token for a Tenant Group
+
+#### Keycloak Token
+
+```
+token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
+```
+
+#### Data object
+
+```json
+{
+  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+  "purpose":"Banana Industries",
+  "targetIdentities":[],
+  "targetGroups": ["Kitchen_Carlos"],
+  "expiration": 6311390400,
+  "notBefore":null,
+  "originDomains": [],
+  "scopes": ["thing:bootstrap"]
+}
+```
+
+#### Post Request
+
+```shell script
+curl -s -X POST \
+    -H "authorization: bearer ${token}" \
+    -H "content-type: application/json" \
+    -d @createBootstrapToken.json \
+    "${host}/api/tokens/v2/create" | jq .
+```
+
+#### Post Response
+
+```json
+{
+  "version": "2.0.0",
+  "ok": true,
+  "data": {
+    "id": "820b619b-1bab-432e-bb49-8a985f236fe6",
+    "jwtClaim": {
+      "content": "{\"scp\":[\"thing:bootstrap\"],\"pur\":\"Kitchen_Carlos\",\"tgp\":[\"d6e525c0-41e2-4a77-925c-4d6ea4fb8431\"],\"tid\":[],\"ord\":[]}",
+      "issuer": "https://token.dev.ubirch.com",
+      "subject": "963995ed-ce12-4ea5-89dc-b181701d1d7b",
+      "audience": [
+        "https://token.dev.ubirch.com"
+      ],
+      "expiration": 7928862861,
+      "issuedAt": 1617472461,
+      "jwtId": "820b619b-1bab-432e-bb49-8a985f236fe6"
+    },
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly90b2tlbi5kZXYudWJpcmNoLmNvbSIsImV4cCI6NzkyODg2Mjg2MSwiaWF0IjoxNjE3NDcyNDYxLCJqdGkiOiI4MjBiNjE5Yi0xYmFiLTQzMmUtYmI0OS04YTk4NWYyMzZmZTYiLCJzY3AiOlsidGhpbmc6Ym9vdHN0cmFwIl0sInB1ciI6IktpdGNoZW5fQ2FybG9zIiwidGdwIjpbImQ2ZTUyNWMwLTQxZTItNGE3Ny05MjVjLTRkNmVhNGZiODQzMSJdLCJ0aWQiOltdLCJvcmQiOltdfQ.WJhq1ldCYBmzBIg_UeuZsTXALCfwFl5pLPh3s4NakDEN4ZGEuEjejxvR_8d5PaEz4Bjgv6J0ZGU9qy-OyhrAvQ"
+  }
+}
 ```
 
 ## List your Tokens 
