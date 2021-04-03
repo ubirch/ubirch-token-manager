@@ -57,7 +57,7 @@ class TokenBoostrapControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         val b = jsonConverter.as[Return](body).right.get
         val data = b.data.asInstanceOf[Map[String, Any]]
@@ -150,7 +150,7 @@ class TokenBoostrapControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         val b = jsonConverter.as[Return](body).right.get
         val data = b.data.asInstanceOf[Map[String, Any]]
@@ -188,7 +188,7 @@ class TokenBoostrapControllerSpec
                 val signature = Base64.getEncoder
                   .encodeToString(PublicKeyUtil.digestSHA512(privKey, br.getBytes(StandardCharsets.UTF_8)))
 
-                post("/v1/bootstrap", body = br, headers = Map("X-Ubirch-Signature" -> signature)) {
+                post("/v2/bootstrap", body = br, headers = Map("X-Ubirch-Signature" -> signature)) {
                   status should equal(200)
                   assert(jsonConverter.as[Return](body).isRight)
                 }

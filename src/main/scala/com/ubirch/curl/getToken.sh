@@ -16,4 +16,4 @@ echo "=> host: $host"
 
 id="faef71cc-2323-4b71-9bb1-e84ca348039c"
 
-curl -s -H "authorization: bearer $token" -X GET $host/api/tokens/v1/$id | jq .
+curl -s -H "authorization: bearer $token" -X GET $host/api/tokens/v2/$id | jq .

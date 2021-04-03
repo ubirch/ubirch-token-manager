@@ -98,7 +98,7 @@ curl -s -X POST \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
     -d @createVerificationToken.json \
-    "${host}/api/tokens/v1/create" | jq .
+    "${host}/api/tokens/v2/create" | jq .
 ```
 
 #### Post Response
@@ -154,7 +154,7 @@ curl -s -X POST \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
     -d @createVerificationToken.json \
-    "${host}/api/tokens/v1/create" | jq .
+    "${host}/api/tokens/v2/create" | jq .
 ```
 
 #### Post Response
@@ -236,7 +236,7 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 curl -s -X GET \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
-    "${host}/api/tokens/v1" | jq .
+    "${host}/api/tokens/v2" | jq .
 ```
 
 #### List Response
@@ -284,7 +284,7 @@ tokenId=UUID for the token id
 curl -s -X DELETE \
     -H "authorization: bearer ${token}" \
     -H "content-type: application/json" \
-    "${host}/api/tokens/v1/${tokenId}" | jq .
+    "${host}/api/tokens/v2/${tokenId}" | jq .
 ```
 
 ### Keycloak Token and Responses
@@ -329,7 +329,7 @@ RESOURCE: Represents the entity in the system that needs to be regulated. For ex
 ACTION: Represents the verb/action that is regulated for the given resource. For example: verify or anchor
 
 ```shell script
-curl -s -X GET $host/api/tokens/v1/scopes | jq .
+curl -s -X GET $host/api/tokens/v2/scopes | jq .
 ```
 
 **upp:anchor**  :: it allows anchoring upps
@@ -368,7 +368,7 @@ The Ubirch Token Manager offers an endpoint that can be used to retrieve the pub
 This endpoint doesn't require of an access token. 
 
 ```shell script
-curl -s -X GET $host/api/tokens/v1/jwk | jq .
+curl -s -X GET $host/api/tokens/v2/jwk | jq .
 ```
 
 This call returns a json object whose data field is the public key. This public key is in JWK format.

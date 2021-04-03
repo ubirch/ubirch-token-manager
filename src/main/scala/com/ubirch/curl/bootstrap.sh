@@ -13,4 +13,4 @@ signature="XnzIs+NjXlVYANOvplFIApEbMCh1iuCSTmypupn+p2b37gT91ZAg//prZI4t11gS8jqBl
 
 echo "=> host: $host"
 
-curl -s -X POST -H "X-Ubirch-Signature: $signature" -H "content-type: application/json" -d @bootstrap.json $host/api/tokens/v1/bootstrap | jq .
+curl -s -X POST -H "X-Ubirch-Signature: $signature" -H "content-type: application/json" -d @bootstrap.json $host/api/tokens/v2/bootstrap | jq .

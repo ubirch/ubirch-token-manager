@@ -11,4 +11,4 @@ fi
 
 echo "=> host: $host"
 
-curl -s -X POST -H "content-type: application/json" -d @verificationRequest.json $host/api/tokens/v1/verify | jq .
+curl -s -X POST -H "content-type: application/json" -d @verificationRequest.json $host/api/tokens/v2/verify | jq .
