@@ -236,9 +236,9 @@ token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -
 ```json
 {
   "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
-  "purpose":"Banana Industries",
+  "purpose":"Kitchen_Carlos",
   "targetIdentities":[],
-  "targetGroups": ["Kitchen_Carlos"],
+  "targetGroups": ["d6e525c0-41e2-4a77-925c-4d6ea4fb8431"],
   "expiration": 6311390400,
   "notBefore":null,
   "originDomains": [],
