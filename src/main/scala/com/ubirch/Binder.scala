@@ -8,8 +8,10 @@ import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
 import com.ubirch.services.jwt._
+import com.ubirch.services.key.{ DefaultHMAC, DefaultHMACVerifier, DefaultKeyPoolService, HMAC, HMACVerifier, KeyPoolService }
 import com.ubirch.services.lifeCycle.{ DefaultJVMHook, DefaultLifecycle, JVMHook, Lifecycle }
 import com.ubirch.services.rest.SwaggerProvider
+import com.ubirch.services.state.{ DefaultExternalGetter, DefaultHttpClient, DefaultKeyGetter, DefaultSecretKeyPoolService, DefaultStateVerifier, DefaultTokenClientsInfo, ExternalStateGetter, HttpClient, KeyGetter, SecretKeyPoolService, StateVerifier, TokenClientsInfo }
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra.swagger.Swagger
@@ -32,12 +34,21 @@ class Binder
   def JsonConverterService: ScopedBindingBuilder = bind(classOf[JsonConverterService]).to(classOf[DefaultJsonConverterService])
   def ClusterService: ScopedBindingBuilder = bind(classOf[ClusterService]).to(classOf[DefaultClusterService])
   def ConnectionService: ScopedBindingBuilder = bind(classOf[ConnectionService]).to(classOf[DefaultConnectionService])
-  def TokenStoreService: ScopedBindingBuilder = bind(classOf[TokenStoreService]).to(classOf[DefaultTokenStoreService])
-  def TokenCreationService: ScopedBindingBuilder = bind(classOf[TokenCreationService]).to(classOf[DefaultTokenCreationService])
-  def TokenVerificationService: ScopedBindingBuilder = bind(classOf[TokenVerificationService]).to(classOf[DefaultTokenVerificationService])
+  def TokenService: ScopedBindingBuilder = bind(classOf[TokenService]).to(classOf[DefaultTokenService])
+  def TokenEncodingService: ScopedBindingBuilder = bind(classOf[TokenEncodingService]).to(classOf[DefaultTokenEncodingService])
+  def TokenDecodingService: ScopedBindingBuilder = bind(classOf[TokenDecodingService]).to(classOf[DefaultTokenDecodingService])
+  def KeyPoolService: ScopedBindingBuilder = bind(classOf[KeyPoolService]).to(classOf[DefaultKeyPoolService])
   def PublicKeyDiscoveryService: ScopedBindingBuilder = bind(classOf[PublicKeyDiscoveryService]).to(classOf[DefaultPublicKeyDiscoveryService])
   def PublicKeyPoolService: ScopedBindingBuilder = bind(classOf[PublicKeyPoolService]).to(classOf[DefaultPublicKeyPoolService])
   def TokenKeyService: ScopedBindingBuilder = bind(classOf[TokenKeyService]).to(classOf[DefaultTokenKeyService])
+  def ExternalStateGetter: ScopedBindingBuilder = bind(classOf[ExternalStateGetter]).to(classOf[DefaultExternalGetter])
+  def StateVerifier: ScopedBindingBuilder = bind(classOf[StateVerifier]).to(classOf[DefaultStateVerifier])
+  def TokenClientsInfo: ScopedBindingBuilder = bind(classOf[TokenClientsInfo]).to(classOf[DefaultTokenClientsInfo])
+  def SecretKeyPoolService: ScopedBindingBuilder = bind(classOf[SecretKeyPoolService]).to(classOf[DefaultSecretKeyPoolService])
+  def HMAC: ScopedBindingBuilder = bind(classOf[HMAC]).to(classOf[DefaultHMAC])
+  def HMACVerifier: ScopedBindingBuilder = bind(classOf[HMACVerifier]).to(classOf[DefaultHMACVerifier])
+  def HttpClient: ScopedBindingBuilder = bind(classOf[HttpClient]).to(classOf[DefaultHttpClient])
+  def KeyGetter: ScopedBindingBuilder = bind(classOf[KeyGetter]).to(classOf[DefaultKeyGetter])
 
   def configure(): Unit = {
     Config
@@ -50,12 +61,21 @@ class Binder
     JsonConverterService
     ClusterService
     ConnectionService
-    TokenStoreService
-    TokenCreationService
-    TokenVerificationService
+    TokenService
+    TokenEncodingService
+    TokenDecodingService
+    KeyPoolService
     PublicKeyDiscoveryService
     PublicKeyPoolService
     TokenKeyService
+    ExternalStateGetter
+    StateVerifier
+    TokenClientsInfo
+    SecretKeyPoolService
+    HMAC
+    HMACVerifier
+    HttpClient
+    KeyGetter
     ()
   }
 

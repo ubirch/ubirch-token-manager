@@ -1,0 +1,19 @@
+@startjson
+{
+  "tenantId": "It is the keycloak id of the logged in user.",
+  "purpose":"Short description of usage",
+  "targetIdentities":["List of UUIDs <or>", "List with single Wildcard * <or>"],
+  "targetGroups": ["List of Group UUIDs <or>", "List of Group Names"],
+  "expiration": "# of seconds to expiration",
+  "notBefore": "# of seconds to be active",
+  "originDomains": ["List of origin domains as http/https urls"],
+  "scopes": [
+    "upp:anchor",
+    "upp:verify",
+    "thing:create",
+    "thing:getinfo",
+    "thing:bootstrap",
+    "user:getinfo"
+  ]
+}
+@endjson

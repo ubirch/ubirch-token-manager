@@ -1,15 +1,14 @@
 package com.ubirch.controllers.concerns
 
-import java.security.PublicKey
-
-import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenVerificationService }
-import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import org.json4s.JsonAST
 import org.scalatra.ScalatraBase
 
+import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
+
 class KeycloakBearerAuthStrategy(
     protected override val app: ScalatraBase,
-    tokenVerificationService: TokenVerificationService,
+    tokenDecodingService: TokenDecodingService,
     publicKeyPoolService: PublicKeyPoolService
 ) extends BearerAuthStrategy[Token](app) {
 
@@ -18,8 +17,7 @@ class KeycloakBearerAuthStrategy(
   override protected def validate(token: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[Token] = {
     for {
       key <- publicKeyPoolService.getDefaultKey
-
-      claims <- tokenVerificationService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
+      claims <- tokenDecodingService.decodeAndVerify(token, key).toOption
 
       sub <- claims.findField(_._1 == "sub").map(_._2).collect {
         case JsonAST.JString(s) => s
@@ -52,12 +50,10 @@ class KeycloakBearerAuthStrategy(
           case _ => Nil
         }
 
-      t = Token(token, claims, sub, name, email, roles)
-      if t.isUser || t.isAdmin
+      keyCloakToken = Token(token, claims, sub, name, email, roles)
+      if keyCloakToken.isUser || keyCloakToken.isAdmin
 
-    } yield {
-      t
-    }
+    } yield keyCloakToken
 
   }
 

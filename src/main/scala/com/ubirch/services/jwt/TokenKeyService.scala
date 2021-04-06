@@ -1,12 +1,12 @@
 package com.ubirch.services.jwt
 
-import javax.inject.{ Inject, Singleton }
-
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.TokenGenPaths
-import com.ubirch.crypto.{ GeneratorKeyFactory, PrivKey }
 import com.ubirch.crypto.utils.Curve
+import com.ubirch.crypto.{ GeneratorKeyFactory, PrivKey }
 import org.jose4j.jwk.PublicJsonWebKey
+
+import javax.inject.{ Inject, Singleton }
 
 trait TokenKeyService {
   val key: PrivKey

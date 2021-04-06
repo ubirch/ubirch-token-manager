@@ -1,8 +1,10 @@
 {
   "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
   "purpose":"King Dude - Concert",
-  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+  "targetIdentities":["e21552f8-0353-41e3-b86e-0d3e92935d46"],
+  "targetGroups": [],
   "expiration": 6311390400,
   "notBefore":null,
-  "originDomains": ["http://verification.dev.ubirch.com"]
+  "originDomains": ["http://verification.dev.ubirch.com"],
+  "scopes": ["upp:verify"]
 }

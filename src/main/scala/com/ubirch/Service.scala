@@ -5,23 +5,26 @@ import java.util.concurrent.CountDownLatch
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.services.jwt.PublicKeyPoolService
 import com.ubirch.services.rest.RestService
-import javax.inject.{ Inject, Singleton }
 import monix.eval.Task
 import monix.execution.Scheduler
+import javax.inject.{ Inject, Singleton }
+
+import com.ubirch.services.state.SecretKeyPoolService
 
 /**
   * Represents a bootable service object that starts the system
   */
 @Singleton
-class Service @Inject() (restService: RestService, publicKeyPoolService: PublicKeyPoolService)(implicit scheduler: Scheduler) extends LazyLogging {
+class Service @Inject() (restService: RestService, publicKeyPoolService: PublicKeyPoolService, secretKeyPoolService: SecretKeyPoolService)(implicit scheduler: Scheduler) extends LazyLogging {
 
   def start(): Unit = {
 
-    publicKeyPoolService.init.doOnFinish {
-      case Some(e) =>
-        Task.delay(logger.error("error_loading_keys", e))
-      case None =>
-        Task.delay(restService.start())
+    (for {
+      _ <- publicKeyPoolService.init
+      _ <- secretKeyPoolService.init
+      _ <- Task.delay(restService.start())
+    } yield ()).onErrorRecover {
+      case e: Exception => logger.error("error_starting", e)
     }.runToFuture
 
     val cd = new CountDownLatch(1)

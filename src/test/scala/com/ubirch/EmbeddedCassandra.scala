@@ -41,7 +41,7 @@ trait EmbeddedCassandra {
 
     def startAndCreateDefaults(scripts: Seq[CqlScript] = EmbeddedCassandra.creationScripts): Unit = {
       start()
-      scripts.foreach(x => x.forEachStatement(connection.execute _))
+      scripts.foreach(x => x.forEachStatement { x => val _ = connection.execute(x) })
     }
 
   }

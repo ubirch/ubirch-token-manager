@@ -17,7 +17,9 @@ case class DeletingException(message: String, reason: String) extends ServiceExc
 
 case class TokenEncodingException(message: String, tokenClaim: TokenClaim) extends ServiceException(message)
 
-case class InvalidOtherClaims(message: String, value: String) extends ServiceException(message)
-case class InvalidAllClaims(message: String, value: String) extends ServiceException(message)
-case class InvalidSpecificClaim(message: String, value: String) extends ServiceException(message)
+case class InvalidClaimException(message: String, value: String) extends ServiceException(message)
 case class InvalidParamException(message: String, reason: String) extends ServiceException(message)
+
+case class StateVerifierException(message: String) extends ServiceException(message)
+
+case class NoCurveException(message: String) extends ServiceException(message)

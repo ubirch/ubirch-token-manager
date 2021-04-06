@@ -10,6 +10,7 @@ import com.datastax.driver.core.policies.RoundRobinPolicy
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.CassandraClusterConfPaths
 import com.ubirch.util.URLsHelper
+
 import javax.inject._
 import javax.net.ssl.{ SSLContext, TrustManagerFactory }
 

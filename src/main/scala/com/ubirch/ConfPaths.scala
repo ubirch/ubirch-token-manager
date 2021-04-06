@@ -45,9 +45,26 @@ object ConfPaths {
     final val KID = "tokenSystem.tokenVerification.kid"
   }
 
+  trait ExternalStateGetterPaths {
+    final val DEVICE_GROUPS_ENDPOINT = "tokenSystem.externalStateGetter.deviceGroupsEndpoint"
+    final val TENANT_GROUPS_ENDPOINT = "tokenSystem.externalStateGetter.tenantGroupsEndpoint"
+    final val REALM_NAME = "tokenSystem.externalStateGetter.realmName"
+  }
+
+  trait KeyServicePaths {
+    final val KEY_BY_IDENTITY_ENDPOINT = "tokenSystem.keyService.keyByIdentityEndpoint"
+  }
+
+  trait TokenClientsPaths {
+    final val TOKEN_CLIENTS_FILE_PATH = "tokenSystem.tokenClientsFile"
+  }
+
   object GenericConfPaths extends GenericConfPaths
   object HttpServerConfPaths extends HttpServerConfPaths
   object TokenGenPaths extends TokenGenPaths
   object TokenVerificationPaths extends TokenVerificationPaths
+  object ExternalStateGetterPaths extends ExternalStateGetterPaths
+  object TokenClientsPaths extends TokenClientsPaths
+  object KeyServicePaths extends KeyServicePaths
 
 }

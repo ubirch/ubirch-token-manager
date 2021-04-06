@@ -8,7 +8,7 @@ abstract class Response[T] {
   val ok: T
 }
 object Response {
-  val version = "1.0"
+  val version = "2.0.0"
 }
 
 /**
@@ -32,6 +32,8 @@ object NOK {
   final val TOKEN_CREATION_ERROR = 'TokenCreationError
   final val TOKEN_LISTING_ERROR = 'TokenListingError
   final val AUTHENTICATION_ERROR = 'AuthenticationError
+  final val TOKEN_VERIFICATION_ERROR = 'TokenVerificationError
+  final val TOKEN_BOOTSTRAPPING_ERROR = 'TokenBootstrappingError
 
   def apply(errorType: Symbol, errorMessage: String): NOK = new NOK(Response.version, ok = false, errorType, errorMessage)
 
@@ -42,11 +44,14 @@ object NOK {
   def tokenCreationError(errorMessage: String): NOK = NOK(TOKEN_CREATION_ERROR, errorMessage)
   def tokenListingError(errorMessage: String): NOK = NOK(TOKEN_LISTING_ERROR, errorMessage)
   def authenticationError(errorMessage: String): NOK = NOK(AUTHENTICATION_ERROR, errorMessage)
+  def tokenVerifyingError(errorMessage: String): NOK = NOK(TOKEN_VERIFICATION_ERROR, errorMessage)
+  def tokenBootstrappingError(errorMessage: String): NOK = NOK(TOKEN_BOOTSTRAPPING_ERROR, errorMessage)
 
 }
 
-case class Good(version: String, ok: Boolean, data: Any) extends Response[Boolean]
-object Good {
-  def apply(data: Any): Good = new Good(Response.version, ok = true, data)
+case class Return(version: String, ok: Boolean, data: Any) extends Response[Boolean]
+object Return {
+  def apply(data: Any): Return = new Return(Response.version, ok = true, data)
+  def apply(ok: Boolean, data: Any): Return = new Return(Response.version, ok = ok, data)
 }
 

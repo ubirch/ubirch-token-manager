@@ -1,0 +1,16 @@
+@startuml
+actor tenant #red
+box "Token Verification Usage" #LightGreen
+tenant->"Verification V2": sends VerificationV2Request(ubirchToken, hash)
+"Verification V2"->"Verification V2": "Token Service Light SDK" handles validation
+"Verification V2"->"Token Service": asks for Validation if claim types require it.
+"Token Service"->"Thing API": asks for required info if needed
+"Thing API"->"Token Service": required info is returned
+"Token Service"->"Token Service": Validation is made
+"Verification V2"->"Verification V2": Hash Verification is performed
+"Token Service"->"Verification V2": Response is returned
+"Verification V2"->"Verification V2": UPP is verified against Claims
+"Verification V2"->"Acct Service": Request is registered if OK
+"Verification V2"->tenant: Verification Response is returned
+end box
+@enduml

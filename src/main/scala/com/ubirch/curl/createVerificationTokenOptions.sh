@@ -14,4 +14,4 @@ token=`curl  -s  -d "client_id=ubirch-2.0-user-access"   -d "username=$TOKEN_USE
 
 echo "=> host: $host"
 
-curl -v -X OPTIONS -H "authorization: bearer $token" -H "content-type: application/json" $host/api/tokens/v1/verification/create
+curl -v -X OPTIONS -H "authorization: bearer $token" -H "content-type: application/json" $host/api/tokens/v2/create

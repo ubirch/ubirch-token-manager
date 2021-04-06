@@ -7,16 +7,16 @@ import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenKeyService, TokenStoreService, TokenVerificationService }
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService, TokenKeyService, TokenService }
+import com.ubirch.util.TaskHelpers
 import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
-import javax.inject._
-
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra._
 import org.scalatra.swagger.{ ResponseMessage, Swagger, SwaggerSupportSyntax }
+import javax.inject.{ Inject, Singleton, Scope => _ }
 
 import scala.concurrent.ExecutionContext
 
@@ -27,11 +27,11 @@ class TokenController @Inject() (
     jFormats: Formats,
     jsonConverterService: JsonConverterService,
     publicKeyPoolService: PublicKeyPoolService,
-    tokenVerificationService: TokenVerificationService,
-    tokenStoreService: TokenStoreService,
+    tokenDecodingService: TokenDecodingService,
+    tokenService: TokenService,
     tokenKeyService: TokenKeyService
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
-  extends ControllerBase with KeycloakBearerAuthenticationSupport {
+  extends ControllerBase with KeycloakBearerAuthenticationSupport with TaskHelpers {
 
   override protected val applicationDescription = "Token Controller"
   override protected implicit def jsonFormats: Formats = jFormats
@@ -60,8 +60,8 @@ class TokenController @Inject() (
     NoContent()
   }
 
-  val postV1TokenCreate: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[TokenCreationData]("postV1TokenCreate")
+  val postV2TokenCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[TokenCreationData]("postV2TokenCreate")
       summary "Creates Generic Tokens"
       description "Creates Generic Access Tokens for particular uses. This endpoint is only valid for users that are admins."
       tags SwaggerElements.TAG_TOKEN_SERVICE
@@ -87,14 +87,14 @@ class TokenController @Inject() (
             )
         ))
 
-  post("/v1/create", operation(postV1TokenCreate)) {
+  post("/v2/generic/create", operation(postV2TokenCreate)) {
 
     authenticated(_.isAdmin) { token =>
-      asyncResult("create_token") { _ => _ =>
+      asyncResult("create_generic_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
-          res <- tokenStoreService.create(token, readBody.extracted, 'generic)
-            .map { tkc => Ok(Good(tkc)) }
+          res <- tokenService.create(token, readBody.extracted, 'generic)
+            .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -111,13 +111,13 @@ class TokenController @Inject() (
     }
   }
 
-  val postV1TokenVerificationCreate: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[TokenCreationData]("postV1TokenVerificationCreate")
+  val postV2TokenVerificationCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[TokenCreationData]("postV2TokenVerificationCreate")
       summary "Creates an Verification Access Token"
       description "Creates Verification Access Tokens for particular users"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters (
-        bodyParam[TokenVerificationClaim]("TokenVerificationClaim").description(
+        bodyParam[TokenPurposedClaim]("tokenPurposedClaim").description(
           "The verification token claims. " +
             "\n Note that expiration and notBefore can be read as follows: " +
             "\n _expiration_: the number of seconds after which the token will be considered expired. That is to say: 'X seconds from now', where X == expiration AND now == the current time calculated on the server." +
@@ -140,14 +140,14 @@ class TokenController @Inject() (
               )
           ))
 
-  post("/v1/verification/create", operation(postV1TokenVerificationCreate)) {
+  post("/v2/create", operation(postV2TokenVerificationCreate)) {
 
     authenticated() { token =>
-      asyncResult("create_verification_token") { _ => _ =>
+      asyncResult("create_purpose_token") { _ => _ =>
         for {
-          readBody <- Task.delay(ReadBody.readJson[TokenVerificationClaim](t => t.camelizeKeys))
-          res <- tokenStoreService.create(token, readBody.extracted)
-            .map { tkc => Ok(Good(tkc)) }
+          readBody <- Task.delay(ReadBody.readJson[TokenPurposedClaim](t => t.camelizeKeys))
+          res <- tokenService.create(token, readBody.extracted)
+            .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -164,20 +164,73 @@ class TokenController @Inject() (
     }
   }
 
-  val getV1TokenList: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Seq[TokenRow]]("getV1TokenList")
+  val postV2Verify: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Boolean]("postV2Verify")
+      summary "Verifies Ubirch Token"
+      description "verifies token and identity"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters swaggerTokenAsHeader)
+
+  post("/v2/verify", operation(postV2Verify)) {
+
+    asyncResult("verify_token") { implicit request => _ =>
+
+      (for {
+        reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp")).map(Option.apply).map(_.filter(_.nonEmpty))
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
+        readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
+        res <- tokenService
+          .verify(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = reqSig, time = reqTimestamp))
+          .map { tkv => Ok(Return(tkv)) }
+      } yield {
+        res
+      }).onErrorHandle {
+        case e: ServiceException =>
+          logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          BadRequest(NOK.tokenVerifyingError("Error verifying token"))
+        case e: Exception =>
+          logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+      }
+    }
+  }
+
+  post("/v2/bootstrap") {
+
+    asyncResult("bootstrap_token") { implicit request => _ =>
+
+      (for {
+        reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
+        readBody <- Task.delay(ReadBody.readJson[BootstrapRequest](t => t.camelizeKeys))
+        _ <- earlyResponseIf(reqSig.isEmpty)(InvalidParamException("X-Ubirch-Signature", "No header found"))
+        res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signature = reqSig)).map { tkv => Ok(Return(tkv)) }
+      } yield {
+        res
+      }).onErrorHandle {
+        case e: ServiceException =>
+          logger.error("1.1 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          BadRequest(NOK.tokenBootstrappingError("Error bootstrapping token"))
+        case e: Exception =>
+          logger.error("1.2 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+      }
+    }
+  }
+
+  val getV2TokenList: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Seq[TokenRow]]("getV2TokenList")
       summary "Queries all currently valid tokens for a particular user."
       description "queries all currently valid tokens based on an access token"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters swaggerTokenAsHeader)
 
-  get("/v1", operation(getV1TokenList)) {
+  get("/v2", operation(getV2TokenList)) {
 
     authenticated() { token =>
       asyncResult("list_tokens") { _ => _ =>
         for {
-          res <- tokenStoreService.list(token)
-            .map { tks => Ok(Good(tks)) }
+          res <- tokenService.list(token)
+            .map { tks => Ok(Return(tks)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -194,14 +247,14 @@ class TokenController @Inject() (
     }
   }
 
-  val getV1Token: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Option[TokenRow]]("getV1Token")
+  val getV2Token: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Option[TokenRow]]("getV2Token")
       summary "Queries token for a particular user."
       description "queries token based on an access token and token id"
       tags SwaggerElements.TAG_TOKEN_SERVICE
       parameters swaggerTokenAsHeader)
 
-  get("/v1/:id", operation(getV1Token)) {
+  get("/v2/:id", operation(getV2Token)) {
 
     authenticated() { token =>
       asyncResult("get_token") { _ => _ =>
@@ -210,8 +263,8 @@ class TokenController @Inject() (
             .map(_.map(UUID.fromString).get) // We want to know if failed or not as soon as possible
             .onErrorHandle(_ => throw InvalidParamException("Invalid OwnerId", "Wrong owner param"))
 
-          res <- tokenStoreService.get(token, id)
-            .map { tks => Ok(Good(tks.orNull)) }
+          res <- tokenService.get(token, id)
+            .map { tks => Ok(Return(tks.orNull)) }
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -228,17 +281,17 @@ class TokenController @Inject() (
     }
   }
 
-  val getV1JWK: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Map[String, String]]("getV1JWK")
+  val getV2JWK: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Map[String, String]]("getV2JWK")
       summary "Returns the public key used to verify tokens in jwk format"
       description "returns the jwk for the current token verification"
       tags SwaggerElements.TAG_TOKEN_SERVICE)
 
-  get("/v1/jwk", operation(getV1JWK)) {
+  get("/v2/jwk", operation(getV2JWK)) {
     asyncResult("get_jwk") { _ => _ =>
       (for {
         key <- Task.fromEither(jsonConverterService.as[Map[String, String]](tokenKeyService.publicJWK.toJson))
-        res <- Task.delay(Ok(Good(key)))
+        res <- Task.delay(Ok(Return(key)))
       } yield {
         res
       }).onErrorRecover {
@@ -249,8 +302,25 @@ class TokenController @Inject() (
     }
   }
 
-  val deleteV1TokenId: SwaggerSupportSyntax.OperationBuilder =
-    (apiOperation[Good]("deleteV1TokenId")
+  val getV2Scopes: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Map[String, String]]("getV2JWK")
+      summary "Returns a list of available scopes"
+      description "returns the list of available scopes"
+      tags SwaggerElements.TAG_TOKEN_SERVICE)
+
+  get("/v2/scopes", operation(getV2Scopes)) {
+    asyncResult("get_scopes") { _ => _ =>
+      Task.delay(Ok(Return(Scope.list.map(Scope.asString))))
+        .onErrorRecover {
+          case e: Exception =>
+            logger.error("1.1 Error getting scopes: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+            InternalServerError(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+        }
+    }
+  }
+
+  val deleteV2TokenId: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Return]("deleteV2TokenId")
       summary "Deletes a token"
       description "deletes a token"
       tags SwaggerElements.TAG_TOKEN_SERVICE
@@ -273,7 +343,7 @@ class TokenController @Inject() (
             )
         ))
 
-  delete("/v1/:tokenId", operation(deleteV1TokenId)) {
+  delete("/v2/:tokenId", operation(deleteV2TokenId)) {
     authenticated() { accessToken =>
 
       asyncResult("delete") { implicit request => _ =>
@@ -283,9 +353,9 @@ class TokenController @Inject() (
             .map(_.map(UUID.fromString).get) // We want to know if failed or not as soon as possible
             .onErrorHandle(_ => throw DeletingException("Invalid Token", "No tokenId parameter found in path"))
 
-          res <- tokenStoreService.delete(accessToken, tokenId)
+          res <- tokenService.delete(accessToken, tokenId)
             .map { dr =>
-              if (dr) Ok(Good("Token deleted"))
+              if (dr) Ok(Return("Token deleted"))
               else BadRequest(NOK.tokenDeleteError("Failed to delete token"))
             }
             .onErrorRecover {
@@ -316,7 +386,7 @@ class TokenController @Inject() (
   }
 
   override protected def createStrategy(app: ScalatraBase): KeycloakBearerAuthStrategy = {
-    new KeycloakBearerAuthStrategy(app, tokenVerificationService, publicKeyPoolService)
+    new KeycloakBearerAuthStrategy(app, tokenDecodingService, publicKeyPoolService)
   }
 
   def swaggerTokenAsHeader: SwaggerSupportSyntax.ParameterBuilder[String] = headerParam[String]("Authorization")

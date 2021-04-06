@@ -3,9 +3,9 @@ package com.ubirch.controllers
 import java.security.PublicKey
 import java.util.UUID
 
-import com.ubirch.models.Good
+import com.ubirch.models.Return
 import com.ubirch.services.formats.JsonConverterService
-import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenVerificationService }
+import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
 import org.jose4j.jwk.PublicJsonWebKey
@@ -42,7 +42,7 @@ class TokenControllerSpec
           |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "issuer":"",
           |  "subject":"",
-          |  "audience":"",
+          |  "audience": [],
           |  "expiration":null,
           |  "notBefore":null,
           |  "issuedAt":null,
@@ -52,22 +52,22 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
     }
 
     "create OK and verified" taggedAs Tag("avocado") in {
 
-      get("/v1/jwk") {
+      get("/v2/jwk") {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
+        assert(body == """{"version":"2.0.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
       }
 
       val token = Injector.get[FakeTokenCreator]
-      val tokenVerificationService = Injector.get[TokenVerificationService]
+      val tokenDecodingService = Injector.get[TokenDecodingService]
 
       val incomingBody =
         """
@@ -75,7 +75,7 @@ class TokenControllerSpec
           |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "issuer":"",
           |  "subject":"",
-          |  "audience":"",
+          |  "audience": [],
           |  "expiration":null,
           |  "notBefore":null,
           |  "issuedAt":null,
@@ -85,14 +85,14 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.admin.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.admin.prepare)) {
         status should equal(200)
-        val good = jsonConverter.as[Good](body).right.get
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        val good = jsonConverter.as[Return](body).right.get
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
         val token = good.data.asInstanceOf[Map[String, String]]("token")
         val key = PublicJsonWebKey.Factory.newPublicJwk("""{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}""").getKey
-        val claims = tokenVerificationService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
-        assert(claims.isDefined)
+        val claims = tokenDecodingService.decodeAndVerify(token, key.asInstanceOf[PublicKey])
+        assert(claims.isSuccess)
       }
 
     }
@@ -107,7 +107,7 @@ class TokenControllerSpec
           |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "issuer":"",
           |  "subject":"",
-          |  "audience":"",
+          |  "audience":[],
           |  "expiration":null,
           |  "notBefore":null,
           |  "issuedAt":null,
@@ -117,9 +117,9 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(403)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Forbidden"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Forbidden"}""")
       }
 
     }
@@ -134,7 +134,7 @@ class TokenControllerSpec
           |  "ownerId":"863995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "issuer":"",
           |  "subject":"",
-          |  "audience":"",
+          |  "audience":[],
           |  "expiration":null,
           |  "notBefore":null,
           |  "issuedAt":null,
@@ -144,9 +144,9 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
       }
 
     }
@@ -161,7 +161,7 @@ class TokenControllerSpec
           |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "issuer":"",
           |  "subject":"",
-          |  "audience":"",
+          |  "audience":[],
           |  "expiration":null,
           |  "notBefore":null,
           |  "issuedAt":null,
@@ -171,19 +171,19 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
-      get("/v1", headers = Map("authorization" -> token.prepare)) {
+      get("/v2", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
@@ -201,7 +201,7 @@ class TokenControllerSpec
           |  "ownerId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
           |  "issuer":"",
           |  "subject":"",
-          |  "audience":"",
+          |  "audience":[],
           |  "expiration":null,
           |  "notBefore":null,
           |  "issuedAt":null,
@@ -211,20 +211,20 @@ class TokenControllerSpec
           |}
           |""".stripMargin
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Good](body).right.get.isInstanceOf[Good])
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
       var current: List[Map[String, String]] = Nil
-      get("/v1", headers = Map("authorization" -> token.prepare)) {
+      get("/v2", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
@@ -233,14 +233,14 @@ class TokenControllerSpec
 
       val toDelete = current.headOption.flatMap(_.find(_._1 == "id")).map(_._2)
       assert(toDelete.isDefined)
-      delete("/v1/" + toDelete.get, headers = Map("authorization" -> token.prepare)) {
+      delete("/v2/" + toDelete.get, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":"Token deleted"}""")
+        assert(body == """{"version":"2.0.0","ok":true,"data":"Token deleted"}""")
       }
 
-      get("/v1", headers = Map("authorization" -> token.prepare)) {
+      get("/v2", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val res = jsonConverter.as[Good](body)
+        val res = jsonConverter.as[Return](body)
         assert(res.isRight)
         val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 1)
@@ -251,27 +251,27 @@ class TokenControllerSpec
     "fail when no access token provided: create" taggedAs Tag("mandarina") in {
 
       val incomingBody = "{}"
-      post("/v1/create", body = incomingBody) {
+      post("/v2/generic/create", body = incomingBody) {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
 
     "fail when no access token provided: list" taggedAs Tag("avocado") in {
 
-      get("/v1") {
+      get("/v2") {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
 
     "fail when no access token provided: delete" taggedAs Tag("strawberry") in {
 
-      delete("/v1/" + UUID.randomUUID().toString) {
+      delete("/v2/" + UUID.randomUUID().toString) {
         status should equal(401)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -279,36 +279,45 @@ class TokenControllerSpec
     "fail when invalid access token provided: create" taggedAs Tag("durian") in {
 
       val incomingBody = "{}"
-      post("/v1/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+      post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
 
     "fail when invalid access token provided: list" taggedAs Tag("cherry") in {
 
-      get("/v1", headers = Map("authorization" -> UUID.randomUUID().toString)) {
+      get("/v2", headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
 
     "fail when invalid access token provided: delete" taggedAs Tag("blackberry") in {
 
-      delete("/v1/" + UUID.randomUUID().toString, headers = Map("authorization" -> UUID.randomUUID().toString)) {
+      delete("/v2/" + UUID.randomUUID().toString, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"1.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
 
     "get JWK OK" taggedAs Tag("macadamia") in {
 
-      get("/v1/jwk") {
+      get("/v2/jwk") {
         status should equal(200)
-        assert(body == """{"version":"1.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
+        assert(body == """{"version":"2.0.0","ok":true,"data":{"kty":"EC","x":"Lgn8c96LBnxMOCkujWg-06uu8iDJuKa4WTWgVTWROac","y":"Dxey52VDUYoRP7qEhj22BguwIk_EUQTKCsioJ5sNdEo","crv":"P-256"}}""".stripMargin)
+      }
+
+    }
+
+    "get available scopes" taggedAs Tag("macadamias") in {
+
+      get("/v2/scopes") {
+        status should equal(200)
+        assert(body == """{"version":"2.0.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","thing:bootstrap","user:getinfo"]}""".stripMargin)
       }
 
     }
@@ -317,7 +326,7 @@ class TokenControllerSpec
 
   override protected def beforeEach(): Unit = {
     CollectorRegistry.defaultRegistry.clear()
-    EmbeddedCassandra.truncateScript.forEachStatement(cassandra.connection.execute _)
+    EmbeddedCassandra.truncateScript.forEachStatement { x => val _ = cassandra.connection.execute(x) }
   }
 
   protected override def afterAll(): Unit = {

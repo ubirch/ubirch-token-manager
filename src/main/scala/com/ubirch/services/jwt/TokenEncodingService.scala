@@ -7,16 +7,16 @@ import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.crypto.PrivKey
 import com.ubirch.models.TokenClaim
 import com.ubirch.util.TaskHelpers
-import javax.inject.Singleton
 import pdi.jwt.{ Jwt, JwtAlgorithm, JwtClaim }
 
+import javax.inject.Singleton
 import scala.util.Try
 
-trait TokenCreationService {
+trait TokenEncodingService {
   def create[T <: Any](
       id: UUID,
       by: String,
-      to: String,
+      to: Set[String],
       about: String,
       expiresIn: Option[Long],
       notBefore: Option[Long],
@@ -28,14 +28,14 @@ trait TokenCreationService {
 }
 
 @Singleton
-class DefaultTokenCreationService extends TokenCreationService with TaskHelpers with LazyLogging {
+class DefaultTokenEncodingService extends TokenEncodingService with TaskHelpers with LazyLogging {
 
   implicit private val clock: Clock = Clock.systemUTC
 
   override def create[T <: Any](
       id: UUID,
       by: String,
-      to: String,
+      to: Set[String],
       about: String,
       expiresIn: Option[Long],
       notBefore: Option[Long],
@@ -85,7 +85,7 @@ class DefaultTokenCreationService extends TokenCreationService with TaskHelpers 
       claims <- create(
         id = id,
         by = tokenClaim.issuer,
-        to = tokenClaim.audience,
+        to = tokenClaim.audience.toSet,
         about = tokenClaim.subject,
         expiresIn = tokenClaim.expiration,
         notBefore = tokenClaim.notBefore,

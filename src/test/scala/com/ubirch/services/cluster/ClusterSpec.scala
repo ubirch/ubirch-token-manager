@@ -55,7 +55,6 @@ class ClusterSpec extends TestBase with EmbeddedCassandra {
       CqlScript.ofString(
         "INSERT INTO token_system.tokens (owner_id, id, created_at, token_value) VALUES (963995ed-ce12-4ea5-89dc-b181701d1d7b, 63f64e20-ff46-49b6-abe3-cb9efda4afaf, '2020-10-30 13:01:54.202', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiIiLCJzdWIiOiIiLCJhdWQiOiIiLCJpYXQiOjE2MDQwNjI5MTQsImp0aSI6IjYzZjY0ZTIwLWZmNDYtNDliNi1hYmUzLWNiOWVmZGE0YWZhZiIsIm93bmVySWQiOiI5NjM5OTVlZC1jZTEyLTRlYTUtODlkYy1iMTgxNzAxZDFkN2IifQ._RBnk9-k13nVtWV-TTRGqxn6emyfdCgn-nwf9GvC7ogQwnuPzKSF5rKJfELBkuIHRpgygc8mslt5kJqC_cd_KQ');".stripMargin
       )
-    )).foreach(x => x.forEachStatement(cassandra.connection.execute _))
-
+    )).foreach(x => x.forEachStatement { x => val _ = cassandra.connection.execute(x) })
   }
 }

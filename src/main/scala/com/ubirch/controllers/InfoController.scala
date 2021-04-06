@@ -3,15 +3,15 @@ package com.ubirch.controllers
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
 import com.ubirch.controllers.concerns.{ ControllerBase, SwaggerElements }
-import com.ubirch.models.{ Good, NOK }
+import com.ubirch.models.{ Return, NOK }
 import io.prometheus.client.Counter
-import javax.inject._
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra._
 import org.scalatra.swagger.{ Swagger, SwaggerSupportSyntax }
 
+import javax.inject._
 import scala.concurrent.ExecutionContext
 
 /**
@@ -70,7 +70,7 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
   get("/", operation(getSimpleCheck)) {
     asyncResult("root") { _ => _ =>
       Task {
-        Ok(Good("Hallo, Hola, Hello, Salut, Hej, this is the Ubirch Token Manager."))
+        Ok(Return("Hallo, Hola, Hello, Salut, Hej, this is the Ubirch Token Manager."))
       }
     }
   }
