@@ -203,6 +203,78 @@ class TokenBoostrapControllerSpec
 
     }
 
+    "get bootstraps token raw signature" in {
+
+      val token = Injector.get[FakeTokenCreator].user
+      val fakeKeyGetter = Injector.get[KeyGetter].asInstanceOf[FakeKeyGetter]
+
+      val incomingBody =
+        """
+          |{
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"Mood Laboratories",
+          |  "targetIdentities":[],
+          |  "targetGroups": ["Kitchen_Carlos"],
+          |  "expiration": 6311390400,
+          |  "notBefore":null,
+          |  "originDomains": [],
+          |  "scopes": ["thing:bootstrap"]
+          |}
+          |""".stripMargin
+
+      post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+        val b = jsonConverter.as[Return](body).right.get
+        val data = b.data.asInstanceOf[Map[String, Any]]
+
+        data.get("token") match {
+          case Some(token: String) =>
+
+            val uuid = UUID.randomUUID()
+            val privKey = GeneratorKeyFactory.getPrivKey(Curve.PRIME256V1)
+
+            val resBody =
+              s"""
+                 |[
+                 |  {
+                 |    "pubKeyInfo":{
+                 |      "algorithm":"ecdsa-p256v1",
+                 |      "created":"2021-01-21T10:38:45.254Z",
+                 |      "hwDeviceId": "${uuid.toString}",
+                 |      "pubKey": "${Base64.getEncoder.encodeToString(privKey.getRawPublicKey)}",
+                 |      "pubKeyId": "${Base64.getEncoder.encodeToString(privKey.getRawPublicKey)}",
+                 |      "validNotAfter":"2031-01-19T10:38:45.254Z",
+                 |      "validNotBefore":"2021-01-21T10:38:45.254Z"
+                 |    },
+                 |    "signature":"A Signature"
+                 |  }
+                 |]
+                 |""".stripMargin
+            fakeKeyGetter.keys.update(uuid, ExternalResponseData(200, Map.empty, resBody.getBytes(StandardCharsets.UTF_8)))
+
+            val bootstrapRequest = BootstrapRequest(token, uuid, None, None)
+            jsonConverter.toString[BootstrapRequest](bootstrapRequest) match {
+              case Left(exception) => fail(exception)
+              case Right(br) =>
+                privKey.setSignatureAlgorithm("SHA256WITHPLAIN-ECDSA")
+                val signature = Base64.getEncoder
+                  .encodeToString(PublicKeyUtil.signSHA512(privKey, br.getBytes(StandardCharsets.UTF_8)))
+
+                post("/v2/bootstrap", body = br, headers = Map("X-Ubirch-Signature" -> signature)) {
+                  status should equal(200)
+                  assert(jsonConverter.as[Return](body).isRight)
+                }
+
+            }
+
+          case _ => fail("No Token Found")
+        }
+
+        assert(b.isInstanceOf[Return])
+      }
+
+    }
+
   }
 
   override protected def beforeEach(): Unit = {

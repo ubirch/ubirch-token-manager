@@ -1,5 +1,6 @@
 package com.ubirch.services.state
 
+import java.security.SignatureException
 import java.util.UUID
 
 import com.typesafe.config.Config
@@ -16,8 +17,6 @@ import monix.eval.Task
 import monix.execution.Scheduler
 import net.logstash.logback.argument.StructuredArguments.v
 import javax.inject.{ Inject, Singleton }
-
-import scala.util.Success
 
 trait StateVerifier {
   def verifyGroupsTokenPurposedClaim(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean]
@@ -67,14 +66,29 @@ class DefaultStateVerifier @Inject() (
   }
 
   override def verifyIdentitySignature(identityUUID: UUID, signed: Array[Byte], signature: Array[Byte]): Task[Boolean] = {
-    for {
-      maybeKey <- identityKey(identityUUID).map(_.map(_.getPrivKey))
-    } yield {
-      maybeKey match {
-        case Some(Success(pubkey)) => PublicKeyUtil.verifySHA512(pubkey, signed, signature)
-        case _ => false
-      }
+    lazy val taskKey = identityKey(identityUUID)
+
+    def check(raw: Boolean): Task[Boolean] = taskKey.flatMap {
+      case Some(key) =>
+        for {
+          pubKey <- Task.fromTry(key.getPrivKey)
+        } yield {
+          //We want to check if maybe there is asn1
+          pubKey.getPublicKey.getAlgorithm match {
+            case "ECC_ECDSA" | "ecdsa-p256v1" | "ECDSA" if raw => pubKey.setSignatureAlgorithm("SHA256WITHPLAIN-ECDSA")
+            case _ => ()
+          }
+          PublicKeyUtil.verifySHA512(pubKey, signed, signature)
+        }
+      case None => Task.delay(false)
     }
+
+    check(raw = true).onErrorRecoverWith {
+      case _: SignatureException =>
+        logger.info("Trying to verify with possible ans1 signature")
+        check(raw = false)
+    }
+
   }
 
   override def identityGroups(identityUUID: UUID): Task[List[Group]] = {
