@@ -72,7 +72,7 @@ object KeySignTest {
   def main(args: Array[String]): Unit = {
 
     val privkey = GeneratorKeyFactory.getPrivKey(Base64.getDecoder.decode("L1qIoAosmLmaOh/W+a3YA4aJnWpoZ69NgRcE650T4hs="), PublicKeyUtil.associateCurve("ECC_ED25519").get)
-    val data = PublicKeyUtil.digestSHA512(privkey, """{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly90b2tlbi5kZXYudWJpcmNoLmNvbSIsImV4cCI6NzkyODg2Mjg2MSwiaWF0IjoxNjE3NDcyNDYxLCJqdGkiOiI4MjBiNjE5Yi0xYmFiLTQzMmUtYmI0OS04YTk4NWYyMzZmZTYiLCJzY3AiOlsidGhpbmc6Ym9vdHN0cmFwIl0sInB1ciI6IktpdGNoZW5fQ2FybG9zIiwidGdwIjpbImQ2ZTUyNWMwLTQxZTItNGE3Ny05MjVjLTRkNmVhNGZiODQzMSJdLCJ0aWQiOltdLCJvcmQiOltdfQ.WJhq1ldCYBmzBIg_UeuZsTXALCfwFl5pLPh3s4NakDEN4ZGEuEjejxvR_8d5PaEz4Bjgv6J0ZGU9qy-OyhrAvQ","identity":"d7a81058-ae97-4178-80ed-71aed46e88fa"}""".getBytes(StandardCharsets.UTF_8))
+    val data = PublicKeyUtil.signSHA512(privkey, """{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Rva2VuLmRldi51YmlyY2guY29tIiwic3ViIjoiOTYzOTk1ZWQtY2UxMi00ZWE1LTg5ZGMtYjE4MTcwMWQxZDdiIiwiYXVkIjoiaHR0cHM6Ly90b2tlbi5kZXYudWJpcmNoLmNvbSIsImV4cCI6NzkyODg2Mjg2MSwiaWF0IjoxNjE3NDcyNDYxLCJqdGkiOiI4MjBiNjE5Yi0xYmFiLTQzMmUtYmI0OS04YTk4NWYyMzZmZTYiLCJzY3AiOlsidGhpbmc6Ym9vdHN0cmFwIl0sInB1ciI6IktpdGNoZW5fQ2FybG9zIiwidGdwIjpbImQ2ZTUyNWMwLTQxZTItNGE3Ny05MjVjLTRkNmVhNGZiODQzMSJdLCJ0aWQiOltdLCJvcmQiOltdfQ.WJhq1ldCYBmzBIg_UeuZsTXALCfwFl5pLPh3s4NakDEN4ZGEuEjejxvR_8d5PaEz4Bjgv6J0ZGU9qy-OyhrAvQ","identity":"d7a81058-ae97-4178-80ed-71aed46e88fa"}""".getBytes(StandardCharsets.UTF_8))
 
     println(Base64.getEncoder.encodeToString(data))
 

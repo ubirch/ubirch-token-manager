@@ -33,18 +33,13 @@ object PublicKeyUtil extends LazyLogging {
     }
   }
 
-  def digestSHA512(privKey: PrivKey, data: Array[Byte]): Array[Byte] = {
+  def digestSHA512(data: Array[Byte]): Array[Byte] = {
     val digest: MessageDigest = MessageDigest.getInstance("SHA-512")
     digest.update(data)
-    val dataToSign = digest.digest
-    privKey.sign(dataToSign)
+    digest.digest
   }
 
-  def verifySHA512(pubKey: PubKey, signed: Array[Byte], signature: Array[Byte]): Boolean = {
-    val digest: MessageDigest = MessageDigest.getInstance("SHA-512")
-    digest.update(signed)
-    val dataToVerify = digest.digest
-    pubKey.verify(dataToVerify, signature)
-  }
+  def signSHA512(privKey: PrivKey, data: Array[Byte]): Array[Byte] = privKey.sign(digestSHA512(data))
+  def verifySHA512(pubKey: PubKey, signed: Array[Byte], signature: Array[Byte]): Boolean = pubKey.verify(digestSHA512(signed), signature)
 
 }

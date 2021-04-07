@@ -186,7 +186,7 @@ class TokenBoostrapControllerSpec
               case Right(br) =>
 
                 val signature = Base64.getEncoder
-                  .encodeToString(PublicKeyUtil.digestSHA512(privKey, br.getBytes(StandardCharsets.UTF_8)))
+                  .encodeToString(PublicKeyUtil.signSHA512(privKey, br.getBytes(StandardCharsets.UTF_8)))
 
                 post("/v2/bootstrap", body = br, headers = Map("X-Ubirch-Signature" -> signature)) {
                   status should equal(200)
