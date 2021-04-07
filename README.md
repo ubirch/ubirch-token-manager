@@ -293,13 +293,13 @@ In order to use a bootstrap token, an existing public key is assumed to have alr
 
 ### X-Ubirch-Signature Header
 
-The Data Object should be signed with a valid ECDSA or EDDSA key. The Json object is assumed to be assigned in a compat fashion. 
+The _Data Object_ should be signed with a valid **ECDSA** or **EDDSA** key. The Json object is assumed to be assigned in a compact fashion. 
 
-The signature is calculated like this:
+The _signature_ is calculated like this:
 
-1. The SHA-512 digest is calculated.
+1. The _SHA-512 digest_ is calculated over the _Data Object_. See previous point.
 2. The digest is signed with the private key.
-3. The base64 string representation is calculated over the signature.
+3. The _base64_ string representation is calculated over the signature.
 4. This encoded signature put in the header.
 
 #### Post Request
