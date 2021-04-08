@@ -13,10 +13,10 @@ import com.ubirch.{ InvalidClaimException, TokenEncodingException }
 import monix.eval.Task
 
 import javax.inject.{ Inject, Singleton }
-
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.key.HMACVerifier
 import com.ubirch.services.state.StateVerifier
+import pdi.jwt.exceptions.JwtValidationException
 
 trait TokenService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
@@ -174,7 +174,7 @@ class DefaultTokenService @Inject() (
   }
 
   private def buildTokenClaimFromUbirchTokenAsString(token: String): Task[TokenPurposedClaim] = {
-    for {
+    (for {
       tokenJValue <- Task.fromTry(tokenDecodingService.decodeAndVerify(token, tokenKey.key.getPublicKey))
       tokenString <- Task.delay(jsonConverterService.toString(tokenJValue))
       tokenPurposedClaim <- Task.delay(jsonConverterService.fromJsonInput[TokenPurposedClaim](tokenString) { x =>
@@ -191,6 +191,10 @@ class DefaultTokenService @Inject() (
       })
     } yield {
       tokenPurposedClaim
+    }).onErrorHandleWith {
+      case e: JwtValidationException =>
+        logger.error("error_building_token_claim=" + e.getMessage, e)
+        Task.raiseError(InvalidClaimException("error_building_token_claim", e.getMessage))
     }
   }
 
