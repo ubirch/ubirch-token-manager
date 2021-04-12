@@ -554,4 +554,7 @@ Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 ### Anchoring Token
 ![Anchoring Token](assets/token_anchoring_usage.png)
 
+### Device Creation Token
+![Device Creation Token](assets/token_device_creation_usage.png)
+
 [Token Scenarios](token_scenarios.md)
