@@ -551,4 +551,7 @@ Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 ### Verification Token
 ![Verification Token](assets/token_verification_usage.png)
 
+### Anchoring Token
+![Anchoring Token](assets/token_anchoring_usage.png)
+
 [Token Scenarios](token_scenarios.md)

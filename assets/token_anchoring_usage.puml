@@ -1,0 +1,14 @@
+@startuml
+actor client #red
+box "Token Anchoring Usage" #Yellow
+client->"Niomon": sends AnchoringRequest(identityId, token(upp:anchor), upp/hash)
+"Niomon"->"Niomon": "Token Service Light SDK" handles validation
+"Niomon"->"Token Service": asks for Validation if claim types require it.
+"Token Service"->"Thing API": asks for required info if needed
+"Thing API"->"Token Service": required info is returned
+"Token Service"->"Token Service": Validation is made
+"Token Service"->"Niomon": Response is returned
+"Niomon"->"Niomon": Claims verification is checked
+"Niomon"->client: Response UPP is returned
+end box
+@enduml
