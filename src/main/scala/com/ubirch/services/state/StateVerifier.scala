@@ -58,11 +58,13 @@ class DefaultStateVerifier @Inject() (
   }
 
   override def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
-    tokenPurposedClaim.targetGroups match {
+    val check = tokenPurposedClaim.targetGroups match {
       case Right(names) if currentGroups.nonEmpty => currentGroups.map(_.name).intersect(names).sorted == names.sorted
       case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
       case _ => false
     }
+    logger.warn("target_groups=" + tokenPurposedClaim.targetGroups.left.map(_.map(_.toString)).merge + " current_groups="+ currentGroups.toString())
+    check
   }
 
   override def verifyIdentitySignature(identityUUID: UUID, signed: Array[Byte], signature: Array[Byte]): Task[Boolean] = {
