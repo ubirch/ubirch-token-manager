@@ -63,7 +63,9 @@ class DefaultStateVerifier @Inject() (
       case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
       case _ => false
     }
-    logger.warn("target_groups=" + tokenPurposedClaim.targetGroups.left.map(_.map(_.toString)).merge + " current_groups="+ currentGroups.toString())
+    if(!check) {
+      logger.warn("target_groups=" + tokenPurposedClaim.targetGroups.left.map(_.map(_.toString)).merge + " current_groups="+ currentGroups.toString())
+    }
     check
   }
 
