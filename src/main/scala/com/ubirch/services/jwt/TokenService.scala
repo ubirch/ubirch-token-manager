@@ -55,7 +55,7 @@ class DefaultTokenService @Inject() (
     for {
       _ <- localVerify(tokenPurposedClaim)
       groupsCheck <- stateVerifier.verifyGroupsTokenPurposedClaim(tokenPurposedClaim)
-      _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
+      _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups Create", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
       tokeCreationData <- create(accessToken, tokenClaim, 'purposed_claim)
@@ -104,7 +104,7 @@ class DefaultTokenService @Inject() (
       _ <- localVerify(tokenPurposedClaim)
       groupsCheck <- stateVerifier.verifyGroupsForVerificationRequest(verificationRequest, tokenPurposedClaim)
 
-      _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups", "Groups couldn't be validated"))
+      _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups Verify", "Groups couldn't be validated"))
 
     } yield {
       true
