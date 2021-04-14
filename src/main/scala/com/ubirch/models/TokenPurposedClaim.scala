@@ -77,7 +77,7 @@ case class TokenPurposedClaim(
     val targetGroupsKey = TokenPurposedClaim.TARGET_GROUPS_KEY -> targetGroups.left.map(_.map(_.toString)).merge.distinct.asInstanceOf[Any]
     val originKey = TokenPurposedClaim.ORIGIN_KEY -> originDomains.distinct.map(_.toString)
     val typedScopes = scopes.sorted.flatMap(x => Scope.fromString(x)).distinct
-    val scopesKey = TokenPurposedClaim.SCOPES_KEY -> typedScopes.map(Scope.asString)
+    val scopesKey = TokenPurposedClaim.SCOPES_KEY -> typedScopes.distinct.map(Scope.asString)
 
     TokenClaim(
       ownerId = tenantId,
