@@ -1,14 +1,12 @@
 package com.ubirch
 
-import java.util.concurrent.CountDownLatch
-
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.services.jwt.PublicKeyPoolService
 import com.ubirch.services.rest.RestService
 import monix.eval.Task
-import monix.execution.Scheduler
-import javax.inject.{ Inject, Singleton }
+import monix.execution.{ CancelableFuture, Scheduler }
 
+import javax.inject.{ Inject, Singleton }
 import com.ubirch.services.state.SecretKeyPoolService
 
 /**
@@ -17,18 +15,18 @@ import com.ubirch.services.state.SecretKeyPoolService
 @Singleton
 class Service @Inject() (restService: RestService, publicKeyPoolService: PublicKeyPoolService, secretKeyPoolService: SecretKeyPoolService)(implicit scheduler: Scheduler) extends LazyLogging {
 
-  def start(): Unit = {
+  def start(): CancelableFuture[Unit] = {
 
     (for {
       _ <- publicKeyPoolService.init
       _ <- secretKeyPoolService.init
       _ <- Task.delay(restService.start())
     } yield ()).onErrorRecover {
-      case e: Exception => logger.error("error_starting", e)
+      case e: Exception =>
+        logger.error("error_starting=" + e.getClass.getCanonicalName + " - " + e.getMessage, e)
+        sys.exit(1)
     }.runToFuture
 
-    val cd = new CountDownLatch(1)
-    cd.await()
   }
 
 }
