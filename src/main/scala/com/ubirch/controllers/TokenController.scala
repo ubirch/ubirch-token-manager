@@ -97,7 +97,7 @@ class TokenController @Inject() (
             .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
-                logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
                 BadRequest(NOK.tokenCreationError("Error creating token"))
               case e: Exception =>
                 logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -150,7 +150,7 @@ class TokenController @Inject() (
             .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
-                logger.error("1.1 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
                 BadRequest(NOK.tokenCreationError("Error creating token"))
               case e: Exception =>
                 logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -179,14 +179,16 @@ class TokenController @Inject() (
         reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp")).map(Option.apply).map(_.filter(_.nonEmpty))
         reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
+        _ <- earlyResponseIf(reqTimestamp.isEmpty && reqSig.isEmpty)(InvalidParamException("Invalid Basic Params", "No X-Ubirch-Timestamp or X-Ubirch-Signature headers found"))
+        verificationRequest = readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = reqSig, time = reqTimestamp)
         res <- tokenService
-          .verify(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = reqSig, time = reqTimestamp))
+          .verify(verificationRequest)
           .map { tkv => Ok(Return(tkv)) }
       } yield {
         res
       }).onErrorHandle {
         case e: ServiceException =>
-          logger.error("1.1 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          logger.error("1.1 Error verifying token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
           BadRequest(NOK.tokenVerifyingError("Error verifying token"))
         case e: Exception =>
           logger.error("1.2 Error verifying token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -208,7 +210,7 @@ class TokenController @Inject() (
         res
       }).onErrorHandle {
         case e: ServiceException =>
-          logger.error("1.1 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+          logger.error("1.1 Error bootstrapping token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
           BadRequest(NOK.tokenBootstrappingError("Error bootstrapping token"))
         case e: Exception =>
           logger.error("1.2 Error bootstrapping token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -233,7 +235,7 @@ class TokenController @Inject() (
             .map { tks => Ok(Return(tks)) }
             .onErrorHandle {
               case e: ServiceException =>
-                logger.error("1.1 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                logger.error("1.1 Error listing token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
                 BadRequest(NOK.tokenListingError("Error getting tokens"))
               case e: Exception =>
                 logger.error("1.2 Error listing token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -267,7 +269,7 @@ class TokenController @Inject() (
             .map { tks => Ok(Return(tks.orNull)) }
             .onErrorHandle {
               case e: ServiceException =>
-                logger.error("1.1 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                logger.error("1.1 Error getting token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
                 BadRequest(NOK.tokenListingError("Error getting token"))
               case e: Exception =>
                 logger.error("1.2 Error getting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
@@ -360,7 +362,7 @@ class TokenController @Inject() (
             }
             .onErrorRecover {
               case e: ServiceException =>
-                logger.error("1.1 Error deleting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                logger.error("1.1 Error deleting token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
                 BadRequest(NOK.tokenDeleteError("Error deleting token"))
               case e: Exception =>
                 logger.error("1.1 Error deleting token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
