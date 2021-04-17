@@ -6,7 +6,6 @@ import java.util.Date
 
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.models.NOK
-import com.ubirch.util.ServiceMetrics
 import monix.eval.Task
 import monix.execution.{ CancelableFuture, Scheduler }
 import org.apache.commons.compress.utils.IOUtils
@@ -49,7 +48,7 @@ class CachedBodyServletInputStream(cachedBody: Array[Byte], raw: ServletInputStr
  */
 class ServiceRequest(httpServletRequest: HttpServletRequest) extends HttpServletRequestWrapper(httpServletRequest) {
 
-  val cachedBody = IOUtils.toByteArray(httpServletRequest.getInputStream)
+  val cachedBody: Array[Byte] = IOUtils.toByteArray(httpServletRequest.getInputStream)
 
   override def getInputStream: ServletInputStream = {
     new CachedBodyServletInputStream(cachedBody, httpServletRequest.getInputStream)
@@ -79,7 +78,15 @@ abstract class ControllerBase extends ScalatraServlet
   with ServiceMetrics
   with LazyLogging {
 
-  def actionResult(body: HttpServletRequest => HttpServletResponse => Task[ActionResult])(implicit request: HttpServletRequest, response: HttpServletResponse): Task[ActionResult] = {
+  def asyncResult(name: String)(body: HttpServletRequest => HttpServletResponse => Task[ActionResult])(implicit request: HttpServletRequest, response: HttpServletResponse, scheduler: Scheduler): AsyncResult = {
+    asyncResultCore(() => count(name)(actionResult(body).runToFuture))
+  }
+
+  private def asyncResultCore(body: () => CancelableFuture[ActionResult]): AsyncResult = {
+    new AsyncResult() { override val is = body() }
+  }
+
+  private def actionResult(body: HttpServletRequest => HttpServletResponse => Task[ActionResult])(implicit request: HttpServletRequest, response: HttpServletResponse): Task[ActionResult] = {
     for {
       _ <- Task.delay(logRequestInfo)
       res <- Task.defer(body(request)(response))
@@ -103,15 +110,7 @@ abstract class ControllerBase extends ScalatraServlet
 
   }
 
-  def asyncResultCore(body: () => CancelableFuture[ActionResult]): AsyncResult = {
-    new AsyncResult() { override val is = body() }
-  }
-
-  def asyncResult(name: String)(body: HttpServletRequest => HttpServletResponse => Task[ActionResult])(implicit request: HttpServletRequest, response: HttpServletResponse, scheduler: Scheduler): AsyncResult = {
-    asyncResultCore(() => count(name)(actionResult(body).runToFuture))
-  }
-
-  def logRequestInfo(implicit request: HttpServletRequest): Unit = {
+  private def logRequestInfo(implicit request: HttpServletRequest): Unit = {
     val path = request.getPathInfo
     val method = request.getMethod
     val headers = request.headers.toList.map { case (k, v) => k + ":" + v }.mkString(",")

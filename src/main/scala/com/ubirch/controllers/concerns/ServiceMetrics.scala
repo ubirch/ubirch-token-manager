@@ -1,4 +1,4 @@
-package com.ubirch.util
+package com.ubirch.controllers.concerns
 
 import io.prometheus.client.Counter
 import monix.execution.CancelableFuture
@@ -17,6 +17,7 @@ trait ServiceMetrics {
   def countWhen[T](method: String)(ft: T => Boolean)(cf: CancelableFuture[T])(implicit ec: ExecutionContext): CancelableFuture[T] = {
 
     def s(): Unit = successCounter.labels(service, method).inc()
+
     def f(): Unit = errorCounter.labels(service, method).inc()
 
     cf.onComplete {
