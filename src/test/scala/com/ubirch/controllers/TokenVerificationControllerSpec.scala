@@ -213,6 +213,47 @@ class TokenVerificationControllerSpec
 
     }
 
+    "create OK and Verify should fail if Token not provided" taggedAs Tag("avocado") in {
+
+      val token = Injector.get[FakeTokenCreator].user
+
+      val incomingBody =
+        """
+          |{
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+          |  "expiration": 2233738785,
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
+          |}
+          |""".stripMargin
+
+      post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+
+        val b = jsonConverter.as[Return](body).right.get
+        val data = b.data.asInstanceOf[Map[String, Any]]
+
+        data.get("token") match {
+          case Some(_: String) =>
+
+            val verificationRequest = VerificationRequest("", UUID.fromString("840b7e21-03e9-4de7-bb31-0b9524f3b500"), None, None, None)
+            val verificationRequestJson = jsonConverter.toString[VerificationRequest](verificationRequest).getOrElse("")
+
+            post("/v2/verify", body = verificationRequestJson, headers = Map("X-Ubirch-Signature" -> "111", "X-Ubirch-Timestamp" -> "111")) {
+              assert(status == 400)
+              assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenVerificationError","errorMessage":"Error verifying token"}""".stripMargin)
+            }
+
+          case _ => fail("No Token Found")
+        }
+
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+      }
+
+    }
+
     "create OK" taggedAs Tag("plum") in {
 
       val token = Injector.get[FakeTokenCreator].user
