@@ -12,6 +12,7 @@ import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
 import com.ubirch.services.formats.{ DefaultJsonConverterService, JsonConverterService, JsonFormatsProvider }
 import com.ubirch.services.jwt.{ DefaultTokenEncodingService, DefaultTokenKeyService, TokenEncodingService, TokenKeyService }
+import com.ubirch.services.lifeCycle.DefaultLifecycle
 import com.ubirch.util.{ PublicKeyUtil, TaskHelpers }
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -221,7 +222,9 @@ object DefaultStateVerifier extends {
     val config = new ConfigProvider get ()
     val e = new ExecutionProvider(config) get ()
     implicit val scheduler = new SchedulerProvider(e) get ()
-    val client = new DefaultHttpClient()
+
+    val lifecycle = new DefaultLifecycle()
+    val client = new DefaultHttpClient(lifecycle)
     val externalStateGetter = new DefaultExternalGetter(config, client)
     val tokenKeyService = new DefaultTokenKeyService(config)
     val tokenEncodingService = new DefaultTokenEncodingService()

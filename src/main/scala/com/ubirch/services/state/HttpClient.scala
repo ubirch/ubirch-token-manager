@@ -1,19 +1,22 @@
 package com.ubirch.services.state
 
+import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.models.ExternalResponseData
+import com.ubirch.services.lifeCycle.Lifecycle
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.impl.client.{ CloseableHttpClient, HttpClients }
 import org.apache.http.util.EntityUtils
+import javax.inject.{ Inject, Singleton }
 
-import javax.inject.Singleton
+import scala.concurrent.Future
 
 trait HttpClient {
   def execute(request: HttpUriRequest): ExternalResponseData[Array[Byte]]
 }
 
 @Singleton
-class DefaultHttpClient extends HttpClient {
+class DefaultHttpClient @Inject() (lifecycle: Lifecycle) extends HttpClient with LazyLogging {
 
   private val httpclient: CloseableHttpClient = HttpClients.createDefault
 
@@ -26,6 +29,9 @@ class DefaultHttpClient extends HttpClient {
       ))
   }
 
-  sys.addShutdownHook(httpclient.close())
+  lifecycle.addStopHook { () =>
+    logger.info("Shutting Http Client Service")
+    Future.successful(httpclient.close())
+  }
 
 }

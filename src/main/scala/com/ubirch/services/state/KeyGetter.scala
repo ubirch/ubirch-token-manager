@@ -9,6 +9,7 @@ import com.ubirch.crypto.GeneratorKeyFactory
 import com.ubirch.models.ExternalResponseData
 import com.ubirch.services.config.ConfigProvider
 import com.ubirch.services.execution.{ ExecutionProvider, SchedulerProvider }
+import com.ubirch.services.lifeCycle.DefaultLifecycle
 import com.ubirch.util.PublicKeyUtil
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -49,7 +50,8 @@ object KeyGetterTest {
     val e = new ExecutionProvider(config) get ()
     implicit val scheduler = new SchedulerProvider(e) get ()
 
-    val client = new DefaultHttpClient()
+    val lifecycle = new DefaultLifecycle()
+    val client = new DefaultHttpClient(lifecycle)
     val keyGetter = new DefaultKeyGetter(config, client)
 
     val res = await(keyGetter.byIdentityId(UUID.fromString("d7a81058-ae97-4178-80ed-71aed46e88fa")), 5 seconds)
