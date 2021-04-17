@@ -3,7 +3,7 @@ package com.ubirch.controllers
 import java.security.PublicKey
 import java.util.UUID
 
-import com.ubirch.models.Return
+import com.ubirch.models.{ Return, VerificationRequest }
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import com.ubirch.{ EmbeddedCassandra, _ }
@@ -168,6 +168,47 @@ class TokenVerificationControllerSpec
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
         assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+      }
+
+    }
+
+    "create OK and Verify should fail if Needed headers are not found or are empty" taggedAs Tag("avocado") in {
+
+      val token = Injector.get[FakeTokenCreator].user
+
+      val incomingBody =
+        """
+          |{
+          |  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+          |  "purpose":"King Dude - Concert",
+          |  "targetIdentities":["840b7e21-03e9-4de7-bb31-0b9524f3b500"],
+          |  "expiration": 2233738785,
+          |  "notBefore":null,
+          |  "scopes" : ["upp:verify"]
+          |}
+          |""".stripMargin
+
+      post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
+        status should equal(200)
+
+        val b = jsonConverter.as[Return](body).right.get
+        val data = b.data.asInstanceOf[Map[String, Any]]
+
+        data.get("token") match {
+          case Some(token: String) =>
+
+            val verificationRequest = VerificationRequest(token, UUID.fromString("840b7e21-03e9-4de7-bb31-0b9524f3b500"), None, None, None)
+            val verificationRequestJson = jsonConverter.toString[VerificationRequest](verificationRequest).getOrElse("")
+
+            post("/v2/verify", body = verificationRequestJson, headers = Map("X-Ubirch-Signature" -> "", "X-Ubirch-Timestamp" -> "111")) {
+              assert(status == 400)
+              assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenVerificationError","errorMessage":"Error verifying token"}""".stripMargin)
+            }
+
+          case _ => fail("No Token Found")
+        }
+
+        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
       }
 
     }

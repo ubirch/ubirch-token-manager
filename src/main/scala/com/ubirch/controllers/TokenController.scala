@@ -179,7 +179,7 @@ class TokenController @Inject() (
         reqTimestamp <- Task.delay(request.getHeader("X-Ubirch-Timestamp")).map(Option.apply).map(_.filter(_.nonEmpty))
         reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
         readBody <- Task.delay(ReadBody.readJson[VerificationRequest](t => t.camelizeKeys))
-        _ <- earlyResponseIf(reqTimestamp.isEmpty && reqSig.isEmpty)(InvalidParamException("Invalid Basic Params", "No X-Ubirch-Timestamp or X-Ubirch-Signature headers found"))
+        _ <- earlyResponseIf(reqTimestamp.isEmpty || reqSig.isEmpty)(InvalidParamException("Invalid Basic Params", "No X-Ubirch-Timestamp or X-Ubirch-Signature headers found"))
         verificationRequest = readBody.extracted.copy(signed = Option(readBody).map(_.asString), signatureRaw = reqSig, time = reqTimestamp)
         res <- tokenService
           .verify(verificationRequest)
