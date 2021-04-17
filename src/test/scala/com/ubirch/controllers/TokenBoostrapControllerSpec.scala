@@ -14,7 +14,7 @@ import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
 import org.jose4j.jwk.PublicJsonWebKey
 import org.json4s.JsonAST.{ JArray, JField, JObject, JString }
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{ BeforeAndAfterEach, Tag }
 import org.scalatra.test.scalatest.ScalatraWordSpec
 
 import scala.concurrent.duration._
@@ -131,7 +131,7 @@ class TokenBoostrapControllerSpec
 
     }
 
-    "get bootstraps token" in {
+    "get bootstraps token" taggedAs Tag("avocado") in {
 
       val token = Injector.get[FakeTokenCreator].user
       val fakeKeyGetter = Injector.get[KeyGetter].asInstanceOf[FakeKeyGetter]
@@ -191,6 +191,11 @@ class TokenBoostrapControllerSpec
                 post("/v2/bootstrap", body = br, headers = Map("X-Ubirch-Signature" -> signature)) {
                   status should equal(200)
                   assert(jsonConverter.as[Return](body).isRight)
+                  val b = jsonConverter.as[Return](body).right.get
+                  val data = b.data.asInstanceOf[Map[String, Any]]
+                  assert(data.contains("registration"))
+                  assert(data.contains("anchoring"))
+                  assert(data.contains("verification"))
                 }
 
             }

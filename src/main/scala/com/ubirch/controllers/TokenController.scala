@@ -205,7 +205,10 @@ class TokenController @Inject() (
         reqSig <- Task.delay(request.getHeader("X-Ubirch-Signature")).map(Option.apply).map(_.filter(_.nonEmpty))
         readBody <- Task.delay(ReadBody.readJson[BootstrapRequest](t => t.camelizeKeys))
         _ <- earlyResponseIf(reqSig.isEmpty)(InvalidParamException("X-Ubirch-Signature", "No header found"))
-        res <- tokenService.processBootstrapToken(readBody.extracted.copy(signed = Option(readBody).map(_.asString), signature = reqSig)).map { tkv => Ok(Return(tkv)) }
+        bootstrapRequest = readBody.extracted.copy(signed = Option(readBody).map(_.asString), signature = reqSig)
+        res <- tokenService
+          .processBootstrapToken(bootstrapRequest)
+          .map { tkv => Ok(Return(tkv)) }
       } yield {
         res
       }).onErrorHandle {
