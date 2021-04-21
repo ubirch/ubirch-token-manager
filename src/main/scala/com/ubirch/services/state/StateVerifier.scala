@@ -76,7 +76,7 @@ class DefaultStateVerifier @Inject() (
     def check(raw: Boolean): Task[Boolean] = taskKey.flatMap {
       case Some(key) =>
         for {
-          pubKey <- Task.fromTry(key.getPrivKey)
+          pubKey <- Task.fromTry(key.getPubKey)
         } yield {
           //We want to check if maybe there is asn1
           pubKey.getPublicKey.getAlgorithm match {
