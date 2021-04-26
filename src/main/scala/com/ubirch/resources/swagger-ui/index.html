@@ -37,6 +37,18 @@
     <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
     <script>
     window.onload = function() {
+
+      const DisableTryItOutPlugin = function() {
+        return {
+          statePlugins: {
+            spec: {
+              wrapSelectors: {
+                allowTryItOutFor: () => () => false
+              }
+            }
+          }
+        }
+      }
       // Begin Swagger UI call region
       const env = location.host;
       const protocol = location.protocol;
@@ -47,12 +59,31 @@
         presets: [
           SwaggerUIBundle.presets.apis,
           SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          DisableTryItOutPlugin
         ]
       });
       // End Swagger UI call region
 
       window.ui = ui;
     };
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const interval0 = setInterval(function () {
+        const elem = document.getElementsByClassName('wrapper');
+        if(elem.length > 0){
+          elem[3].hidden = true;
+
+          document.getElementsByClassName('scheme-container')[0].hidden=true;
+          //document.getElementsByClassName('model-example')[0].hidden=true ;
+
+          clearInterval(interval0);
+        }
+      }, 1000)
+
+    });
+
   </script>
   </body>
 </html>
