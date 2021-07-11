@@ -15,12 +15,13 @@ case object User extends Resource
 
 sealed trait Action
 object Action {
-  final val list: List[Action] = List(Anchor, Verify, Create, GetInfo, Bootstrap)
+  final val list: List[Action] = List(Anchor, Verify, Create, StoreData, GetInfo, Bootstrap)
   def fromString(value: String): Option[Action] = list.find(_.toString.toLowerCase == value)
 }
 case object Anchor extends Action
 case object Verify extends Action
 case object Create extends Action
+case object StoreData extends Action
 case object GetInfo extends Action
 case object Bootstrap extends Action
 
@@ -32,9 +33,10 @@ object Scope {
   final val UPP_Verify: Scope = Scope(UPP, Verify)
   final val Thing_Create: Scope = Scope(Thing, Create)
   final val Thing_GetInfo: Scope = Scope(Thing, GetInfo)
+  final val Thing_StoreData = Scope(Thing, StoreData)
   final val Thing_Bootstrap: Scope = Scope(Thing, Bootstrap)
   final val User_GetInfo: Scope = Scope(User, GetInfo)
-  final val list = List(UPP_Anchor, UPP_Verify, Thing_Create, Thing_GetInfo, Thing_Bootstrap, User_GetInfo)
+  final val list = List(UPP_Anchor, UPP_Verify, Thing_Create, Thing_GetInfo, Thing_StoreData, Thing_Bootstrap, User_GetInfo)
 
   def asString(scope: Scope): String = {
     s"${scope.resource.toString.toLowerCase}:${scope.action.toString.toLowerCase}"
@@ -65,6 +67,7 @@ object Scope {
       case UPP_Verify => Option(new URL(s"https://verify.$ENV.ubirch.com"))
       case Thing_Create => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
       case Thing_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
+      case Thing_StoreData => Option(new URL(s"https://data.$ENV.ubirch.com"))
       case Thing_Bootstrap => Option(new URL(s"https://token.$ENV.ubirch.com"))
       case User_GetInfo => Option(new URL(s"https://api.console.$ENV.ubirch.com"))
       case _ => None

@@ -138,10 +138,14 @@ class DefaultTokenService @Inject() (
         .map(_.copy(expiration = None))
         .flatMap(create(_, 'purposed_claim))
 
-      _ = logger.debug("bootstrap_tokens_created create:{} anchor:{} verify:{}", thingCreate.token, thingAnchor.token, thingVerify.token)
+      thingDataStore <- createClaim(Scope.Thing_StoreData, None)
+        .map(_.copy(expiration = None))
+        .flatMap(create(_, 'purposed_claim))
+
+      _ = logger.debug("bootstrap_tokens_created create:{} anchor:{} verify:{} data:{}", thingCreate.token, thingAnchor.token, thingVerify.token, thingDataStore)
 
     } yield {
-      BootstrapToken(thingCreate, thingAnchor, thingVerify)
+      BootstrapToken(thingCreate, thingAnchor, thingVerify, thingDataStore)
     }
 
   }
