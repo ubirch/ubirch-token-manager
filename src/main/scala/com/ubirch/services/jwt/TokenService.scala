@@ -138,7 +138,7 @@ class DefaultTokenService @Inject() (
         .map(_.copy(expiration = None))
         .flatMap(create(_, 'purposed_claim))
 
-      thingDataStore <- createClaim(Scope.Thing_StoreData, None)
+      thingDataStore <- createClaim(Scope.Thing_StoreData, Some(bootstrapRequest.identity))
         .map(_.copy(expiration = None))
         .flatMap(create(_, 'purposed_claim))
 
