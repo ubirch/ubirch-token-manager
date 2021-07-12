@@ -310,7 +310,7 @@ curl -s -X POST -H "X-Ubirch-Signature: $signature" -H "content-type: applicatio
 
 #### Post Response
 
-The data object has three fields, registration, anchoring and verification. The registration token has a experiation of 15 mins. By registration of the device, the device is assigned to the claimed group. Note that in order to anchor the device has to be registered.
+The data object has three fields, registration, anchoring and verification. The registration token has an expiration of 15 mins. By registration of the device, the device is assigned to the claimed group. Note that in order to anchor the device has to be registered.
 
 ```json
 {
@@ -484,6 +484,8 @@ curl -s -X GET $host/api/tokens/v2/scopes | jq .
 
 **thing:getinfo**:: it allows querying info about a device or thing.
 
+**"thing:storedata"**:: it allows store data sets produced by a thing on the simple data service.
+
 **user:getinfo**:: it allows querying info about a user.
 
 **thing:bootstrap**:: it allows creatinga bootstrap token that would permit creating devices, anchoring upps and 
@@ -500,10 +502,12 @@ This call returns a json object whose data field is an array of scopes.
     "upp:verify",
     "thing:create",
     "thing:getinfo",
+    "thing:storedata",
     "thing:bootstrap",
     "user:getinfo"
   ]
 }
+
 ```
 
 ## Verifying an Ubirch JWT Token
