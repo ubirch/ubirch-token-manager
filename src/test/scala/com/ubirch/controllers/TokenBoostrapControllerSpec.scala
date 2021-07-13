@@ -131,7 +131,7 @@ class TokenBoostrapControllerSpec
 
     }
 
-    "get bootstraps tokens" taggedAs Tag("avocado") in {
+    "get bootstrap tokens - R, A, V, S" taggedAs Tag("avocado") in {
 
       val token = Injector.get[FakeTokenCreator].user
       val fakeKeyGetter = Injector.get[KeyGetter].asInstanceOf[FakeKeyGetter]
