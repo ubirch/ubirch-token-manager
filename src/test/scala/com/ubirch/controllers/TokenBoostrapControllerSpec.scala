@@ -131,7 +131,7 @@ class TokenBoostrapControllerSpec
 
     }
 
-    "get bootstraps token" taggedAs Tag("avocado") in {
+    "get bootstraps tokens" taggedAs Tag("avocado") in {
 
       val token = Injector.get[FakeTokenCreator].user
       val fakeKeyGetter = Injector.get[KeyGetter].asInstanceOf[FakeKeyGetter]
@@ -196,6 +196,7 @@ class TokenBoostrapControllerSpec
                   assert(data.contains("registration"))
                   assert(data.contains("anchoring"))
                   assert(data.contains("verification"))
+                  assert(data.contains("dataStore"))
                 }
 
             }

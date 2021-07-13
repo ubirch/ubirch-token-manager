@@ -561,4 +561,7 @@ Visit https://token.dev.ubirch.com/docs on your browser to see the swagger docs.
 ### Device Creation Token
 ![Device Creation Token](assets/token_device_creation_usage.png)
 
+### Data Store Token
+![Data Store Token](assets/token_store_data_usage.png)
+
 [Token Scenarios](token_scenarios.md)

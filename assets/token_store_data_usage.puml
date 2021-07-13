@@ -1,0 +1,13 @@
+@startuml
+actor tenant #red
+box "Token Data Store Usage" #E5E7E9
+tenant->"Simple Data Service": sends ubirchToken and data
+"Simple Data Service"->"Simple Data Service": "Token Service Light SDK" handles validation
+"Simple Data Service"->"Token Service": asks for Validation if claim types require it.
+"Token Service"->"Thing API": asks for required info if needed
+"Thing API"->"Token Service": required info is returned
+"Token Service"->"Token Service": Validation is made
+"Token Service"->"Simple Data Service": Response is returned
+"Simple Data Service"->tenant: Verification Response is returned
+end box
+@enduml
