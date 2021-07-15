@@ -43,6 +43,7 @@ class DefaultStateVerifier @Inject() (
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
   private final val REALM_NAME: String = config.getString(ExternalStateGetterPaths.REALM_NAME)
+  private final val STRICT_GROUP_CHECK: Boolean = config.getBoolean(ExternalStateGetterPaths.STRICT_GROUP_CHECK)
 
   override def verifyGroupsTokenPurposedClaim(tokenPurposedClaim: TokenPurposedClaim): Task[Boolean] = {
     if (tokenPurposedClaim.hasMaybeGroups) {
@@ -60,8 +61,14 @@ class DefaultStateVerifier @Inject() (
 
   override def verifyGroups(tokenPurposedClaim: TokenPurposedClaim, currentGroups: List[Group]): Boolean = {
     val check = tokenPurposedClaim.targetGroups match {
-      case Right(names) if currentGroups.nonEmpty => currentGroups.map(_.name).intersect(names).sorted == names.sorted
-      case Left(uuids) if currentGroups.nonEmpty => currentGroups.map(_.id).intersect(uuids).sorted == uuids.sorted
+      case Right(claimedGroupAsNames) if currentGroups.nonEmpty && STRICT_GROUP_CHECK =>
+        currentGroups.map(_.name).intersect(claimedGroupAsNames).sorted == claimedGroupAsNames.sorted
+      case Left(claimedGroupAsUUIDs) if currentGroups.nonEmpty && STRICT_GROUP_CHECK =>
+        currentGroups.map(_.id).intersect(claimedGroupAsUUIDs).sorted == claimedGroupAsUUIDs.sorted
+      case Right(claimedGroupAsNames) if currentGroups.nonEmpty && !STRICT_GROUP_CHECK =>
+        currentGroups.map(_.name).intersect(claimedGroupAsNames).sorted.nonEmpty
+      case Left(claimedGroupAsUUIDs) if currentGroups.nonEmpty && !STRICT_GROUP_CHECK =>
+        currentGroups.map(_.id).intersect(claimedGroupAsUUIDs).sorted.nonEmpty
       case _ => false
     }
     if (!check) {
@@ -236,11 +243,34 @@ object DefaultStateVerifier extends {
 
     val stateVerifier: StateVerifier = new DefaultStateVerifier(config, externalStateGetter, tokenKeyService, tokenEncodingService, jsonConverterService, keyGetter)
 
-    //val res = await(stateVerifier.groups(UUID.fromString("bdab47d0-fcf9-429e-a118-3dae0773cac2")), 5 seconds)
+    //2021-07-14 19:36:53.851 INFO  [DefaultStateVerifier] deviceId:bdab47d0-fcf9-429e-a118-3dae0773cac2 res_status:200 res_body:[{"id":"d6e525c0-41e2-4a77-925c-4d6ea4fb8431","name":"Kitchen_Carlos"},{"id":"9192e299-333a-43b6-ad05-bcfae5ebdc10","name":"OWN_DEVICES_carlos.sanchez@ubirch.com"}]
+    //List(
+    // Group(d6e525c0-41e2-4a77-925c-4d6ea4fb8431,Kitchen_Carlos),
+    // Group(9192e299-333a-43b6-ad05-bcfae5ebdc10,OWN_DEVICES_carlos.sanchez@ubirch.com))
+    //val res = await(stateVerifier.identityGroups(UUID.fromString("bdab47d0-fcf9-429e-a118-3dae0773cac2")), 5 seconds)
 
+    //2021-07-14 19:34:29.873 INFO  [DefaultStateVerifier] ownerId:963995ed-ce12-4ea5-89dc-b181701d1d7b res_status:200 res_body:[{"id":"d6e525c0-41e2-4a77-925c-4d6ea4fb8431","name":"Kitchen_Carlos"},{"id":"9192e299-333a-43b6-ad05-bcfae5ebdc10","name":"OWN_DEVICES_carlos.sanchez@ubirch.com"},{"id":"eda5bf51-ad00-49fa-8281-a0996893c1db","name":"ubirch_admins"}]
+    //List(
+    // Group(d6e525c0-41e2-4a77-925c-4d6ea4fb8431,Kitchen_Carlos),
+    // Group(9192e299-333a-43b6-ad05-bcfae5ebdc10,OWN_DEVICES_carlos.sanchez@ubirch.com),
+    // Group(eda5bf51-ad00-49fa-8281-a0996893c1db,ubirch_admins))
     //val res = await(stateVerifier.tenantGroups(UUID.fromString("963995ed-ce12-4ea5-89dc-b181701d1d7b")), 5 seconds)
 
-    val res = await(stateVerifier.identityKey(UUID.fromString("9011a2de-8c69-45be-bc47-60fd58e121ce")), 5 seconds)
+    //val res = await(stateVerifier.identityKey(UUID.fromString("9011a2de-8c69-45be-bc47-60fd58e121ce")), 5 seconds)
+
+    val res = await(stateVerifier.verifyGroupsForVerificationRequest(
+      VerificationRequest("a token", UUID.fromString("bdab47d0-fcf9-429e-a118-3dae0773cac2"), None, None, None),
+      TokenPurposedClaim(
+        tenantId = null,
+        purpose = "",
+        targetIdentities = null,
+        targetGroups = Left(List(UUID.fromString("d6e525c0-41e2-4a77-925c-4d6ea4fb8431"), UUID.fromString("d6e525c0-41e2-4a77-925c-3dae0773cac2"))),
+        expiration = null,
+        notBefore = null,
+        originDomains = null,
+        scopes = null
+      )
+    ), 5 seconds)
 
     println(res)
 
