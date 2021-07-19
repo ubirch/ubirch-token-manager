@@ -317,7 +317,7 @@ class TokenControllerSpec
 
       get("/v2/scopes") {
         status should equal(200)
-        assert(body == """{"version":"2.0.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","thing:bootstrap","user:getinfo"]}""".stripMargin)
+        assert(body == """{"version":"2.0.0","ok":true,"data":["upp:anchor","upp:verify","thing:create","thing:getinfo","thing:storedata","thing:bootstrap","user:getinfo"]}""".stripMargin)
       }
 
     }

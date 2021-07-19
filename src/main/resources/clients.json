@@ -14,5 +14,9 @@
   {
     "client":  "niomon-enricher",
     "secret": "baO4L74O4SZE-B7LqicyRUZPFcyn5NeypcB5L438bXuzaKMX2CrWFwtH9"
+  },
+  {
+    "client":  "viz-enabler",
+    "secret": "OIqh+Z3uzD0E-WOUXbhy79Y7lg/j537VcZubOwdYggZM1WEg4Y0lYSSlx"
   }
 ]
