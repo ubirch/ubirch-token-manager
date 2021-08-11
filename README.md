@@ -73,7 +73,7 @@ Set as null or don't send the fields.
 
 #### Keycloak Token
 
-This is a command that can be used to get a keycloak token. Note that you will need the username, password and client secret for the correspondig keycloak instance.
+This is a command that can be used to get a keycloak token. Note that you will need the username, password and client secret for the corresponding keycloak instance.
 
 ```
 token=`curl -s -d "client_id=ubirch-2.0-user-access" -d "username=$TOKEN_USER" -d "password=$TOKEN_PASS" -d "grant_type=password" -d "client_secret=$TOKEN_CLIENT_ID" $keycloak | jq -r .access_token`
@@ -488,7 +488,7 @@ curl -s -X GET $host/api/tokens/v2/scopes | jq .
 
 **user:getinfo**:: it allows querying info about a user.
 
-**thing:bootstrap**:: it allows creatinga bootstrap token that would permit creating devices, anchoring upps and 
+**thing:bootstrap**:: it allows creating a bootstrap token that would permit creating devices, anchoring upps and 
 verifying upps.
 
 This call returns a json object whose data field is an array of scopes.
@@ -528,7 +528,7 @@ In order to facilitate the integration of some of the most important functions o
 The interface offers these basic operations:
 
 * **decodeAndVerify** ->  It allows a basic verification. It verifies that the token is well-built, that its standard claims are checked. I
-* **getClaims** -> It the same as the previous operation but basically performing the verification on the header as it is.
+* **getClaims** -> It is same as the previous operation but basically performing the verification on the header as it is.
 * **externalStateVerify**: -> Depending on the kinds of claims, there are some that require an external verification, these operations starts a verification against the Token Manager. Useful for groups and revocation claims.
 
         <dependency>
