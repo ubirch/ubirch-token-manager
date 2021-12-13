@@ -21,7 +21,7 @@
 
     <groupId>com.ubirch</groupId>
     <artifactId>ubirch-token-sdk</artifactId>
-    <version>2.0.2-SNAPSHOT</version>
+    <version>2.0.3-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
@@ -92,7 +92,6 @@
 
         <slf4j.api.version>1.7.15</slf4j.api.version>
         <logback-classic.version>1.2.3</logback-classic.version>
-        <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
         <jcl-over-slf4j.version>1.7.25</jcl-over-slf4j.version>
         <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
 
@@ -221,13 +220,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback-classic.version}</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.slf4j/log4j-over-slf4j -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>${log4j-over-slf4j.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.slf4j/jcl-over-slf4j -->
