@@ -25,6 +25,10 @@ class DefaultTokenVerification @Inject() (
   override def decodeAndVerify(jwt: String): Try[Claims] = {
     (for {
 
+      _ <- Try(jwt).filter(_.nonEmpty).recover { case _: Exception =>
+        throw new IllegalArgumentException("Token can't be empty")
+      }
+
       (_, p, _) <- Jwt.decodeRawAll(jwt, tokenPublicKey.publicKey, Seq(JwtAlgorithm.ES256))
 
       all <- jsonConverterService.toJValue(p).toTry

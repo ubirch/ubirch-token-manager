@@ -65,6 +65,19 @@ class TokenApiSpec extends TestBase {
 
     }
 
+    "fail when empty" in {
+
+      val token = ""
+
+      val tokenApi = new FakeTokenManagerImpl
+
+      tokenApi.decodeAndVerify(token) match {
+        case Failure(exception: IllegalArgumentException) => assert(exception.getMessage == "Token can't be empty")
+        case _ => fail("TokenApi received empty")
+      }
+
+    }
+
   }
 }
 
