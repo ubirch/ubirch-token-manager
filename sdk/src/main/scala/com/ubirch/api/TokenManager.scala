@@ -98,6 +98,12 @@ class Claims(val token: String, val all: JValue) {
 
   def hasScopes: Boolean = scopes.nonEmpty
 
+  def validateScope(scope: String): Try[String] = {
+    findScope(scope)
+      .toRight(InvalidClaimException("Invalid Scope", s"scope_not_found_in_expected_scopes=$scope"))
+      .toTry
+  }
+
   def validatePurpose: Try[String] = Try(purpose.nonEmpty && purpose.length > 3).map(_ => purpose)
 
   def validateIdentity(uuid: UUID): Try[UUID] = {

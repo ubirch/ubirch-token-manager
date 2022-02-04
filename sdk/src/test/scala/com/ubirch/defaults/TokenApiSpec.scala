@@ -34,6 +34,8 @@ class TokenApiSpec extends TestBase {
           assert(claims.validateOrigin(Some("http://verification.dev.ubirch.com")).isSuccess)
           assert(claims.validateOrigin(Some("http://verification.demo.ubirch.com")).isFailure)
           assert(claims.validatePurpose.filter(_ == "King Dude - Concert").isSuccess)
+          assert(claims.validateScope("thing:create").isSuccess)
+          assert(claims.validateScope("thing:fly").isFailure)
           assert(claims.hasScope("thing:create"))
           assert(claims.hasScopes)
 
