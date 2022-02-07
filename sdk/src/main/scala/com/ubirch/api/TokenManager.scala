@@ -129,6 +129,18 @@ class Claims(val token: String, val all: JValue) {
     }
   }
 
+  def validateSubject(subject: String): Try[String] = {
+    if (subject == this.subject) Success(subject)
+    else Failure(InvalidClaimException("Invalid Subject", s"subject_not_equal_to=$subject"))
+  }
+
+  def validateSubjectAsUUID(subject: UUID): Try[UUID] = {
+    isSubjectUUID.flatMap { uuid =>
+      if (subject == uuid) Success(uuid)
+      else Failure(InvalidClaimException("Invalid Subject", s"subject_not_equal_to=$subject"))
+    }
+  }
+
   def isSubjectUUID: Try[UUID] = Try(UUID.fromString(subject)).recoverWith {
     case _: Exception =>
       Failure(InvalidClaimException("Invalid Subject As UUID", s"subject_not_convertible_to_uuid=$subject"))
