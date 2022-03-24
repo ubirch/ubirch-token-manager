@@ -1,11 +1,12 @@
 package com.ubirch.defaults
 
 import java.util.UUID
-
 import javax.inject.{ Inject, Singleton }
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.api._
+
+import com.typesafe.config.ConfigException.WrongType
 import pdi.jwt.{ Jwt, JwtAlgorithm }
 
 import scala.collection.JavaConverters._
@@ -18,9 +19,14 @@ class DefaultTokenVerification @Inject() (
     jsonConverterService: JsonConverterService
 ) extends TokenVerification with LazyLogging {
 
-  private val validIssuer = config.getString(Paths.VALID_ISSUER_PATH)
-  private val validAudience = config.getString(Paths.VALID_AUDIENCE_PATH)
-  private val validScopes = config.getStringList(Paths.VALID_SCOPES_PATH).asScala.toList
+  private val validIssuer: String = config.getString(Paths.VALID_ISSUER_PATH)
+  private val validAudiences: Set[String] = {
+    Try(config.getStringList(Paths.VALID_AUDIENCE_PATH).asScala.toSet)
+      .recover {
+        case _: WrongType => Set(config.getString(Paths.VALID_AUDIENCE_PATH))
+      }.get
+  }
+  private val validScopes: Set[String] = config.getStringList(Paths.VALID_SCOPES_PATH).asScala.toSet
 
   override def decodeAndVerify(jwt: String): Try[Claims] = {
     (for {
@@ -39,8 +45,8 @@ class DefaultTokenVerification @Inject() (
       isIssuerValid <- Try(claims.issuer).map(_ == validIssuer)
       _ = if (!isIssuerValid) throw InvalidClaimException("Invalid issuer", p)
 
-      isAudienceValid <- Try(claims.audiences).map(_.contains(validAudience))
-      _ = if (!isAudienceValid) throw InvalidClaimException("Invalid audience", p)
+      _ <- Try(claims.audiences).filter(_.exists(validAudiences.contains))
+        .recover { case _: Exception => throw InvalidClaimException(s"Invalid audience :: ${claims.audiences.mkString(",")} not found in ${validAudiences.mkString(",")}", p) }
 
       _ <- Try(claims.subject)
         .filter(_.nonEmpty)
@@ -48,7 +54,7 @@ class DefaultTokenVerification @Inject() (
         .recover { case e: Exception => throw InvalidClaimException(e.getMessage, p) }
 
       _ <- Try(claims.scopes).filter(_.exists(validScopes.contains))
-        .recover { case _: Exception => throw InvalidClaimException(s"Invalid Scopes :: ${claims.scopes} not found in $validScopes", p) }
+        .recover { case _: Exception => throw InvalidClaimException(s"Invalid Scopes :: ${claims.scopes.mkString(",")} not found in ${validScopes.mkString(",")}", p) }
 
       _ <- Try(claims.purpose).filter(_.nonEmpty)
         .recover { case e: Exception => throw InvalidClaimException(e.getMessage, p) }

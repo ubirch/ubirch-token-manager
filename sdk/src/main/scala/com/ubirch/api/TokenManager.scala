@@ -136,8 +136,7 @@ class Claims(val token: String, val all: JValue) {
 
   def validateSubjectAsUUID(subject: UUID): Try[UUID] = {
     isSubjectUUID.flatMap { uuid =>
-      if (subject == uuid) Success(uuid)
-      else Failure(InvalidClaimException("Invalid Subject", s"subject_not_equal_to=$subject"))
+      validateSubject(subject.toString).map(_ => uuid)
     }
   }
 
