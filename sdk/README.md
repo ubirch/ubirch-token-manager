@@ -11,7 +11,7 @@ In order to facilitate the integration of some of the most important functions o
         <dependency>
             <groupId>com.ubirch</groupId>
             <artifactId>ubirch-token-sdk</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
 
 Note that every system that might use the Light SDK and that performs externalities has to be explicitly known to the token manager. Every client has to configure their secret in their configuration file and the token manager must know of it.
