@@ -44,7 +44,7 @@ class DefaultTokenService @Inject() (
 
   override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
     for {
-      _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidClaimException(s"Owner Id is invalid (${accessToken.id} ${tokenClaim.ownerId})", accessToken.id))
+      _ <- earlyResponseIf(UUID.fromString(accessToken.id) != tokenClaim.ownerId)(InvalidClaimException(s"Owner Id is invalid (${accessToken.id} != ${tokenClaim.ownerId})", s"${accessToken.id} != ${tokenClaim.ownerId}"))
       tcd <- create(tokenClaim, category)
     } yield {
       tcd
@@ -208,7 +208,7 @@ class DefaultTokenService @Inject() (
     _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeIdentities && !tokenPurposedClaim.validateIdentities)(InvalidClaimException("Invalid Target Identities", "Target Identities are empty or invalid"))
     _ <- earlyResponseIf(tokenPurposedClaim.hasMaybeGroups && !tokenPurposedClaim.validateGroups)(InvalidClaimException("Invalid Target Groups", "Target Groups are empty or invalid"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
-    _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException(s"Invalid Scopes :: ${tokenPurposedClaim.scopes}", "Scopes are empty or invalid"))
+    _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException(s"Invalid Scopes", s"Scopes are empty or invalid, current=${tokenPurposedClaim.scopes}"))
   } yield true
 
 }

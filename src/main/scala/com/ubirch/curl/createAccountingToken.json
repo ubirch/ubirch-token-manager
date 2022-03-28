@@ -1,0 +1,10 @@
+{
+  "tenantId":"963995ed-ce12-4ea5-89dc-b181701d1d7b",
+  "purpose":"Accounting Service",
+  "targetIdentities":["*"],
+  "targetGroups": [],
+  "expiration": null,
+  "notBefore":null,
+  "originDomains": [],
+  "scopes": ["thing:getinfo", "thing:storedata"]
+}

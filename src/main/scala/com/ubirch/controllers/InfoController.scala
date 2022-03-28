@@ -80,9 +80,9 @@ class InfoController @Inject() (config: Config, val swagger: Swagger, jFormats: 
   }
 
   notFound {
-    asyncResult("not_found") { _ => _ =>
+    asyncResult("not_found") { implicit request => _ =>
       Task {
-        logger.info("controller=InfoController route_not_found={} query_string={}", requestPath, request.getQueryString)
+        logger.info("controller=InfoController route_not_found={} query_string={}", requestPath, Option(request).map(_.getQueryString).getOrElse(""))
         NotFound(NOK.noRouteFound(requestPath + " might exist in another universe"))
       }
     }
