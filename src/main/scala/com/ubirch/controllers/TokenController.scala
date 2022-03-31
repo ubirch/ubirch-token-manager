@@ -97,10 +97,10 @@ class TokenController @Inject() (
             .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
-                logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
-                BadRequest(NOK.tokenCreationError("Error creating token"))
+                logger.error("1.1 Error creating generic token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
+                BadRequest(NOK.tokenCreationError("Error creating generic token:" + e.getMessage))
               case e: Exception =>
-                logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                logger.error("1.2 Error creating generic token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
                 InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
             }
 
@@ -151,7 +151,7 @@ class TokenController @Inject() (
             .onErrorHandle {
               case e: ServiceException =>
                 logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
-                BadRequest(NOK.tokenCreationError("Error creating token"))
+                BadRequest(NOK.tokenCreationError("Error creating token:" + e.getMessage))
               case e: Exception =>
                 logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
                 InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))

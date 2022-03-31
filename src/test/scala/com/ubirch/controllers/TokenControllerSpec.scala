@@ -146,7 +146,7 @@ class TokenControllerSpec
 
       post("/v2/generic/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token"}""")
+        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating generic token:Owner Id is invalid (963995ed-ce12-4ea5-89dc-b181701d1d7b != 863995ed-ce12-4ea5-89dc-b181701d1d7b)"}""".stripMargin)
       }
 
     }
