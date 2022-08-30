@@ -66,7 +66,7 @@
         <scalatest.version>3.0.5</scalatest.version>
         <scala.logging.version>3.9.0</scala.logging.version>
 
-        <ubirch-crypto.version>2.1.4-SNAPSHOT</ubirch-crypto.version>
+        <ubirch-crypto.version>2.1.4</ubirch-crypto.version>
         <quill.cassandra.version>3.4.1</quill.cassandra.version>
         <embedded-cassandra>3.0.3</embedded-cassandra>
 
@@ -119,6 +119,10 @@
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
+	<repository>
+	  <id>gitlab-maven</id>
+	  <url>https://gitlab.com/api/v4/projects/37429227/packages/maven</url>
+	</repository>
     </repositories>
 
     <dependencies>
