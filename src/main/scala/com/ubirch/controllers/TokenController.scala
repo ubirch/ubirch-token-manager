@@ -4,10 +4,11 @@ import java.util.UUID
 
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
-import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
+import com.ubirch.controllers.concerns.{ ControllerBase, HMACAuthenticationSupport, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService, TokenKeyService, TokenService }
+import com.ubirch.services.key.HMACVerifier
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
@@ -29,9 +30,10 @@ class TokenController @Inject() (
     publicKeyPoolService: PublicKeyPoolService,
     tokenDecodingService: TokenDecodingService,
     tokenService: TokenService,
-    tokenKeyService: TokenKeyService
+    tokenKeyService: TokenKeyService,
+    val hmacVerifier: HMACVerifier
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
-  extends ControllerBase with KeycloakBearerAuthenticationSupport with TaskHelpers {
+  extends ControllerBase with KeycloakBearerAuthenticationSupport with TaskHelpers with HMACAuthenticationSupport {
 
   override protected val applicationDescription = "Token Controller"
   override protected implicit def jsonFormats: Formats = jFormats
@@ -162,6 +164,54 @@ class TokenController @Inject() (
         }
       }
     }
+  }
+
+  post("/v1/pat", operation(postV2TokenVerificationCreate)) {
+    hmacAuth() { _ =>
+      asyncResult("create_platform_access_token") { _ => _ =>
+        for {
+          readBody <- Task.delay(ReadBody.readJson[PlatformAccessTokenRequest](t => t.camelizeKeys))
+          res <- tokenService.createPAT(readBody.extracted)
+            .map { tkc => Ok(Return(tkc)) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
+                BadRequest(NOK.tokenCreationError("Error creating token:" + e.getMessage))
+              case e: Exception =>
+                logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+      }
+    }
+
+  }
+
+  delete("/v1/pat", operation(postV2TokenVerificationCreate)) {
+    hmacAuth() { _ =>
+      asyncResult("delete_platform_access_token") { _ => _ =>
+        for {
+          readBody <- Task.delay(ReadBody.readJson[PlatformAccessTokenDeleteRequest](t => t.camelizeKeys))
+          res <- tokenService.deletePAT(readBody.extracted)
+            .map { tkc => Ok(Return(tkc)) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
+                BadRequest(NOK.tokenCreationError("Error creating token:" + e.getMessage))
+              case e: Exception =>
+                logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+      }
+    }
+
   }
 
   val postV2Verify: SwaggerSupportSyntax.OperationBuilder =

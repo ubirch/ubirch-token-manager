@@ -38,6 +38,7 @@ object ConfPaths {
 
   trait TokenGenPaths {
     final val PRIV_KEY_IN_HEX = "tokenSystem.tokenGen.privKeyInHex"
+    final val HASH_SALT_SECRET = "tokenSystem.tokenGen.secretHashSalt"
   }
 
   trait TokenVerificationPaths {

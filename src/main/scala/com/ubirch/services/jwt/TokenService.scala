@@ -1,14 +1,15 @@
 package com.ubirch.services.jwt
 
-import java.util.{ Date, UUID }
+import java.util.{ Base64, Calendar, Date, UUID }
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import com.ubirch.ConfPaths.GenericConfPaths
+import com.ubirch.ConfPaths.{ GenericConfPaths, TokenGenPaths }
 import com.ubirch.controllers.concerns.Token
+import com.ubirch.crypto.utils.Utils
 import com.ubirch.models.Scope.asString
 import com.ubirch.models._
-import com.ubirch.util.TaskHelpers
+import com.ubirch.util.{ HashUtils, TaskHelpers }
 import com.ubirch.{ InvalidClaimException, TokenEncodingException }
 import monix.eval.Task
 
@@ -21,6 +22,8 @@ import pdi.jwt.exceptions.JwtValidationException
 trait TokenService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
   def create(accessToken: Token, tokenClaim: TokenPurposedClaim): Task[TokenCreationData]
+  def createPAT(platformAccessTokenRequest: PlatformAccessTokenRequest): Task[PlatformAccessToken]
+  def deletePAT(platformAccessTokenDeleteRequest: PlatformAccessTokenDeleteRequest): Task[Boolean]
   def list(accessToken: Token): Task[List[TokenRow]]
   def get(accessToken: Token, id: UUID): Task[Option[TokenRow]]
   def delete(accessToken: Token, tokenId: UUID): Task[Boolean]
@@ -36,11 +39,13 @@ class DefaultTokenService @Inject() (
     tokenDecodingService: TokenDecodingService,
     stateVerifier: StateVerifier,
     tokensDAO: TokensDAO,
+    patDAO: PlatformAccessTokenDAO,
     HMACVerifier: HMACVerifier,
     jsonConverterService: JsonConverterService
 ) extends TokenService with TaskHelpers with LazyLogging {
 
   private final val ENV = config.getString(GenericConfPaths.ENV)
+  private final val HASH_SALT_SECRET = config.getString(TokenGenPaths.HASH_SALT_SECRET)
 
   override def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData] = {
     for {
@@ -62,6 +67,29 @@ class DefaultTokenService @Inject() (
 
     } yield {
       tokeCreationData
+    }
+  }
+
+  override def createPAT(platformAccessTokenRequest: PlatformAccessTokenRequest): Task[PlatformAccessToken] = for {
+    _ <- Task.unit
+    pat = generatePAT(platformAccessTokenRequest.ownerId, platformAccessTokenRequest.validityDurationInDays)
+    insertion <- patDAO.insert(pat.asRow).headOptionL
+    _ = insertion match {
+      case Some(_) =>
+        logger.info("platform_access_token_insertion_succeeded={}", pat.asRow.toString)
+      case None =>
+        logger.error("platform_access_token_insertion_failed={}", pat.asRow.toString)
+    }
+  } yield pat
+
+  override def deletePAT(platformAccessTokenDeleteRequest: PlatformAccessTokenDeleteRequest): Task[Boolean] = {
+    for {
+      deletion <- patDAO.delete(platformAccessTokenDeleteRequest.ownerId, platformAccessTokenDeleteRequest.tokenHashValue).headOptionL
+
+      _ = if (deletion.isEmpty) logger.error("failed_platform_access_token_deletion. owner_id={}", platformAccessTokenDeleteRequest.ownerId.toString)
+      _ = if (deletion.isDefined) logger.info("platform_access_token_deletion_succeeded. owner_id={}", platformAccessTokenDeleteRequest.ownerId.toString)
+    } yield {
+      deletion.isDefined
     }
   }
 
@@ -210,5 +238,21 @@ class DefaultTokenService @Inject() (
     _ <- earlyResponseIf(!tokenPurposedClaim.validateOriginsDomains)(InvalidClaimException("Invalid Origin Domains", "Origin Domains are empty or invalid"))
     _ <- earlyResponseIf(!tokenPurposedClaim.validateScopes)(InvalidClaimException(s"Invalid Scopes", s"Scopes are empty or invalid, current=${tokenPurposedClaim.scopes}"))
   } yield true
+
+  private def generatePAT(ownerId: UUID, expireAfter: Option[Int]): PlatformAccessToken = {
+    val patValue = Base64.getEncoder.encodeToString(Utils.secureRandomBytes(32))
+    val hashedPatValue = HashUtils.sha256WithSalt(patValue, HASH_SALT_SECRET.getBytes)
+    val cal = Calendar.getInstance()
+    cal.setTime(new Date())
+    cal.add(Calendar.DATE, expireAfter.getOrElse(365))
+    val expireAt = cal.getTime
+    PlatformAccessToken(
+      ownerId,
+      patValue,
+      hashedPatValue,
+      new Date,
+      expireAt
+    )
+  }
 
 }

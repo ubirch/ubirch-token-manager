@@ -12,6 +12,8 @@ import javax.inject.{ Inject, Singleton }
 
 trait HMACVerifier {
   def verify(verificationRequest: VerificationRequest): Boolean
+
+  def verify(time: Date, signaturePair: String, data: Array[Byte]): Boolean
 }
 
 @Singleton
@@ -30,6 +32,17 @@ class DefaultHMACVerifier @Inject() (secretKeyPoolService: SecretKeyPoolService,
         key.asInstanceOf[SecretKey]
       ) == verificationRequest.signature) && secsInBetween < 120
     }).getOrElse(false)
+  }
+
+  def verify(time: Date, signaturePair: String, data: Array[Byte]): Boolean = {
+    val secsInBetween = new Duration(new DateTime(time), new DateTime()).abs().getStandardSeconds
+    val sigPointer = signaturePair.split("-", 2).headOption.getOrElse("")
+    val signature = signaturePair.split("-", 2).tail.headOption.getOrElse("")
+    val keyOpt = secretKeyPoolService.getKey(sigPointer)
+
+    keyOpt.exists { key =>
+      (HMAC.getHMAC(data, time, key.asInstanceOf[SecretKey]) == signature) && secsInBetween < 1230000
+    }
   }
 
 }
