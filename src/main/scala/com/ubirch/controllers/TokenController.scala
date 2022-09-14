@@ -166,7 +166,34 @@ class TokenController @Inject() (
     }
   }
 
-  post("/v1/pat", operation(postV2TokenVerificationCreate)) {
+  val postV1PlatformAccessTokenCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[PlatformAccessToken]("postV1PlatformAccessTokenCreate")
+      summary "Creates a Platform Access Token"
+      description "Creates a Platform Access Token for particular platform"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters (
+      bodyParam[PlatformAccessTokenRequest]("platformAccessTokenRequest").description(
+          "Note that validityDurationInDays can be read as number of days after which the token will be considered expired. That is to say: 'X days from now', where X == expiration AND now == the current time calculated on the server."
+      ),
+      headerParam[String]("X-Ubirch-Signature").description("Signed representation of the request body + timestamp + secret key"),
+      headerParam[String]("X-Ubirch-Timestamp").description("Current time in milliseconds")
+    )
+      responseMessages (
+      ResponseMessage(
+        SwaggerElements.ERROR_REQUEST_CODE_400,
+        jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+          .right
+          .getOrElse("Error creating token")
+      ),
+      ResponseMessage(
+        SwaggerElements.INTERNAL_ERROR_CODE_500,
+        jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+          .right
+          .getOrElse("Sorry, something went wrong on our end")
+      )
+    ))
+
+  post("/v1/pat", operation(postV1PlatformAccessTokenCreate)) {
     hmacAuth() { _ =>
       asyncResult("create_platform_access_token") { _ => _ =>
         for {
@@ -187,10 +214,34 @@ class TokenController @Inject() (
         }
       }
     }
-
   }
 
-  delete("/v1/pat", operation(postV2TokenVerificationCreate)) {
+  val deleteV1PlatformAccessTokenCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Boolean]("deleteV1PlatformAccessTokenCreate")
+      summary "Deletes a Platform Access Token"
+      description "Deletes a Platform Access Token for particular platform"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters (
+      bodyParam[PlatformAccessTokenDeleteRequest]("platformAccessTokenDeleteRequest"),
+      headerParam[String]("X-Ubirch-Signature").description("Signed representation of the request body + timestamp + secret key"),
+      headerParam[String]("X-Ubirch-Timestamp").description("Current time in milliseconds")
+    )
+      responseMessages (
+      ResponseMessage(
+        SwaggerElements.ERROR_REQUEST_CODE_400,
+        jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+          .right
+          .getOrElse("Error creating token")
+      ),
+      ResponseMessage(
+        SwaggerElements.INTERNAL_ERROR_CODE_500,
+        jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+          .right
+          .getOrElse("Sorry, something went wrong on our end")
+      )
+    ))
+
+  delete("/v1/pat", operation(deleteV1PlatformAccessTokenCreate)) {
     hmacAuth() { _ =>
       asyncResult("delete_platform_access_token") { _ => _ =>
         for {
@@ -211,7 +262,6 @@ class TokenController @Inject() (
         }
       }
     }
-
   }
 
   val postV2Verify: SwaggerSupportSyntax.OperationBuilder =
@@ -447,5 +497,8 @@ class TokenController @Inject() (
 
   def swaggerTokenAsHeader: SwaggerSupportSyntax.ParameterBuilder[String] = headerParam[String]("Authorization")
     .description("Token of the user. ADD \"bearer \" followed by a space) BEFORE THE TOKEN OTHERWISE IT WON'T WORK")
+
+  def swaggerHMACAsHeader: SwaggerSupportSyntax.ParameterBuilder[String] =
+    headerParam[String]("X-Ubirch-Signature").description("Token of the user. ADD \"bearer \" followed by a space) BEFORE THE TOKEN OTHERWISE IT WON'T WORK")
 
 }
