@@ -89,7 +89,7 @@ val defaultScalacOptions = Seq(
   "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
 )
 
-val excludedScalaCOption213 = Set("-Xlint:by-name-right-associative", "-Xlint:nullary-override", "-Xlint:unsound-match", "-Yno-adapted-args", "-Ypartial-unification", "-Ywarn-inaccessible", "-Ywarn-infer-any", "-Ywarn-nullary-override", "-Ywarn-nullary-unit", "-Xfuture")
+lazy val excludedScalaCOption213 = Set("-Xlint:by-name-right-associative", "-Xlint:nullary-override", "-Xlint:unsound-match", "-Yno-adapted-args", "-Ypartial-unification", "-Ywarn-inaccessible", "-Ywarn-infer-any", "-Ywarn-nullary-override", "-Ywarn-nullary-unit", "-Xfuture")
 
 libraryDependencies ++= Seq(
   "org.apache.httpcomponents" % "httpclient" % HttpClientVersion,
@@ -114,7 +114,7 @@ libraryDependencies ++= Seq(
 
 lazy val root = (project in file("."))
   .settings(
-    name := "token-manager-sdk",
+    name := "ubirch-token-sdk",
     crossScalaVersions := supportedScalaVersions,
     scalacOptions := {
       scalaBinaryVersion.value match {
