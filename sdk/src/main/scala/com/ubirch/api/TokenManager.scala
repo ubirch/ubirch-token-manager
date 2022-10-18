@@ -80,7 +80,7 @@ class Claims(val token: String, val all: JValue) {
     case xs => Left(xs.distinct)
   }
   val targetIdentitiesMerged: List[String] = targetIdentities.left.map(_.map(_.toString)).merge
-  val isTargetIdentitiesStarWildCard: Boolean = targetIdentities.right.map(_.contains("*")).fold(_ => false, x => x)
+  val isTargetIdentitiesStarWildCard: Boolean = targetIdentities.map(_.contains("*")).fold(_ => false, x => x)
   val hasMaybeTargetIdentities: Boolean = targetIdentitiesMerged.exists(_.nonEmpty)
 
   val targetGroups: Either[List[UUID], List[String]] = extractListUUID(TARGET_GROUPS_KEY.name, all) match {
@@ -157,11 +157,11 @@ object Claims {
   final val ISSUED_AT = "iat"
   final val JWT_ID = "jti"
 
-  final val PURPOSE_KEY = 'pur
-  final val TARGET_IDENTITIES_KEY = 'tid
-  final val TARGET_GROUPS_KEY = 'tgp
-  final val ORIGIN_KEY = 'ord
-  final val SCOPES_KEY = 'scp
+  final val PURPOSE_KEY = Symbol("pur")
+  final val TARGET_IDENTITIES_KEY = Symbol("tid")
+  final val TARGET_GROUPS_KEY = Symbol("tgp")
+  final val ORIGIN_KEY = Symbol("ord")
+  final val SCOPES_KEY = Symbol("scp")
 
   def extractStringAsOpt(key: String, obj: JValue): Option[String] = {
     (for {

@@ -5,11 +5,10 @@ import javax.inject.{ Inject, Singleton }
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.api._
-
+import com.ubirch.utils.ConfigHelper
 import com.typesafe.config.ConfigException.WrongType
 import pdi.jwt.{ Jwt, JwtAlgorithm }
 
-import scala.collection.JavaConverters._
 import scala.util.{ Failure, Try }
 
 @Singleton
@@ -21,12 +20,12 @@ class DefaultTokenVerification @Inject() (
 
   private val validIssuer: String = config.getString(Paths.VALID_ISSUER_PATH)
   private val validAudiences: Set[String] = {
-    Try(config.getStringList(Paths.VALID_AUDIENCE_PATH).asScala.toSet)
+    Try(ConfigHelper.getStringList(config, Paths.VALID_AUDIENCE_PATH).toSet)
       .recover {
         case _: WrongType => Set(config.getString(Paths.VALID_AUDIENCE_PATH))
       }.get
   }
-  private val validScopes: Set[String] = config.getStringList(Paths.VALID_SCOPES_PATH).asScala.toSet
+  private val validScopes: Set[String] = ConfigHelper.getStringList(config, Paths.VALID_SCOPES_PATH).toSet
 
   override def decodeAndVerify(jwt: String): Try[Claims] = {
     (for {

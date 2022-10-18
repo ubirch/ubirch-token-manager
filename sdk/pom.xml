@@ -20,8 +20,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ubirch</groupId>
-    <artifactId>ubirch-token-sdk</artifactId>
-    <version>2.1.0-SNAPSHOT</version>
+    <artifactId>ubirch-token-sdk_${scala.major.version}</artifactId>
+    <version>2.10.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
@@ -81,8 +81,7 @@
 
         <scala.major.version>2.12</scala.major.version>
         <scala.version>2.12.8</scala.version>
-        <scala.compat.version>2.12</scala.compat.version>
-        <scalatest.version>3.2.9</scalatest.version>
+        <scalatest.version>3.1.0</scalatest.version>
         <scala.logging.version>3.9.2</scala.logging.version>
 
         <ubirch-crypto.version>2.1.2</ubirch-crypto.version>
@@ -94,6 +93,7 @@
         <logback-classic.version>1.2.3</logback-classic.version>
         <jcl-over-slf4j.version>1.7.25</jcl-over-slf4j.version>
         <logstash-logback-encoder.version>7.2</logstash-logback-encoder.version>
+        <io.monix.version>3.1.0</io.monix.version>
 
         <bcpkix-jdk15on.version>1.70</bcpkix-jdk15on.version>
         <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
@@ -160,12 +160,13 @@
 
         <!--Monix-->
 
+        <!-- https://mvnrepository.com/artifact/io.monix/monix -->
         <dependency>
             <groupId>io.monix</groupId>
-            <artifactId>monix_${scala.compat.version}</artifactId>
-            <version>3.1.0</version>
-            <type>pom</type>
+            <artifactId>monix_${scala.major.version}</artifactId>
+            <version>${io.monix.version}</version>
         </dependency>
+
 
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -183,19 +184,19 @@
         <!-- Json -->
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-native_${scala.compat.version}</artifactId>
+            <artifactId>json4s-native_${scala.major.version}</artifactId>
             <version>${json4s-native.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-jackson_${scala.compat.version}</artifactId>
+            <artifactId>json4s-jackson_${scala.major.version}</artifactId>
             <version>${json4s-jackson.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-ext_${scala.compat.version}</artifactId>
+            <artifactId>json4s-ext_${scala.major.version}</artifactId>
             <version>${json4s-ext}</version>
         </dependency>
 
@@ -231,7 +232,7 @@
 
         <dependency>
             <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_${scala.compat.version}</artifactId>
+            <artifactId>scala-logging_${scala.major.version}</artifactId>
             <version>${scala.logging.version}</version>
         </dependency>
 
@@ -245,7 +246,7 @@
         <!-- https://mvnrepository.com/artifact/com.pauldijou/jwt-core -->
         <dependency>
             <groupId>com.pauldijou</groupId>
-            <artifactId>jwt-core_${scala.compat.version}</artifactId>
+            <artifactId>jwt-core_${scala.major.version}</artifactId>
             <version>${jwt-core.version}</version>
         </dependency>
 
@@ -313,8 +314,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-
 
             <!-- copy all dependencies into the target/lib dir for our docker image -->
             <plugin>
@@ -387,6 +386,25 @@
                     <skip>false</skip>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.spurint.maven.plugins</groupId>
+                <artifactId>scala-cross-maven-plugin</artifactId>
+                <version>0.3.0</version>
+                <executions>
+                    <execution>
+                        <id>rewrite-pom</id>
+                        <goals>
+                            <goal>rewrite-pom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- plugin to check for vulnerable dependencies; invoke by mvn org.owasp:dependency-check-maven:check -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>7.1.0</version>
+            </plugin>
         </plugins>
     </build>
 
@@ -449,39 +467,18 @@
                             <keyname>7a672196888951a7cccdc200810233050cd1c9f0</keyname>
                         </configuration>
                     </plugin>
-                    <!-- plugin to check for vulnerable dependencies; invoke by mvn org.owasp:dependency-check-maven:check -->
-                    <plugin>
-                        <groupId>org.owasp</groupId>
-                        <artifactId>dependency-check-maven</artifactId>
-                        <version>7.1.0</version>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.spurint.maven.plugins</groupId>
-                        <artifactId>scala-cross-maven-plugin</artifactId>
-                        <version>{see tags for latest version}</version>
-                        <executions>
-                            <execution>
-                                <id>rewrite-pom</id>
-                                <goals>
-                                    <goal>rewrite-pom</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
                 </plugins>
             </build>
         </profile>
         <profile>
             <id>scala-2.12</id>
             <properties>
-                <scala.binary.version>2.12</scala.binary.version>
                 <scala.version>2.12.8</scala.version>
                 <scala.major.version>2.12</scala.major.version>
-                <scala.compat.version>2.12</scala.compat.version>
             </properties>
             <build>
                 <plugins>
+
                     <plugin>
                             <!-- see http://davidb.github.com/scala-maven-plugin -->
                             <groupId>net.alchim31.maven</groupId>
@@ -496,6 +493,7 @@
                                         <goal>doc-jar</goal>
                                     </goals>
                                     <configuration>
+                                        <sourceDir>${project.basedir}/src/main/scala, ${project.basedir}/src/main/scala-2.12</sourceDir>
                                         <args>
                                             <arg>-deprecation
                                             </arg>                      <!--  Emit warning and location for usages of deprecated APIs. -->
@@ -586,10 +584,8 @@
         <profile>
             <id>scala-2.13</id>
             <properties>
-                <scala.binary.version>2.13</scala.binary.version>
                 <scala.version>2.13.9</scala.version>
                 <scala.major.version>2.13</scala.major.version>
-                <scala.compat.version>2.13</scala.compat.version>
             </properties>
             <build>
                 <plugins>
@@ -607,6 +603,7 @@
                                     <goal>doc-jar</goal>
                                 </goals>
                                 <configuration>
+                                    <sourceDir>${project.basedir}/src/main/scala, ${project.basedir}/src/main/scala-2.13</sourceDir>
                                     <args>
                                         <arg>-deprecation
                                         </arg>                      <!--  Emit warning and location for usages of deprecated APIs. -->
