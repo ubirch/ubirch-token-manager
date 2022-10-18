@@ -19,10 +19,10 @@ class DefaultHMAC @Inject() (config: Config) extends HMAC {
 
   Security.addProvider(new BouncyCastleProvider())
 
-  private final val SECRET = config.getString(Paths.SECRET_PATH).split("-", 2)
-  private final val SECRET_POINTER: String = SECRET.headOption.getOrElse("")
-  private final val SECRET_KEY: String = SECRET.tail.headOption.getOrElse("")
-  private final val MAC_KEY = new SecretKeySpec(Base64.getDecoder.decode(SECRET_KEY), "HmacSHA256")
+  final private val SECRET = config.getString(Paths.SECRET_PATH).split("-", 2)
+  final private val SECRET_POINTER: String = SECRET.headOption.getOrElse("")
+  final private val SECRET_KEY: String = SECRET.tail.headOption.getOrElse("")
+  final private val MAC_KEY = new SecretKeySpec(Base64.getDecoder.decode(SECRET_KEY), "HmacSHA256")
 
   override def getHMAC(data: Array[Byte], time: Date): String = {
     val fullData = Arrays.concatenate(data, time.getTime.toString.getBytes(StandardCharsets.UTF_8))

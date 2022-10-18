@@ -17,15 +17,18 @@ class DefaultExternalGetter @Inject() (config: Config, HMAC: HMAC) extends Exter
 
   private val httpclient: CloseableHttpClient = HttpClients.createDefault
 
-  private final val TOKEN_MANAGER_ENDPOINT: String = config.getString(Paths.TOKEN_SERVICE_PATH)
+  final private val TOKEN_MANAGER_ENDPOINT: String = config.getString(Paths.TOKEN_SERVICE_PATH)
 
   def execute(request: HttpUriRequest): ExternalResponseData[Array[Byte]] = {
-    httpclient.execute(request, (httpResponse: HttpResponse) =>
-      ExternalResponseData(
-        httpResponse.getStatusLine.getStatusCode,
-        httpResponse.getAllHeaders.map(x => (x.getName, List(x.getValue))).toMap,
-        EntityUtils.toByteArray(httpResponse.getEntity)
-      ))
+    httpclient.execute(
+      request,
+      (httpResponse: HttpResponse) =>
+        ExternalResponseData(
+          httpResponse.getStatusLine.getStatusCode,
+          httpResponse.getAllHeaders.map(x => (x.getName, List(x.getValue))).toMap,
+          EntityUtils.toByteArray(httpResponse.getEntity)
+        )
+    )
   }
 
   def calculateHmac(body: Array[Byte]): (String, String) = {

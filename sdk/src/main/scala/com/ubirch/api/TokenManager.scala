@@ -20,7 +20,9 @@ trait TokenManager {
   def decodeAndVerify(jwt: String): Try[Claims]
   def getClaims(token: String): Try[Claims]
   def externalStateVerify(accessToken: String, identity: UUID): Task[Boolean]
-  def externalStateVerifySync(accessToken: String, identity: UUID)(timeout: Duration)(implicit s: Scheduler, permit: CanBlock): Either[Throwable, Boolean]
+  def externalStateVerifySync(accessToken: String, identity: UUID)(timeout: Duration)(
+    implicit s: Scheduler,
+    permit: CanBlock): Either[Throwable, Boolean]
 }
 
 trait TokenPublicKey {
@@ -72,20 +74,20 @@ class Claims(val token: String, val all: JValue) {
   val subject: String = extractString(SUBJECT, all)
   val audiences: List[String] = extractListString(AUDIENCE, all) match {
     case Nil => List(extractString(AUDIENCE, all))
-    case xs => xs
+    case xs  => xs
   }
   val purpose: String = extractString(PURPOSE_KEY.name, all)
   val targetIdentities: Either[List[UUID], List[String]] = extractListUUID(TARGET_IDENTITIES_KEY.name, all) match {
     case Nil => Right(extractListString(TARGET_IDENTITIES_KEY.name, all).distinct)
-    case xs => Left(xs.distinct)
+    case xs  => Left(xs.distinct)
   }
   val targetIdentitiesMerged: List[String] = targetIdentities.left.map(_.map(_.toString)).merge
-  val isTargetIdentitiesStarWildCard: Boolean = targetIdentities.right.map(_.contains("*")).fold(_ => false, x => x)
+  val isTargetIdentitiesStarWildCard: Boolean = targetIdentities.map(_.contains("*")).fold(_ => false, x => x)
   val hasMaybeTargetIdentities: Boolean = targetIdentitiesMerged.exists(_.nonEmpty)
 
   val targetGroups: Either[List[UUID], List[String]] = extractListUUID(TARGET_GROUPS_KEY.name, all) match {
     case Nil => Right(extractListString(TARGET_GROUPS_KEY.name, all).distinct)
-    case xs => Left(xs.distinct)
+    case xs  => Left(xs.distinct)
   }
   val hasMaybeGroups: Boolean = targetGroups.left.map(_.map(_.toString)).merge.exists(_.nonEmpty)
 
@@ -111,11 +113,13 @@ class Claims(val token: String, val all: JValue) {
       if (isTargetIdentitiesStarWildCard) true
       else targetIdentities.left.map(_.contains(uuid)) match {
         case Left(validation) => validation
-        case Right(_) => false
+        case Right(_)         => false
       }
 
     if (res) Success(uuid)
-    else Failure(InvalidClaimException("Invalid UUID", s"upp_uuid_not_equals_target_identities=$uuid != ${targetIdentitiesMerged.mkString(",")}"))
+    else Failure(InvalidClaimException(
+      "Invalid UUID",
+      s"upp_uuid_not_equals_target_identities=$uuid != ${targetIdentitiesMerged.mkString(",")}"))
   }
 
   def validateOrigin(maybeOrigin: Option[String]): Try[List[URL]] = {
@@ -125,7 +129,11 @@ class Claims(val token: String, val all: JValue) {
     } yield res) match {
       case Success(true) => Success(originDomains)
       case _ =>
-        Failure(InvalidClaimException("Invalid Origin", s"origin_not_equals_origin_domains=${maybeOrigin.filter(_.nonEmpty).getOrElse("NO-ORIGIN")} != ${originDomains.map(_.toString).mkString(",")}"))
+        Failure(InvalidClaimException(
+          "Invalid Origin",
+          s"origin_not_equals_origin_domains=${maybeOrigin.filter(_.nonEmpty).getOrElse(
+            "NO-ORIGIN")} != ${originDomains.map(_.toString).mkString(",")}"
+        ))
     }
   }
 
@@ -157,11 +165,11 @@ object Claims {
   final val ISSUED_AT = "iat"
   final val JWT_ID = "jti"
 
-  final val PURPOSE_KEY = 'pur
-  final val TARGET_IDENTITIES_KEY = 'tid
-  final val TARGET_GROUPS_KEY = 'tgp
-  final val ORIGIN_KEY = 'ord
-  final val SCOPES_KEY = 'scp
+  final val PURPOSE_KEY = Symbol("pur")
+  final val TARGET_IDENTITIES_KEY = Symbol("tid")
+  final val TARGET_GROUPS_KEY = Symbol("tgp")
+  final val ORIGIN_KEY = Symbol("ord")
+  final val SCOPES_KEY = Symbol("scp")
 
   def extractStringAsOpt(key: String, obj: JValue): Option[String] = {
     (for {

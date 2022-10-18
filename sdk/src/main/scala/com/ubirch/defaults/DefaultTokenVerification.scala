@@ -9,30 +9,31 @@ import com.ubirch.api._
 import com.typesafe.config.ConfigException.WrongType
 import pdi.jwt.{ Jwt, JwtAlgorithm }
 
-import scala.collection.JavaConverters._
 import scala.util.{ Failure, Try }
 
 @Singleton
 class DefaultTokenVerification @Inject() (
-    config: Config,
-    tokenPublicKey: TokenPublicKey,
-    jsonConverterService: JsonConverterService
-) extends TokenVerification with LazyLogging {
+  config: Config,
+  tokenPublicKey: TokenPublicKey,
+  jsonConverterService: JsonConverterService
+) extends TokenVerification
+  with LazyLogging {
 
   private val validIssuer: String = config.getString(Paths.VALID_ISSUER_PATH)
   private val validAudiences: Set[String] = {
-    Try(config.getStringList(Paths.VALID_AUDIENCE_PATH).asScala.toSet)
+    Try(ConfigHelper.getStringList(config, Paths.VALID_AUDIENCE_PATH).toSet)
       .recover {
         case _: WrongType => Set(config.getString(Paths.VALID_AUDIENCE_PATH))
       }.get
   }
-  private val validScopes: Set[String] = config.getStringList(Paths.VALID_SCOPES_PATH).asScala.toSet
+  private val validScopes: Set[String] = ConfigHelper.getStringList(config, Paths.VALID_SCOPES_PATH).toSet
 
   override def decodeAndVerify(jwt: String): Try[Claims] = {
     (for {
 
-      _ <- Try(jwt).filter(_.nonEmpty).recover { case _: Exception =>
-        throw new IllegalArgumentException("Token can't be empty")
+      _ <- Try(jwt).filter(_.nonEmpty).recover {
+        case _: Exception =>
+          throw new IllegalArgumentException("Token can't be empty")
       }
 
       (_, p, _) <- Jwt.decodeRawAll(jwt, tokenPublicKey.publicKey, Seq(JwtAlgorithm.ES256))
@@ -46,7 +47,11 @@ class DefaultTokenVerification @Inject() (
       _ = if (!isIssuerValid) throw InvalidClaimException("Invalid issuer", p)
 
       _ <- Try(claims.audiences).filter(_.exists(validAudiences.contains))
-        .recover { case _: Exception => throw InvalidClaimException(s"Invalid audience :: ${claims.audiences.mkString(",")} not found in ${validAudiences.mkString(",")}", p) }
+        .recover {
+          case _: Exception => throw InvalidClaimException(
+              s"Invalid audience :: ${claims.audiences.mkString(",")} not found in ${validAudiences.mkString(",")}",
+              p)
+        }
 
       _ <- Try(claims.subject)
         .filter(_.nonEmpty)
@@ -54,7 +59,11 @@ class DefaultTokenVerification @Inject() (
         .recover { case e: Exception => throw InvalidClaimException(e.getMessage, p) }
 
       _ <- Try(claims.scopes).filter(_.exists(validScopes.contains))
-        .recover { case _: Exception => throw InvalidClaimException(s"Invalid Scopes :: ${claims.scopes.mkString(",")} not found in ${validScopes.mkString(",")}", p) }
+        .recover {
+          case _: Exception => throw InvalidClaimException(
+              s"Invalid Scopes :: ${claims.scopes.mkString(",")} not found in ${validScopes.mkString(",")}",
+              p)
+        }
 
       _ <- Try(claims.purpose).filter(_.nonEmpty)
         .recover { case e: Exception => throw InvalidClaimException(e.getMessage, p) }

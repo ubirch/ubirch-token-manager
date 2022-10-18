@@ -2,7 +2,14 @@ package com.ubirch.defaults
 
 import java.util.UUID
 
-import com.ubirch.api.{ Claims, ExternalStateVerifier, InvalidClaimException, TokenManager, TokenVerification, VerificationRequest }
+import com.ubirch.api.{
+  Claims,
+  ExternalStateVerifier,
+  InvalidClaimException,
+  TokenManager,
+  TokenVerification,
+  VerificationRequest
+}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.annotations.{ UnsafeBecauseBlocking, UnsafeBecauseImpure }
@@ -22,7 +29,8 @@ abstract class TokenManagerImpl extends TokenManager {
       val claims = tokenVerification.decodeAndVerify(y)
       if (isBearer && claims.isSuccess) claims
       else Failure(InvalidClaimException("Invalid Check", "Either is not Bearer or extraction failed."))
-    case _ => Failure(InvalidClaimException("Invalid Elements", "The token definition seems not to have the required parts"))
+    case _ =>
+      Failure(InvalidClaimException("Invalid Elements", "The token definition seems not to have the required parts"))
   }
 
   override def decodeAndVerify(jwt: String): Try[Claims] = tokenVerification.decodeAndVerify(jwt)
@@ -32,8 +40,9 @@ abstract class TokenManagerImpl extends TokenManager {
 
   @UnsafeBecauseImpure
   @UnsafeBecauseBlocking
-  override def externalStateVerifySync(accessToken: String, identity: UUID)
-    (timeout: Duration)(implicit s: Scheduler, permit: CanBlock): Either[Throwable, Boolean] =
+  override def externalStateVerifySync(accessToken: String, identity: UUID)(timeout: Duration)(
+    implicit s: Scheduler,
+    permit: CanBlock): Either[Throwable, Boolean] =
     externalStateVerify(accessToken, identity).attempt.runSyncUnsafe(timeout)
 
 }

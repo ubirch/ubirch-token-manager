@@ -33,3 +33,28 @@ token {
   secret: "judgDg3jaCDM-QwKFZpTiEcXnLdbbGEdzcO57/yoIVGOpixXfeKGLDdg="
 }
 ```
+
+## Compile
+```shell
+# compile in Scala 2.12
+sbt "++ 2.12.16" "compile"
+
+# compile in Scala 2.13
+sbt "++ 2.13.10" "compile"
+```
+
+## Publish
+```shell
+# publish artifact in Scala 2.12
+sbt "++ 2.12.16" "publish"
+
+# publish artifact in Scala 2.13
+sbt "++ 2.13.10" "publish"
+```
+
+## Dependency check
+```shell
+sbt dependencyCheck
+```
+
+See [the detail](https://github.com/albuch/sbt-dependency-check).

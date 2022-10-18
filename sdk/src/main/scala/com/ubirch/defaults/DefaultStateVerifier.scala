@@ -10,7 +10,11 @@ import com.typesafe.scalalogging.LazyLogging
 import org.json4s.JsonAST.{ JBool, JField, JObject }
 
 @Singleton
-class DefaultStateVerifier @Inject() (externalStateGetter: ExternalStateGetter, jsonConverterService: DefaultJsonConverterService) extends ExternalStateVerifier with LazyLogging {
+class DefaultStateVerifier @Inject() (
+  externalStateGetter: ExternalStateGetter,
+  jsonConverterService: DefaultJsonConverterService)
+  extends ExternalStateVerifier
+  with LazyLogging {
 
   def isResponseOK(bodyAsString: String): Task[Boolean] = {
     for {

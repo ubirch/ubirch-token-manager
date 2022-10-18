@@ -20,9 +20,7 @@ trait TestBase
   with BeforeAndAfterAll
   with MustMatchers
   with Awaits
-  with ExecutionContextsTests {
-
-}
+  with ExecutionContextsTests {}
 
 trait ExecutionContextsTests {
   implicit lazy val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(5))
