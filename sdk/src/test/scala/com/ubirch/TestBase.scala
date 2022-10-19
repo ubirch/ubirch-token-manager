@@ -4,8 +4,9 @@ import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers, WordSpec }
-
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import java.util.concurrent.Executors
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor, Future }
@@ -14,11 +15,11 @@ import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor, Fut
   * Represents base for a convenient test
   */
 trait TestBase
-  extends WordSpec
+  extends AnyWordSpec
   with ScalaFutures
   with BeforeAndAfterEach
   with BeforeAndAfterAll
-  with MustMatchers
+  with Matchers
   with Awaits
   with ExecutionContextsTests {}
 
