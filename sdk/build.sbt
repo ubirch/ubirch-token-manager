@@ -17,7 +17,7 @@
 ThisBuild / organization := "com.ubirch"
 ThisBuild / organizationName := "ubirch GmbH"
 ThisBuild / description := "Light library to integrate Token Verification"
-developers := List(
+ThisBuild / developers := List(
   Developer("carlos", "Carlos Sanchez", "carlos.sanchezi@ubirch.com", url("https://www.ubirch.com/"))
 )
 licenses := Seq("Apache 2" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
@@ -123,9 +123,8 @@ lazy val root = (project in file("."))
         case _      => defaultScalacOptions
       }
     },
-    publishTo :=
-        Some("gitlab-maven" at "https://gitlab.com/api/v4/projects/37429227/packages/maven"),
+    publishMavenStyle := true,
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab"),
+    GitlabPlugin.autoImport.gitlabProjectId := Some(37429227),
     scalafmtOnCompile := true
   )
-
-credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab")
