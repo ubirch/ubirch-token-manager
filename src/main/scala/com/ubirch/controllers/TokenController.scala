@@ -4,10 +4,11 @@ import java.util.UUID
 
 import com.typesafe.config.Config
 import com.ubirch.ConfPaths.GenericConfPaths
-import com.ubirch.controllers.concerns.{ ControllerBase, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
+import com.ubirch.controllers.concerns.{ ControllerBase, HMACAuthenticationSupport, KeycloakBearerAuthStrategy, KeycloakBearerAuthenticationSupport, SwaggerElements }
 import com.ubirch.models._
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService, TokenKeyService, TokenService }
+import com.ubirch.services.key.HMACVerifier
 import com.ubirch.util.TaskHelpers
 import com.ubirch.{ DeletingException, InvalidParamException, ServiceException }
 import io.prometheus.client.Counter
@@ -29,9 +30,10 @@ class TokenController @Inject() (
     publicKeyPoolService: PublicKeyPoolService,
     tokenDecodingService: TokenDecodingService,
     tokenService: TokenService,
-    tokenKeyService: TokenKeyService
+    tokenKeyService: TokenKeyService,
+    val hmacVerifier: HMACVerifier
 )(implicit val executor: ExecutionContext, scheduler: Scheduler)
-  extends ControllerBase with KeycloakBearerAuthenticationSupport with TaskHelpers {
+  extends ControllerBase with KeycloakBearerAuthenticationSupport with TaskHelpers with HMACAuthenticationSupport {
 
   override protected val applicationDescription = "Token Controller"
   override protected implicit def jsonFormats: Formats = jFormats
@@ -147,6 +149,104 @@ class TokenController @Inject() (
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenPurposedClaim](t => t.camelizeKeys))
           res <- tokenService.create(token, readBody.extracted)
+            .map { tkc => Ok(Return(tkc)) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
+                BadRequest(NOK.tokenCreationError("Error creating token:" + e.getMessage))
+              case e: Exception =>
+                logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+      }
+    }
+  }
+
+  val postV1PlatformAccessTokenCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[PlatformAccessToken]("postV1PlatformAccessTokenCreate")
+      summary "Creates a Platform Access Token"
+      description "Creates a Platform Access Token for particular platform"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters (
+      bodyParam[PlatformAccessTokenRequest]("platformAccessTokenRequest").description(
+          "Note that validityDurationInDays can be read as number of days after which the token will be considered expired. That is to say: 'X days from now', where X == expiration AND now == the current time calculated on the server."
+      ),
+      headerParam[String]("X-Ubirch-Signature").description("Signed representation of the request body + timestamp + secret key"),
+      headerParam[String]("X-Ubirch-Timestamp").description("Current time in milliseconds")
+    )
+      responseMessages (
+      ResponseMessage(
+        SwaggerElements.ERROR_REQUEST_CODE_400,
+        jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+          .right
+          .getOrElse("Error creating token")
+      ),
+      ResponseMessage(
+        SwaggerElements.INTERNAL_ERROR_CODE_500,
+        jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+          .right
+          .getOrElse("Sorry, something went wrong on our end")
+      )
+    ))
+
+  post("/v1/pat", operation(postV1PlatformAccessTokenCreate)) {
+    hmacAuth() { _ =>
+      asyncResult("create_platform_access_token") { _ => _ =>
+        for {
+          readBody <- Task.delay(ReadBody.readJson[PlatformAccessTokenRequest](t => t.camelizeKeys))
+          res <- tokenService.createPAT(readBody.extracted)
+            .map { tkc => Ok(Return(tkc)) }
+            .onErrorHandle {
+              case e: ServiceException =>
+                logger.error("1.1 Error creating token: exception={} message={} reason={}", e.name, e.getMessage, e.getReason)
+                BadRequest(NOK.tokenCreationError("Error creating token:" + e.getMessage))
+              case e: Exception =>
+                logger.error("1.2 Error creating token: exception={} message={}", e.getClass.getCanonicalName, e.getMessage)
+                InternalServerError(NOK.serverError("1.2 Sorry, something went wrong on our end"))
+            }
+
+        } yield {
+          res
+        }
+      }
+    }
+  }
+
+  val deleteV1PlatformAccessTokenCreate: SwaggerSupportSyntax.OperationBuilder =
+    (apiOperation[Boolean]("deleteV1PlatformAccessTokenCreate")
+      summary "Deletes a Platform Access Token"
+      description "Deletes a Platform Access Token for particular platform"
+      tags SwaggerElements.TAG_TOKEN_SERVICE
+      parameters (
+      bodyParam[PlatformAccessTokenDeleteRequest]("platformAccessTokenDeleteRequest"),
+      headerParam[String]("X-Ubirch-Signature").description("Signed representation of the request body + timestamp + secret key"),
+      headerParam[String]("X-Ubirch-Timestamp").description("Current time in milliseconds")
+    )
+      responseMessages (
+      ResponseMessage(
+        SwaggerElements.ERROR_REQUEST_CODE_400,
+        jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
+          .right
+          .getOrElse("Error creating token")
+      ),
+      ResponseMessage(
+        SwaggerElements.INTERNAL_ERROR_CODE_500,
+        jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
+          .right
+          .getOrElse("Sorry, something went wrong on our end")
+      )
+    ))
+
+  delete("/v1/pat", operation(deleteV1PlatformAccessTokenCreate)) {
+    hmacAuth() { _ =>
+      asyncResult("delete_platform_access_token") { _ => _ =>
+        for {
+          readBody <- Task.delay(ReadBody.readJson[PlatformAccessTokenDeleteRequest](t => t.camelizeKeys))
+          res <- tokenService.deletePAT(readBody.extracted)
             .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
@@ -397,5 +497,8 @@ class TokenController @Inject() (
 
   def swaggerTokenAsHeader: SwaggerSupportSyntax.ParameterBuilder[String] = headerParam[String]("Authorization")
     .description("Token of the user. ADD \"bearer \" followed by a space) BEFORE THE TOKEN OTHERWISE IT WON'T WORK")
+
+  def swaggerHMACAsHeader: SwaggerSupportSyntax.ParameterBuilder[String] =
+    headerParam[String]("X-Ubirch-Signature").description("Token of the user. ADD \"bearer \" followed by a space) BEFORE THE TOKEN OTHERWISE IT WON'T WORK")
 
 }

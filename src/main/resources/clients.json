@@ -18,5 +18,10 @@
   {
     "client":  "viz-enabler",
     "secret": "OIqh+Z3uzD0E-WOUXbhy79Y7lg/j537VcZubOwdYggZM1WEg4Y0lYSSlx"
+  },
+  {
+    "client":  "kyct-platform",
+    "secret": "x3CDsjXG5BFx-HkmTDdY2MkBp+9KxntYTX+A2AKqR9AsOzQLvvnXUzke5"
   }
+
 ]
