@@ -21,7 +21,7 @@ class DefaultStateVerifier @Inject() (
       resBodyJValue <- Task.fromEither(jsonConverterService.toJValue(bodyAsString))
       isOK <- Task.delay {
         for {
-          JObject(obj) <- resBodyJValue
+          JObject(obj) <- resBodyJValue.children
           JField("ok", JBool(ok)) <- obj
           JField("data", JBool(data)) <- obj
         } yield ok && data

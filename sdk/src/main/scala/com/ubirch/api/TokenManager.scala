@@ -21,7 +21,7 @@ trait TokenManager {
   def getClaims(token: String): Try[Claims]
   def externalStateVerify(accessToken: String, identity: UUID): Task[Boolean]
   def externalStateVerifySync(accessToken: String, identity: UUID)(timeout: Duration)(
-    implicit s: Scheduler,
+    using s: Scheduler,
     permit: CanBlock): Either[Throwable, Boolean]
 }
 
@@ -45,7 +45,7 @@ trait JsonConverterService {
   def toJValue(value: String): Either[Exception, JValue]
   def toJValue[T](obj: T): Either[Exception, JValue]
   def as[T: Manifest](value: String): Either[Exception, T]
-  def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T
+  def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(using mf: Manifest[T]): T
 }
 
 case class VerificationRequest(token: String, identity: UUID)
@@ -165,15 +165,15 @@ object Claims {
   final val ISSUED_AT = "iat"
   final val JWT_ID = "jti"
 
-  final val PURPOSE_KEY = Symbol("pur")
-  final val TARGET_IDENTITIES_KEY = Symbol("tid")
-  final val TARGET_GROUPS_KEY = Symbol("tgp")
-  final val ORIGIN_KEY = Symbol("ord")
-  final val SCOPES_KEY = Symbol("scp")
+  final val PURPOSE_KEY: Symbol = Symbol("pur")
+  final val TARGET_IDENTITIES_KEY: Symbol = Symbol("tid")
+  final val TARGET_GROUPS_KEY: Symbol = Symbol("tgp")
+  final val ORIGIN_KEY: Symbol = Symbol("ord")
+  final val SCOPES_KEY: Symbol = Symbol("scp")
 
   def extractStringAsOpt(key: String, obj: JValue): Option[String] = {
     (for {
-      JObject(child) <- obj
+      JObject(child) <- obj.children
       JField(k, JString(value)) <- child if k == key
     } yield value).headOption
   }
@@ -182,7 +182,7 @@ object Claims {
 
   def extractListString(key: String, obj: JValue): List[String] = {
     for {
-      JObject(child) <- obj
+      JObject(child) <- obj.children
       JField(k, JArray(scopes)) <- child if k == key
       JString(scope) <- scopes
     } yield scope
@@ -190,7 +190,7 @@ object Claims {
 
   def extractListUUID(key: String, obj: JValue): List[UUID] = {
     for {
-      JObject(child) <- obj
+      JObject(child) <- obj.children
       JField(k, JArray(ids)) <- child if k == key
       JString(id) <- ids
       tryUUID = Try(UUID.fromString(id)) if tryUUID.isSuccess
@@ -199,7 +199,7 @@ object Claims {
 
   def extractListURL(key: String, obj: JValue): List[URL] = {
     for {
-      JObject(child) <- obj
+      JObject(child) <- obj.children
       JField(k, JArray(urls)) <- child if k == key
       JString(url) <- urls
       tryURL = Try(new URL(url)) if tryURL.isSuccess
