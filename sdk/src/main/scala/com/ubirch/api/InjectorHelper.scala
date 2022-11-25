@@ -42,15 +42,18 @@ abstract class InjectorHelper(val modules: List[Module]) extends LazyLogging {
 }
 
 object InjectorHelper {
+
   /**
     * Represents an Exception for when injecting a component
-    * @param message Represents the error message
+    * @param message
+    *   Represents the error message
     */
   case class InjectionException(message: String) extends Exception(message)
 
   /**
     * Represents an Exception for when creating an injector a component
-    * @param message Represents the error message
+    * @param message
+    *   Represents the error message
     */
   case class InjectorCreationException(message: String) extends Exception(message)
 }

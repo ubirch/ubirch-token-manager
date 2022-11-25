@@ -11,10 +11,11 @@ import org.json4s.jvalue2extractable
 
 /**
   * Represents a default internal service or component for managing Json.
-  * @param formats Represents the json formats used for parsing.
+  * @param formats
+  *   Represents the json formats used for parsing.
   */
 @Singleton
-class DefaultJsonConverterService @Inject() () (using formats: Formats) extends JsonConverterService {
+class DefaultJsonConverterService @Inject() ()(using formats: Formats) extends JsonConverterService {
 
   override def toString(value: JValue): String = compact(render(value))
 

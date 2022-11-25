@@ -80,5 +80,6 @@ lazy val root = (project in file("."))
     // push pom
     publishMavenStyle := true,
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab"),
-    GitlabPlugin.autoImport.gitlabProjectId := Some(37429227)
+    GitlabPlugin.autoImport.gitlabProjectId := Some(37429227),
+    scalafmtOnCompile := true
   )

@@ -132,7 +132,7 @@ class Claims(val token: String, val all: JValue) {
         Failure(InvalidClaimException(
           "Invalid Origin",
           s"origin_not_equals_origin_domains=${maybeOrigin.filter(_.nonEmpty).getOrElse(
-            "NO-ORIGIN")} != ${originDomains.map(_.toString).mkString(",")}"
+              "NO-ORIGIN")} != ${originDomains.map(_.toString).mkString(",")}"
         ))
     }
   }
