@@ -20,13 +20,15 @@ ThisBuild / description := "Light library to integrate Token Verification"
 ThisBuild / developers := List(
   Developer("carlos", "Carlos Sanchez", "carlos.sanchezi@ubirch.com", url("https://www.ubirch.com/"))
 )
+/** @see [[https://www.scala-sbt.org/1.x/docs/Publishing.html#Version+scheme]] */
+ThisBuild / versionScheme := Some("semver-spec")
 licenses := Seq("Apache 2" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 lazy val scala212 = "2.12.16"
 lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala213, scala212)
 
-ThisBuild / version := "2.2.0-SNAPSHOT"
+ThisBuild / version := "2.2.0"
 ThisBuild / scalaVersion := scala213
 
 val HttpClientVersion = "4.5.13"
@@ -123,6 +125,7 @@ lazy val root = (project in file("."))
         case _      => defaultScalacOptions
       }
     },
+    // push pom
     publishMavenStyle := true,
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials.gitlab"),
     GitlabPlugin.autoImport.gitlabProjectId := Some(37429227),

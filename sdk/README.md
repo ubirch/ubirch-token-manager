@@ -50,6 +50,9 @@ sbt "++ 2.12.16" "publish"
 
 # publish artifact in Scala 2.13
 sbt "++ 2.13.10" "publish"
+
+# publish both of Scala 2.12 and 2.13
+sbt +publish
 ```
 
 ## Dependency check
