@@ -7,13 +7,15 @@ import org.json4s.native.JsonMethods
 import org.json4s.native.JsonMethods.{ compact, render }
 import org.json4s.native.Serialization.{ read, write }
 import org.json4s.{ Formats, JValue, JsonInput }
+import org.json4s.jvalue2extractable
 
 /**
   * Represents a default internal service or component for managing Json.
-  * @param formats Represents the json formats used for parsing.
+  * @param formats
+  *   Represents the json formats used for parsing.
   */
 @Singleton
-class DefaultJsonConverterService @Inject() (implicit formats: Formats) extends JsonConverterService {
+class DefaultJsonConverterService @Inject() ()(using formats: Formats) extends JsonConverterService {
 
   override def toString(value: JValue): String = compact(render(value))
 
@@ -51,9 +53,9 @@ class DefaultJsonConverterService @Inject() (implicit formats: Formats) extends 
     }
   }
 
-  def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(implicit mf: Manifest[T]): T = {
+  def fromJsonInput[T](json: JsonInput)(f: JValue => JValue)(using mf: Manifest[T]): T = {
     val jv = JsonMethods.parse(json, formats.wantsBigDecimal, formats.wantsBigInt)
-    f(jv).extract(formats, mf)
+    f(jv).extract[T]
   }
 
 }

@@ -23,9 +23,9 @@ abstract class InjectorHelper(val modules: List[Module]) extends LazyLogging {
     }
   }
 
-  def getAsOption[T](implicit ct: ClassTag[T]): Option[T] = Option(get(ct))
+  def getAsOption[T](using ct: ClassTag[T]): Option[T] = Option(get)
 
-  def get[T](implicit ct: ClassTag[T]): T = get(ct.runtimeClass.asInstanceOf[Class[T]])
+  def get[T](using ct: ClassTag[T]): T = get(ct.runtimeClass.asInstanceOf[Class[T]])
 
   def get[T](clazz: Class[T]): T = {
     try {
@@ -37,20 +37,23 @@ abstract class InjectorHelper(val modules: List[Module]) extends LazyLogging {
     }
   }
 
-  def getAsTry[T](implicit ct: ClassTag[T]): Try[T] = Try(get(ct))
+  def getAsTry[T](using ct: ClassTag[T]): Try[T] = Try(get)
 
 }
 
 object InjectorHelper {
+
   /**
     * Represents an Exception for when injecting a component
-    * @param message Represents the error message
+    * @param message
+    *   Represents the error message
     */
   case class InjectionException(message: String) extends Exception(message)
 
   /**
     * Represents an Exception for when creating an injector a component
-    * @param message Represents the error message
+    * @param message
+    *   Represents the error message
     */
   case class InjectorCreationException(message: String) extends Exception(message)
 }
