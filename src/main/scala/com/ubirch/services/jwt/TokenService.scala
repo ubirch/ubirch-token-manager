@@ -1,7 +1,6 @@
 package com.ubirch.services.jwt
 
-import java.util.{ Date, UUID }
-
+import java.util.UUID
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.ubirch.ConfPaths.GenericConfPaths
@@ -17,6 +16,8 @@ import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.key.HMACVerifier
 import com.ubirch.services.state.StateVerifier
 import pdi.jwt.exceptions.JwtValidationException
+
+import java.time.Instant
 
 trait TokenService {
   def create(accessToken: Token, tokenClaim: TokenClaim, category: Symbol): Task[TokenCreationData]
@@ -161,7 +162,7 @@ class DefaultTokenService @Inject() (
       (token, claims) = res
 
       _ <- earlyResponseIf(claims.jwtId.isEmpty)(TokenEncodingException("No token id found", tokenClaim))
-      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, new Date())
+      aRow = TokenRow(UUID.fromString(claims.jwtId.get), tokenClaim.ownerId, token, category.name, Instant.now())
 
       insertion <- tokensDAO.insert(aRow).headOptionL
 

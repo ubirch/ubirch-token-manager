@@ -2,10 +2,10 @@ package com.ubirch.controllers
 
 import java.security.PublicKey
 import java.util.UUID
-
 import com.ubirch.models.Return
 import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
+import com.ubirch.util.cassandra.test.EmbeddedCassandraBase
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
 import org.jose4j.jwk.PublicJsonWebKey
@@ -20,7 +20,7 @@ import scala.language.postfixOps
   */
 class TokenControllerSpec
   extends ScalatraWordSpec
-  with EmbeddedCassandra
+  with EmbeddedCassandraBase
   with BeforeAndAfterEach
   with ExecutionContextsTests
   with Awaits {
@@ -326,7 +326,7 @@ class TokenControllerSpec
 
   override protected def beforeEach(): Unit = {
     CollectorRegistry.defaultRegistry.clear()
-    EmbeddedCassandra.truncateScript.forEachStatement { x => val _ = cassandra.connection.execute(x) }
+    cassandra.executeScripts(List(EmbeddedCassandra.truncateScript))
   }
 
   protected override def afterAll(): Unit = {
@@ -337,7 +337,7 @@ class TokenControllerSpec
   protected override def beforeAll(): Unit = {
 
     CollectorRegistry.defaultRegistry.clear()
-    cassandra.startAndCreateDefaults()
+    cassandra.startAndExecuteScripts(EmbeddedCassandra.creationScripts)
 
     lazy val pool = Injector.get[PublicKeyPoolService]
     await(pool.init, 2 seconds)

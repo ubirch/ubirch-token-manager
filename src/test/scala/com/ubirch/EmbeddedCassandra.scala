@@ -1,63 +1,18 @@
 package com.ubirch
 
-import com.github.nosan.embedded.cassandra.EmbeddedCassandraFactory
-import com.github.nosan.embedded.cassandra.api.Cassandra
-import com.github.nosan.embedded.cassandra.api.connection.{ CassandraConnection, DefaultCassandraConnectionFactory }
-import com.github.nosan.embedded.cassandra.api.cql.CqlScript
-import com.typesafe.scalalogging.LazyLogging
-
-import scala.collection.JavaConverters._
-
-/**
-  * Tool for embedding cassandra
-  */
-trait EmbeddedCassandra {
-
-  class CassandraTest extends LazyLogging {
-
-    @volatile var cassandra: Cassandra = _
-    @volatile var cassandraConnectionFactory: DefaultCassandraConnectionFactory = _
-    @volatile var connection: CassandraConnection = _
-
-    def start(): Unit = {
-      val factory: EmbeddedCassandraFactory = new EmbeddedCassandraFactory()
-      factory.getJvmOptions.addAll(List("-Xms500m", "-Xmx1000m").asJava)
-      cassandra = factory.create()
-      cassandra.start()
-      cassandraConnectionFactory = new DefaultCassandraConnectionFactory
-      connection = cassandraConnectionFactory.create(cassandra)
-
-    }
-
-    def stop(): Unit = {
-      if (connection != null) try connection.close()
-      catch {
-        case ex: Throwable =>
-          logger.error("CassandraConnection '" + connection + "' is not closed", ex)
-      }
-      cassandra.stop()
-      if (cassandra != null) cassandra.stop()
-    }
-
-    def startAndCreateDefaults(scripts: Seq[CqlScript] = EmbeddedCassandra.creationScripts): Unit = {
-      start()
-      scripts.foreach(x => x.forEachStatement { x => val _ = connection.execute(x) })
-    }
-
-  }
-
-}
+import com.github.nosan.embedded.cassandra.commons.ClassPathResource
+import com.github.nosan.embedded.cassandra.cql.{ CqlScript, ResourceCqlScript, StringCqlScript }
 
 object EmbeddedCassandra {
 
-  def truncateScript: CqlScript = {
-    CqlScript.ofString("truncate token_system.tokens;")
+  def truncateScript: StringCqlScript = {
+    new StringCqlScript("truncate token_system.tokens;")
   }
 
   def creationScripts: Seq[CqlScript] = List(
-    CqlScript.ofString("drop keyspace IF EXISTS token_system;"),
-    CqlScript.ofString("CREATE KEYSPACE token_system WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};"),
-    CqlScript.ofString("USE token_system;"),
-    CqlScript.ofClasspath("db/migrations/v1_Adding_basic_token_table.cql")
+    new StringCqlScript("drop keyspace IF EXISTS token_system;"),
+    new StringCqlScript("CREATE KEYSPACE token_system WITH replication = {'class': 'SimpleStrategy','replication_factor': '1'};"),
+    new StringCqlScript("USE token_system;"),
+    new ResourceCqlScript(new ClassPathResource("db/migrations/v1_Adding_basic_token_table.cql"))
   )
 }

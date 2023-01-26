@@ -12,6 +12,7 @@ import com.ubirch.services.key.{ DefaultHMAC, DefaultHMACVerifier, DefaultKeyPoo
 import com.ubirch.services.lifeCycle.{ DefaultJVMHook, DefaultLifecycle, JVMHook, Lifecycle }
 import com.ubirch.services.rest.SwaggerProvider
 import com.ubirch.services.state.{ DefaultExternalGetter, DefaultHttpClient, DefaultKeyGetter, DefaultSecretKeyPoolService, DefaultStateVerifier, DefaultTokenClientsInfo, ExternalStateGetter, HttpClient, KeyGetter, SecretKeyPoolService, StateVerifier, TokenClientsInfo }
+import com.ubirch.util.cassandra.{ CQLSessionService, CassandraConfig, DefaultCQLSessionServiceProvider, DefaultCassandraConfigProvider }
 import monix.execution.Scheduler
 import org.json4s.Formats
 import org.scalatra.swagger.Swagger
@@ -32,7 +33,8 @@ class Binder
   def Lifecycle: ScopedBindingBuilder = bind(classOf[Lifecycle]).to(classOf[DefaultLifecycle])
   def JVMHook: ScopedBindingBuilder = bind(classOf[JVMHook]).to(classOf[DefaultJVMHook])
   def JsonConverterService: ScopedBindingBuilder = bind(classOf[JsonConverterService]).to(classOf[DefaultJsonConverterService])
-  def ClusterService: ScopedBindingBuilder = bind(classOf[ClusterService]).to(classOf[DefaultClusterService])
+  def CassandraConfig: ScopedBindingBuilder = bind(classOf[CassandraConfig]).toProvider(classOf[DefaultCassandraConfigProvider])
+  def CQLSessionService: ScopedBindingBuilder = bind(classOf[CQLSessionService]).toProvider(classOf[DefaultCQLSessionServiceProvider])
   def ConnectionService: ScopedBindingBuilder = bind(classOf[ConnectionService]).to(classOf[DefaultConnectionService])
   def TokenService: ScopedBindingBuilder = bind(classOf[TokenService]).to(classOf[DefaultTokenService])
   def TokenEncodingService: ScopedBindingBuilder = bind(classOf[TokenEncodingService]).to(classOf[DefaultTokenEncodingService])
@@ -59,7 +61,8 @@ class Binder
     Lifecycle
     JVMHook
     JsonConverterService
-    ClusterService
+    CassandraConfig
+    CQLSessionService
     ConnectionService
     TokenService
     TokenEncodingService
