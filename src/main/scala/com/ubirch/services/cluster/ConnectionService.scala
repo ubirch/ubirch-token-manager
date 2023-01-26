@@ -30,8 +30,6 @@ trait ConnectionService extends ConnectionServiceBase[SnakeCase]
 /**
   * Default Implementation of the Connection Service Component.
   * It add shutdown hooks.
-  * @param clusterService Cluster Service Component.
-  * @param config Configuration injected component.
   * @param lifecycle Lifecycle injected component that allows for shutdown hooks.
   */
 
