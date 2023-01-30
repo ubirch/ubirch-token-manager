@@ -68,7 +68,7 @@
 
         <ubirch-crypto.version>2.1.2</ubirch-crypto.version>
         <quill.cassandra.version>3.4.1</quill.cassandra.version>
-        <embedded-cassandra>3.0.3</embedded-cassandra>
+        <embedded-cassandra>4.0.7</embedded-cassandra>
 
         <guice.version>4.1.0</guice.version>
 
@@ -82,6 +82,8 @@
 
         <jwt-core.version>4.2.0</jwt-core.version>
         <commons-validator.version>1.7</commons-validator.version>
+        <io.getquill.cassandra.version>4.6.0</io.getquill.cassandra.version>
+        <ubirch-cassandra-utils.version>1.0-SNAPSHOT</ubirch-cassandra-utils.version>
 
         <io.prometheus.simpleclient.version>0.6.0</io.prometheus.simpleclient.version>
         <io.prometheus.simpleclient_hotspot.version>0.6.0</io.prometheus.simpleclient_hotspot.version>
@@ -118,6 +120,10 @@
         <repository>
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+        <repository>
+            <id>gitlab-maven</id>
+            <url>https://gitlab.com/api/v4/projects/37429227/packages/maven</url>
         </repository>
     </repositories>
 
@@ -161,17 +167,23 @@
             <type>pom</type>
         </dependency>
 
+        <dependency>
+            <groupId>com.ubirch</groupId>
+            <artifactId>ubirch-cassandra-utils_${scala.compat.version}</artifactId>
+            <version>${ubirch-cassandra-utils.version}</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/io.getquill/quill-cassandra-monix -->
         <dependency>
             <groupId>io.getquill</groupId>
             <artifactId>quill-cassandra-monix_${scala.compat.version}</artifactId>
-            <version>3.4.10</version>
+            <version>${io.getquill.cassandra.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.getquill</groupId>
             <artifactId>quill-cassandra_${scala.compat.version}</artifactId>
-            <version>3.4.10</version>
+            <version>${io.getquill.cassandra.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.lz4/lz4-java -->

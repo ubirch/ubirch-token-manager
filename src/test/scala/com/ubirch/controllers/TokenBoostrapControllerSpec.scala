@@ -2,7 +2,6 @@ package com.ubirch.controllers
 
 import java.nio.charset.StandardCharsets
 import java.util.{ Base64, UUID }
-
 import com.ubirch.crypto.GeneratorKeyFactory
 import com.ubirch.crypto.utils.Curve
 import com.ubirch.models.{ BootstrapRequest, ExternalResponseData, Return }
@@ -10,6 +9,7 @@ import com.ubirch.services.formats.JsonConverterService
 import com.ubirch.services.jwt.{ PublicKeyPoolService, TokenDecodingService }
 import com.ubirch.services.state.KeyGetter
 import com.ubirch.util.PublicKeyUtil
+import com.ubirch.util.cassandra.test.EmbeddedCassandraBase
 import com.ubirch.{ EmbeddedCassandra, _ }
 import io.prometheus.client.CollectorRegistry
 import org.jose4j.jwk.PublicJsonWebKey
@@ -26,7 +26,7 @@ import scala.util.{ Failure, Success }
   */
 class TokenBoostrapControllerSpec
   extends ScalatraWordSpec
-  with EmbeddedCassandra
+  with EmbeddedCassandraBase
   with BeforeAndAfterEach
   with ExecutionContextsTests
   with Awaits {
@@ -285,7 +285,7 @@ class TokenBoostrapControllerSpec
 
   override protected def beforeEach(): Unit = {
     CollectorRegistry.defaultRegistry.clear()
-    EmbeddedCassandra.truncateScript.forEachStatement { x => val _ = cassandra.connection.execute(x) }
+    cassandra.executeScripts(List(EmbeddedCassandra.truncateScript))
   }
 
   protected override def afterAll(): Unit = {
@@ -296,7 +296,7 @@ class TokenBoostrapControllerSpec
   protected override def beforeAll(): Unit = {
 
     CollectorRegistry.defaultRegistry.clear()
-    cassandra.startAndCreateDefaults()
+    cassandra.startAndExecuteScripts(EmbeddedCassandra.creationScripts)
 
     lazy val pool = Injector.get[PublicKeyPoolService]
     await(pool.init, 2 seconds)
