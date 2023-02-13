@@ -2,40 +2,42 @@ package com.ubirch.models
 
 import java.util.UUID
 import com.ubirch.services.cluster.ConnectionService
-import io.getquill.{ CassandraStreamContext, Delete, EntityQuery, Insert, Quoted, SnakeCase }
+import io.getquill.{ CassandraStreamContext, SnakeCase }
 import monix.reactive.Observable
 
 import javax.inject.Inject
 
-trait TokenRowsQueries extends TablePointer[TokenRow] {
+/**
+  * @important
+  * Since at least quill 3.12, dynamic query might leads to OutOfMemory.
+  * Therefore, we need to avoid using it.
+  * @see [[https://github.com/zio/zio-quill/issues/2484]]
+  */
+trait TokenRowsQueries extends CassandraBase {
 
   import db._
 
-  //These represent query descriptions only
-
-  implicit val pointingAt: db.SchemaMeta[TokenRow] = schemaMeta[TokenRow]("tokens")
-
-  def insertQ(tokenRow: TokenRow): Quoted[Insert[TokenRow]] = quote {
-    query[TokenRow].insertValue(lift(tokenRow))
+  def insertQ(tokenRow: TokenRow) = quote {
+    querySchema[TokenRow]("tokens").insertValue(lift(tokenRow))
   }
 
-  def selectAllQ: Quoted[EntityQuery[TokenRow]] = quote(query[TokenRow])
+  def selectAllQ = quote(querySchema[TokenRow]("tokens"))
 
-  def byOwnerIdQ(ownerId: UUID): Quoted[EntityQuery[TokenRow]] = quote {
-    query[TokenRow]
+  def byOwnerIdQ(ownerId: UUID) = quote {
+    querySchema[TokenRow]("tokens")
       .filter(_.ownerId == lift(ownerId))
       .map(x => x)
   }
 
-  def byOwnerIdAndIdQ(ownerId: UUID, id: UUID): Quoted[EntityQuery[TokenRow]] = quote {
-    query[TokenRow]
+  def byOwnerIdAndIdQ(ownerId: UUID, id: UUID) = quote {
+    querySchema[TokenRow]("tokens")
       .filter(_.ownerId == lift(ownerId))
       .filter(_.id == lift(id))
       .map(x => x)
   }
 
-  def deleteQ(ownerId: UUID, tokenId: UUID): Quoted[Delete[TokenRow]] = quote {
-    query[TokenRow].filter(x => x.ownerId == lift(ownerId) && x.id == lift(tokenId)).delete
+  def deleteQ(ownerId: UUID, tokenId: UUID) = quote {
+    querySchema[TokenRow]("tokens").filter(x => x.ownerId == lift(ownerId) && x.id == lift(tokenId)).delete
   }
 
 }
