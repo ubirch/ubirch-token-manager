@@ -32,7 +32,7 @@ ThisBuild / version := "2.2.0"
 ThisBuild / scalaVersion := scala213
 
 val HttpClientVersion = "4.5.13"
-val UbirchCryptoVersion = "2.1.5-SNAPSHOT"
+val UbirchCryptoVersion = "2.1.5"
 val CommonsValidatorVersion = "1.7"
 val BouncyCastleVersion = "1.70"
 val MonixVersion = "3.1.0"
