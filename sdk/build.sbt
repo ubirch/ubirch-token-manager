@@ -32,7 +32,7 @@ ThisBuild / version := "2.2.0"
 ThisBuild / scalaVersion := scala213
 
 val HttpClientVersion = "4.5.13"
-val UbirchCryptoVersion = "2.1.2"
+val UbirchCryptoVersion = "2.1.5-SNAPSHOT"
 val CommonsValidatorVersion = "1.7"
 val BouncyCastleVersion = "1.70"
 val MonixVersion = "3.1.0"
@@ -67,6 +67,8 @@ libraryDependencies ++= Seq(
   "com.pauldijou" %% "jwt-core" % JwtCoreVersion,
   "org.scalatest" %% "scalatest" % ScalatestVersion % Test
 )
+
+resolvers += "ubirch-mvn-artifacts" at "https://gitlab.com/api/v4/projects/37429227/packages/maven"
 
 lazy val root = (project in file("."))
   .settings(
