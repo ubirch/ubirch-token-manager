@@ -11,7 +11,7 @@ import com.ubirch.services.config.ConfigProvider
 
 import javax.inject._
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 case class TokenClient(client: Symbol, secret: String) {
   override def toString: String = " client=" + client.name
@@ -114,7 +114,7 @@ object DefaultTokenClientsInfo {
 
   def main(args: Array[String]): Unit = {
     implicit val format = new JsonFormatsProvider().get()
-    val di = new DefaultTokenClientsInfo(new ConfigProvider get (), new DefaultJsonConverterService {})
+    val di = new DefaultTokenClientsInfo(new ConfigProvider().get(), new DefaultJsonConverterService {})
     println("Current token clients: \n" + di.info.zipWithIndex.map { case (d, i) => (i, d) }.mkString(", \n"))
 
   }

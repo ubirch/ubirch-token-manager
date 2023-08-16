@@ -8,7 +8,7 @@ abstract class Response[T] {
   val ok: T
 }
 object Response {
-  val version = "2.0.0"
+  val version = "3.0.0"
 }
 
 /**
@@ -25,15 +25,15 @@ case class NOK(version: String, ok: Boolean, errorType: Symbol, errorMessage: St
   */
 object NOK {
 
-  final val SERVER_ERROR = 'ServerError
-  final val PARSING_ERROR = 'ParsingError
-  final val NO_ROUTE_FOUND_ERROR = 'NoRouteFound
-  final val DELETE_ERROR = 'TokenDeleteError
-  final val TOKEN_CREATION_ERROR = 'TokenCreationError
-  final val TOKEN_LISTING_ERROR = 'TokenListingError
-  final val AUTHENTICATION_ERROR = 'AuthenticationError
-  final val TOKEN_VERIFICATION_ERROR = 'TokenVerificationError
-  final val TOKEN_BOOTSTRAPPING_ERROR = 'TokenBootstrappingError
+  final val SERVER_ERROR = Symbol("ServerError")
+  final val PARSING_ERROR = Symbol("ParsingError")
+  final val NO_ROUTE_FOUND_ERROR = Symbol("NoRouteFound")
+  final val DELETE_ERROR = Symbol("TokenDeleteError")
+  final val TOKEN_CREATION_ERROR = Symbol("TokenCreationError")
+  final val TOKEN_LISTING_ERROR = Symbol("TokenListingError")
+  final val AUTHENTICATION_ERROR = Symbol("AuthenticationError")
+  final val TOKEN_VERIFICATION_ERROR = Symbol("TokenVerificationError")
+  final val TOKEN_BOOTSTRAPPING_ERROR = Symbol("TokenBootstrappingError")
 
   def apply(errorType: Symbol, errorMessage: String): NOK = new NOK(Response.version, ok = false, errorType, errorMessage)
 

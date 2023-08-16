@@ -59,7 +59,7 @@ class TokenBoostrapControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val b = jsonConverter.as[Return](body).right.get
+        val b = jsonConverter.as[Return](body).toTry.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -152,7 +152,7 @@ class TokenBoostrapControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val b = jsonConverter.as[Return](body).right.get
+        val b = jsonConverter.as[Return](body).toTry.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -191,7 +191,7 @@ class TokenBoostrapControllerSpec
                 post("/v2/bootstrap", body = br, headers = Map("X-Ubirch-Signature" -> signature)) {
                   status should equal(200)
                   assert(jsonConverter.as[Return](body).isRight)
-                  val b = jsonConverter.as[Return](body).right.get
+                  val b = jsonConverter.as[Return](body).toTry.get
                   val data = b.data.asInstanceOf[Map[String, Any]]
                   assert(data.contains("registration"))
                   assert(data.contains("anchoring"))
@@ -230,7 +230,7 @@ class TokenBoostrapControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val b = jsonConverter.as[Return](body).right.get
+        val b = jsonConverter.as[Return](body).toTry.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {

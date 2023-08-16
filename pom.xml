@@ -21,7 +21,7 @@
 
     <groupId>com.ubirch</groupId>
     <artifactId>ubirch-token-manager</artifactId>
-    <version>2.0.0</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <licenses>
@@ -52,25 +52,25 @@
 
     <properties>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.11</maven.compiler.source>
+        <maven.compiler.target>1.11</maven.compiler.target>
         <build.number>${timestamp}-dev</build.number>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <encoding>UTF-8</encoding>
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
 
-        <scala.major.version>2.12</scala.major.version>
-        <scala.version>2.12.8</scala.version>
-        <scala.compat.version>2.12</scala.compat.version>
-        <scalatest.version>3.0.5</scalatest.version>
-        <scala.logging.version>3.9.0</scala.logging.version>
+        <scala.major.version>2.13</scala.major.version>
+        <scala.version>2.13.11</scala.version>
+
+        <scalatest.version>3.2.9</scalatest.version>
+        <scala.logging.version>3.9.4</scala.logging.version>
 
         <ubirch-crypto.version>2.1.5</ubirch-crypto.version>
         <quill.cassandra.version>3.4.1</quill.cassandra.version>
         <embedded-cassandra>4.0.7</embedded-cassandra>
 
-        <guice.version>4.1.0</guice.version>
+        <guice.version>5.0.1</guice.version>
 
         <slf4j.api.version>1.7.15</slf4j.api.version>
         <logback-classic.version>1.2.3</logback-classic.version>
@@ -80,38 +80,37 @@
         <bcpkix-jdk15on.version>1.61</bcpkix-jdk15on.version>
         <bcprov-jdk15on.version>1.61</bcprov-jdk15on.version>
 
-        <jwt-core.version>4.2.0</jwt-core.version>
+        <jwt-core.version>5.0.0</jwt-core.version>
         <commons-validator.version>1.7</commons-validator.version>
         <io.getquill.cassandra.version>4.6.0</io.getquill.cassandra.version>
         <ubirch-cassandra-utils.version>1.0</ubirch-cassandra-utils.version>
 
-        <io.prometheus.simpleclient.version>0.6.0</io.prometheus.simpleclient.version>
-        <io.prometheus.simpleclient_hotspot.version>0.6.0</io.prometheus.simpleclient_hotspot.version>
-        <io.prometheus.simpleclient_httpserver.version>0.6.0</io.prometheus.simpleclient_httpserver.version>
-        <io.prometheus.simpleclient_logback.version>0.6.0</io.prometheus.simpleclient_logback.version>
-        <io.prometheus.simpleclient_graphite_bridge.version>0.6.0</io.prometheus.simpleclient_graphite_bridge.version>
+        <io.prometheus.simpleclient.version>0.16.0</io.prometheus.simpleclient.version>
+        <io.prometheus.simpleclient_hotspot.version>0.16.0</io.prometheus.simpleclient_hotspot.version>
+        <io.prometheus.simpleclient_httpserver.version>0.16.0</io.prometheus.simpleclient_httpserver.version>
+        <io.prometheus.simpleclient_logback.version>0.16.0</io.prometheus.simpleclient_logback.version>
+        <io.prometheus.simpleclient_graphite_bridge.version>0.16.0</io.prometheus.simpleclient_graphite_bridge.version>
 
-        <json4s-native.version>3.6.0</json4s-native.version>
-        <json4s-jackson.version>3.6.1</json4s-jackson.version>
-        <json4s-ext>3.6.0</json4s-ext>
+        <json4s-native.version>4.0.6</json4s-native.version>
+        <json4s-jackson.version>4.0.6</json4s-jackson.version>
+        <json4s-ext>4.0.6</json4s-ext>
 
         <!-- Scalatra -->
-        <scalatra.version>2.6.5</scalatra.version>
-        <scalatra-scalatest.version>2.6.5</scalatra-scalatest.version>
-        <scalactic.version>3.0.5</scalactic.version>
-        <scalatraSwagger.version>2.6.5</scalatraSwagger.version>
+        <scalatra.version>2.8.4</scalatra.version>
+        <scalatra-scalatest.version>2.8.4</scalatra-scalatest.version>
+        <scalatraSwagger.version>2.8.4</scalatraSwagger.version>
 
-        <jetty.version>9.4.45.v20220203</jetty.version>
+        <jetty.version>10.0.12</jetty.version>
 
         <!-- plugins -->
         <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
         <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
         <dockerfile-maven-plugin.version>1.4.4</dockerfile-maven-plugin.version>
         <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
-        <scalariform.version>0.2.2</scalariform.version>
-        <scala-maven-plugin.version>3.3.2</scala-maven-plugin.version>
+        <scalariform.version>0.2.3</scalariform.version>
+        <scala-maven-plugin.version>3.4.2</scala-maven-plugin.version>
         <maven-surefire-plugin.version>2.7</maven-surefire-plugin.version>
-        <scalatest-maven-plugin.version>2.0.0</scalatest-maven-plugin.version>
+        <scalatest-maven-plugin.version>2.0.2</scalatest-maven-plugin.version>
         <!-- plugins -->
 
     </properties>
@@ -132,7 +131,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.12</version>
+            <version>4.5.14</version>
         </dependency>
 
         <dependency>
@@ -162,27 +161,27 @@
 
         <dependency>
             <groupId>io.monix</groupId>
-            <artifactId>monix_${scala.compat.version}</artifactId>
-            <version>3.1.0</version>
+            <artifactId>monix_${scala.major.version}</artifactId>
+            <version>3.4.1</version>
             <type>pom</type>
         </dependency>
 
         <dependency>
             <groupId>com.ubirch</groupId>
-            <artifactId>ubirch-cassandra-utils_${scala.compat.version}</artifactId>
+            <artifactId>ubirch-cassandra-utils_${scala.major.version}</artifactId>
             <version>${ubirch-cassandra-utils.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/io.getquill/quill-cassandra-monix -->
         <dependency>
             <groupId>io.getquill</groupId>
-            <artifactId>quill-cassandra-monix_${scala.compat.version}</artifactId>
+            <artifactId>quill-cassandra-monix_${scala.major.version}</artifactId>
             <version>${io.getquill.cassandra.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.getquill</groupId>
-            <artifactId>quill-cassandra_${scala.compat.version}</artifactId>
+            <artifactId>quill-cassandra_${scala.major.version}</artifactId>
             <version>${io.getquill.cassandra.version}</version>
         </dependency>
 
@@ -190,7 +189,7 @@
         <dependency>
             <groupId>org.lz4</groupId>
             <artifactId>lz4-java</artifactId>
-            <version>1.6.0</version>
+            <version>1.8.0</version>
         </dependency>
 
         <dependency>
@@ -243,19 +242,19 @@
 
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-native_${scala.compat.version}</artifactId>
+            <artifactId>json4s-native_${scala.major.version}</artifactId>
             <version>${json4s-native.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-jackson_${scala.compat.version}</artifactId>
+            <artifactId>json4s-jackson_${scala.major.version}</artifactId>
             <version>${json4s-jackson.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-ext_${scala.compat.version}</artifactId>
+            <artifactId>json4s-ext_${scala.major.version}</artifactId>
             <version>${json4s-ext}</version>
         </dependency>
 
@@ -291,7 +290,7 @@
 
         <dependency>
             <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_${scala.compat.version}</artifactId>
+            <artifactId>scala-logging_${scala.major.version}</artifactId>
             <version>${scala.logging.version}</version>
         </dependency>
 
@@ -306,24 +305,19 @@
 
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra_2.12</artifactId>
+            <artifactId>scalatra_${scala.major.version}</artifactId>
             <version>${scalatra.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.scalactic</groupId>
-            <artifactId>scalactic_${scala.compat.version}</artifactId>
-            <version>${scalactic.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-swagger_${scala.compat.version}</artifactId>
+            <artifactId>scalatra-swagger_${scala.major.version}</artifactId>
             <version>${scalatraSwagger.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.scalatra/scalatra-scalatest -->
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest_${scala.compat.version}</artifactId>
+            <artifactId>scalatra-scalatest_${scala.major.version}</artifactId>
             <version>${scalatra-scalatest.version}</version>
             <scope>test</scope>
         </dependency>
@@ -359,7 +353,7 @@
         <!-- https://mvnrepository.com/artifact/com.pauldijou/jwt-core -->
         <dependency>
             <groupId>com.pauldijou</groupId>
-            <artifactId>jwt-core_${scala.compat.version}</artifactId>
+            <artifactId>jwt-core_${scala.major.version}</artifactId>
             <version>${jwt-core.version}</version>
         </dependency>
 
@@ -367,7 +361,7 @@
         <dependency>
             <groupId>org.bitbucket.b_c</groupId>
             <artifactId>jose4j</artifactId>
-            <version>0.7.2</version>
+            <version>0.9.3</version>
         </dependency>
 
         <!-- test dependencies -->
@@ -389,7 +383,36 @@
     <build>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <release>11</release>
+                </configuration>
+            </plugin>
 
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.5.4</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- code formatting -->
             <plugin>
                 <groupId>com.github.tashoyan</groupId>
@@ -440,16 +463,12 @@
                                 <arg>-unchecked</arg>                        <!--  Enable additional warnings where generated code depends on assumptions. -->
                                 <arg>-Xcheckinit</arg>                       <!--  Wrap field accessors to throw an exception on uninitialized access. -->
                                 <arg>-Xfatal-warnings</arg>                  <!--  Fail the compilation if there are any warnings. -->
-                                <arg>-Xfuture</arg>                          <!--  Turn on future language features. -->
                                 <arg>-Xlint:adapted-args</arg>               <!--  Warn if an argument list is modified to match the receiver. -->
-                                <arg>-Xlint:by-name-right-associative</arg>  <!--  By-name parameter of right associative operator. -->
                                 <arg>-Xlint:constant</arg>                   <!--  Evaluation of a constant arithmetic expression results in an error. -->
                                 <arg>-Xlint:delayedinit-select</arg>         <!--  Selecting member of DelayedInit. -->
                                 <arg>-Xlint:doc-detached</arg>               <!--  A Scaladoc comment appears to be detached from its element. -->
-                                <arg>-Xlint:inaccessible</arg>               <!--  Warn about inaccessible types in method signatures. -->
                                 <arg>-Xlint:infer-any</arg>                  <!--  Warn when a type argument is inferred to be `Any`. -->
                                 <arg>-Xlint:missing-interpolator</arg>       <!--  A string literal appears to be missing an interpolator id. -->
-                                <arg>-Xlint:nullary-override</arg>           <!--  Warn when non-nullary `def f()' overrides nullary `def f'. -->
                                 <arg>-Xlint:nullary-unit</arg>               <!--  Warn when nullary methods return Unit. -->
                                 <arg>-Xlint:option-implicit</arg>            <!--  Option.apply used implicit view. -->
                                 <arg>-Xlint:package-object-classes</arg>     <!--  Class or object defined in package object. -->
@@ -457,15 +476,8 @@
                                 <arg>-Xlint:private-shadow</arg>             <!--  A private field (or class parameter) shadows a superclass field. -->
                                 <arg>-Xlint:stars-align</arg>                <!--  Pattern sequence wildcard must align with sequence component. -->
                                 <arg>-Xlint:type-parameter-shadow</arg>      <!--  A local type parameter shadows a type already in scope. -->
-                                <arg>-Xlint:unsound-match</arg>              <!--  Pattern match may not be typesafe. -->
-                                <arg>-Yno-adapted-args</arg>                 <!--  Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver. -->
-                                <arg>-Ypartial-unification</arg>             <!--  Enable partial unification in type constructor inference -->
                                 <arg>-Ywarn-dead-code</arg>                  <!--  Warn when dead code is identified. -->
                                 <arg>-Ywarn-extra-implicit</arg>             <!--  Warn when more than one implicit parameter section is defined. -->
-                                <arg>-Ywarn-inaccessible</arg>               <!--  Warn about inaccessible types in method signatures. -->
-                                <arg>-Ywarn-infer-any</arg>                  <!--  Warn when a type argument is inferred to be `Any`. -->
-                                <arg>-Ywarn-nullary-override</arg>           <!--  Warn when non-nullary `def f()' overrides nullary `def f'. -->
-                                <arg>-Ywarn-nullary-unit</arg>               <!--  Warn when nullary methods return Unit. -->
                                 <arg>-Ywarn-numeric-widen</arg>              <!--  Warn when numerics are widened. -->
                                 <arg>-Ywarn-unused:implicits</arg>           <!--  Warn if an implicit parameter is unused. -->
                                 <arg>-Ywarn-unused:imports</arg>             <!--  Warn if an import selector is not referenced. -->
@@ -576,6 +588,22 @@
                 <version>${maven-deploy-plugin.version}</version>
                 <configuration>
                     <skip>true</skip>
+                </configuration>
+            </plugin>
+
+            <!-- plugin to check for vulnerable dependencies; invoke by mvn org.owasp:dependency-check-maven:check -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>7.1.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <generateBackupPoms>false</generateBackupPoms>
                 </configuration>
             </plugin>
         </plugins>

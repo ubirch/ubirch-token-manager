@@ -29,7 +29,7 @@ class PrometheusMetrics @Inject() (config: Config, lifecycle: Lifecycle) extends
 
   lifecycle.addStopHook { () =>
     logger.info("Shutting down Prometheus")
-    Future.successful(server.stop())
+    Future.successful(server.close())
   }
 
 }

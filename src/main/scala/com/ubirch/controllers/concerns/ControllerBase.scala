@@ -111,10 +111,11 @@ abstract class ControllerBase extends ScalatraServlet
   }
 
   private def logRequestInfo(implicit request: HttpServletRequest): Unit = {
-    val path = request.getPathInfo
+    val path = request.getRequestURI
     val method = request.getMethod
-    val headers = request.headers.toList.map { case (k, v) => k + ":" + v }.mkString(",")
-    logger.info("Path[{}]:{} {}", method, path, headers)
+    //val headers = request.headers.toList.map { case (k, v) => k + ":" + v }.mkString(",")
+    //logger.info("Path[{}]:{} {}", method, path, headers)
+    logger.debug("Path[{}]:{}", method, path)
   }
 
   case class ReadBody[T](extracted: T, asString: String)

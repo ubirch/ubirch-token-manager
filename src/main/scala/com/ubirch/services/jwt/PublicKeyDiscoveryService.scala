@@ -102,8 +102,8 @@ object DefaultPublicKeyDiscoveryService extends TaskApp {
 
   override def run(args: List[String]): Task[ExitCode] = {
 
-    implicit val formats: Formats = new JsonFormatsProvider() get ()
-    val config = new ConfigProvider() get ()
+    implicit val formats: Formats = new JsonFormatsProvider().get()
+    val config = new ConfigProvider().get()
     val jsonConverterService: JsonConverterService = new DefaultJsonConverterService()
     val pk: PublicKeyDiscoveryService = new DefaultPublicKeyDiscoveryService(config, jsonConverterService)
 
