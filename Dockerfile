@@ -20,7 +20,7 @@ COPY certs/truststore-devtest.jks /usr/share/service/lib/truststore-devtest.jks
 ENTRYPOINT [ \
   "/bin/bash", \
   "-c", \
-  "exec /usr/bin/java \
+  "exec java \
    -XX:MaxRAM=$(( $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes) - 254*1024*1024 )) \
    -XX:+ExitOnOutOfMemoryError \
    -Djava.awt.headless=true \
