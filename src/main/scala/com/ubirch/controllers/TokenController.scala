@@ -76,13 +76,11 @@ class TokenController @Inject() (
           ResponseMessage(
             SwaggerElements.ERROR_REQUEST_CODE_400,
             jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
-              .right
               .getOrElse("Error creating token")
           ),
             ResponseMessage(
               SwaggerElements.INTERNAL_ERROR_CODE_500,
               jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
-                .right
                 .getOrElse("Sorry, something went wrong on our end")
             )
         ))
@@ -93,7 +91,7 @@ class TokenController @Inject() (
       asyncResult("create_generic_token") { _ => _ =>
         for {
           readBody <- Task.delay(ReadBody.readJson[TokenClaim](t => t))
-          res <- tokenService.create(token, readBody.extracted, 'generic)
+          res <- tokenService.create(token, readBody.extracted, Symbol("generic"))
             .map { tkc => Ok(Return(tkc)) }
             .onErrorHandle {
               case e: ServiceException =>
@@ -129,13 +127,11 @@ class TokenController @Inject() (
             ResponseMessage(
               SwaggerElements.ERROR_REQUEST_CODE_400,
               jsonConverterService.toString(NOK.tokenDeleteError("Error creating token"))
-                .right
                 .getOrElse("Error creating token")
             ),
               ResponseMessage(
                 SwaggerElements.INTERNAL_ERROR_CODE_500,
                 jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
-                  .right
                   .getOrElse("Sorry, something went wrong on our end")
               )
           ))
@@ -338,13 +334,11 @@ class TokenController @Inject() (
           ResponseMessage(
             SwaggerElements.ERROR_REQUEST_CODE_400,
             jsonConverterService.toString(NOK.tokenDeleteError("Error deleting token"))
-              .right
               .getOrElse("Error deleting token")
           ),
             ResponseMessage(
               SwaggerElements.INTERNAL_ERROR_CODE_500,
               jsonConverterService.toString(NOK.serverError("1.1 Sorry, something went wrong on our end"))
-                .right
                 .getOrElse("Sorry, something went wrong on our end")
             )
         ))

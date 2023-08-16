@@ -1,4 +1,5 @@
-FROM amazoncorretto:8u342
+FROM adoptopenjdk/openjdk11
+
 ARG JAR_LIBS
 ARG JAR_FILE
 ARG VERSION

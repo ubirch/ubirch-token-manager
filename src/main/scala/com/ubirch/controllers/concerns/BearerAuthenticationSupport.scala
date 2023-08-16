@@ -55,7 +55,7 @@ object BearerAuthStrategy {
 
     private def authorizationKey: Option[String] = AUTHORIZATION_KEYS.find(r.getHeader(_) != null)
 
-    def isBearerAuth: Boolean = (false /: scheme) { (_, sch) => sch == "bearer" }
+    def isBearerAuth: Boolean = scheme.foldLeft(false) { (_, sch) => sch == "bearer" }
     def providesAuth: Boolean = authorizationKey.isDefined
 
     private[this] val credentials = params.getOrElse("")
@@ -88,8 +88,8 @@ case class Token(value: String, json: JValue, sub: String, name: String, email: 
 }
 
 object Token {
-  final val ADMIN = 'ADMIN
-  final val USER = 'USER
+  final val ADMIN = Symbol("ADMIN")
+  final val USER = Symbol("USER")
   def apply(value: String): Token = new Token(value, JNothing, sub = "", name = "", email = "", roles = Nil)
 }
 

@@ -94,10 +94,10 @@ case class TokenPurposedClaim(
 }
 
 object TokenPurposedClaim {
-  final val PURPOSE_KEY = 'pur
-  final val TARGET_IDENTITIES_KEY = 'tid
-  final val TARGET_GROUPS_KEY = 'tgp
-  final val ORIGIN_KEY = 'ord
-  final val SCOPES_KEY = 'scp
+  final val PURPOSE_KEY = Symbol("pur")
+  final val TARGET_IDENTITIES_KEY = Symbol("tid")
+  final val TARGET_GROUPS_KEY = Symbol("tgp")
+  final val ORIGIN_KEY = Symbol("ord")
+  final val SCOPES_KEY = Symbol("scp")
 }
 

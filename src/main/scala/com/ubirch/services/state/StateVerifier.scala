@@ -119,8 +119,8 @@ class DefaultStateVerifier @Inject() (
         scopes = List(Scope.asString(Scope.Thing_GetInfo))
       ).toTokenClaim(ENV)
         .addContent(
-          'realm_access -> "DEVICE",
-          'realm_name -> REALM_NAME
+          Symbol("realm_access") -> "DEVICE",
+          Symbol("realm_name") -> REALM_NAME
         )
 
       res <- liftTry(tokenEncodingService.encode(UUID.randomUUID(), tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
@@ -163,8 +163,8 @@ class DefaultStateVerifier @Inject() (
         scopes = List(Scope.asString(Scope.User_GetInfo))
       ).toTokenClaim(ENV)
         .addContent(
-          'realm_access -> "USER",
-          'realm_name -> REALM_NAME
+          Symbol("realm_access") -> "USER",
+          Symbol("realm_name") -> REALM_NAME
         )
 
       res <- liftTry(tokenEncodingService.encode(UUID.randomUUID(), tokenClaim, tokenKey.key))(TokenEncodingException("Error creating token", tokenClaim))
@@ -226,9 +226,9 @@ object DefaultStateVerifier extends {
 
   def main(args: Array[String]): Unit = {
 
-    val config = new ConfigProvider get ()
-    val e = new ExecutionProvider(config) get ()
-    implicit val scheduler = new SchedulerProvider(e) get ()
+    val config = new ConfigProvider().get()
+    val e = new ExecutionProvider(config).get()
+    implicit val scheduler = new SchedulerProvider(e).get()
 
     val lifecycle = new DefaultLifecycle()
     val client = new DefaultHttpClient(lifecycle)
@@ -236,7 +236,7 @@ object DefaultStateVerifier extends {
     val tokenKeyService = new DefaultTokenKeyService(config)
     val tokenEncodingService = new DefaultTokenEncodingService()
 
-    val formats = new JsonFormatsProvider() get ()
+    val formats = new JsonFormatsProvider().get()
     val jsonConverterService = new DefaultJsonConverterService()(formats)
 
     val keyGetter = new DefaultKeyGetter(config, client)

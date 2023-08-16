@@ -52,7 +52,7 @@ class Binder
   def HttpClient: ScopedBindingBuilder = bind(classOf[HttpClient]).to(classOf[DefaultHttpClient])
   def KeyGetter: ScopedBindingBuilder = bind(classOf[KeyGetter]).to(classOf[DefaultKeyGetter])
 
-  def configure(): Unit = {
+  override def configure(): Unit = {
     Config
     ExecutionContext
     Scheduler

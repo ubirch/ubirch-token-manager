@@ -53,7 +53,7 @@ class TokenVerificationControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        val b = jsonConverter.as[Return](body).right.get
+        val b = jsonConverter.as[Return](body).toTry.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -144,7 +144,7 @@ class TokenVerificationControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
     }
@@ -167,7 +167,7 @@ class TokenVerificationControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token:Invalid Origin Domains"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token:Invalid Origin Domains"}""")
       }
 
     }
@@ -191,7 +191,7 @@ class TokenVerificationControllerSpec
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
 
-        val b = jsonConverter.as[Return](body).right.get
+        val b = jsonConverter.as[Return](body).toTry.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -202,13 +202,13 @@ class TokenVerificationControllerSpec
 
             post("/v2/verify", body = verificationRequestJson, headers = Map("X-Ubirch-Signature" -> "", "X-Ubirch-Timestamp" -> "111")) {
               assert(status == 400)
-              assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenVerificationError","errorMessage":"Error verifying token"}""".stripMargin)
+              assert(body == """{"version":"3.0.0","ok":false,"errorType":"TokenVerificationError","errorMessage":"Error verifying token"}""".stripMargin)
             }
 
           case _ => fail("No Token Found")
         }
 
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
     }
@@ -232,7 +232,7 @@ class TokenVerificationControllerSpec
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
 
-        val b = jsonConverter.as[Return](body).right.get
+        val b = jsonConverter.as[Return](body).toTry.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -243,13 +243,13 @@ class TokenVerificationControllerSpec
 
             post("/v2/verify", body = verificationRequestJson, headers = Map("X-Ubirch-Signature" -> "111", "X-Ubirch-Timestamp" -> "111")) {
               assert(status == 400)
-              assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenVerificationError","errorMessage":"Error verifying token"}""".stripMargin)
+              assert(body == """{"version":"3.0.0","ok":false,"errorType":"TokenVerificationError","errorMessage":"Error verifying token"}""".stripMargin)
             }
 
           case _ => fail("No Token Found")
         }
 
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
     }
@@ -273,7 +273,7 @@ class TokenVerificationControllerSpec
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
 
-        val b = jsonConverter.as[Return](body).right.get
+        val b = jsonConverter.as[Return](body).toTry.get
         val data = b.data.asInstanceOf[Map[String, Any]]
 
         data.get("token") match {
@@ -337,7 +337,7 @@ class TokenVerificationControllerSpec
           case _ => fail("No Token Found")
         }
 
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
     }
@@ -359,7 +359,7 @@ class TokenVerificationControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token:Invalid Scopes"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token:Invalid Scopes"}""")
       }
 
     }
@@ -382,19 +382,19 @@ class TokenVerificationControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
       get("/v2", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         val res = jsonConverter.as[Return](body)
         assert(res.isRight)
-        val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
+        val data = res.toTry.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
       }
 
@@ -419,17 +419,17 @@ class TokenVerificationControllerSpec
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         val bodyAsEither = jsonConverter.as[Return](body)
-        val data = bodyAsEither.right.get.data.asInstanceOf[Map[String, Any]]
+        val data = bodyAsEither.toTry.get.data.asInstanceOf[Map[String, Any]]
         val id = data.get("id").map(x => UUID.fromString(x.toString))
 
-        assert(bodyAsEither.right.get.isInstanceOf[Return])
+        assert(bodyAsEither.toTry.get.isInstanceOf[Return])
         assert(id.isDefined)
 
         get("/v2/" + id.get, headers = Map("authorization" -> token.prepare)) {
           status should equal(200)
           val res = jsonConverter.as[Return](body)
           assert(res.isRight)
-          val data = res.right.get.data.asInstanceOf[Map[String, String]]
+          val data = res.toTry.get.data.asInstanceOf[Map[String, String]]
           val id2 = data.get("id").map(x => UUID.fromString(x))
           assert(id == id2)
         }
@@ -456,12 +456,12 @@ class TokenVerificationControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(jsonConverter.as[Return](body).right.get.isInstanceOf[Return])
+        assert(jsonConverter.as[Return](body).toTry.get.isInstanceOf[Return])
       }
 
       var current: List[Map[String, String]] = Nil
@@ -469,7 +469,7 @@ class TokenVerificationControllerSpec
         status should equal(200)
         val res = jsonConverter.as[Return](body)
         assert(res.isRight)
-        val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
+        val data = res.toTry.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 2)
         current = data
       }
@@ -478,14 +478,14 @@ class TokenVerificationControllerSpec
       assert(toDelete.isDefined)
       delete("/v2/" + toDelete.get, headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
-        assert(body == """{"version":"2.0.0","ok":true,"data":"Token deleted"}""")
+        assert(body == """{"version":"3.0.0","ok":true,"data":"Token deleted"}""")
       }
 
       get("/v2", headers = Map("authorization" -> token.prepare)) {
         status should equal(200)
         val res = jsonConverter.as[Return](body)
         assert(res.isRight)
-        val data = res.right.get.data.asInstanceOf[List[Map[String, String]]]
+        val data = res.toTry.get.data.asInstanceOf[List[Map[String, String]]]
         assert(data.size == 1)
       }
 
@@ -496,7 +496,7 @@ class TokenVerificationControllerSpec
       val incomingBody = "{}"
       post("/v2/create", body = incomingBody) {
         status should equal(401)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -505,7 +505,7 @@ class TokenVerificationControllerSpec
 
       get("/v2") {
         status should equal(401)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -514,7 +514,7 @@ class TokenVerificationControllerSpec
 
       delete("/v2/" + UUID.randomUUID().toString) {
         status should equal(401)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Unauthenticated"}""")
       }
 
     }
@@ -524,7 +524,7 @@ class TokenVerificationControllerSpec
       val incomingBody = "{}"
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -533,7 +533,7 @@ class TokenVerificationControllerSpec
 
       get("/v2", headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -542,7 +542,7 @@ class TokenVerificationControllerSpec
 
       delete("/v2/" + UUID.randomUUID().toString, headers = Map("authorization" -> UUID.randomUUID().toString)) {
         status should equal(400)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"AuthenticationError","errorMessage":"Invalid bearer token"}""")
       }
 
     }
@@ -564,7 +564,7 @@ class TokenVerificationControllerSpec
 
       post("/v2/create", body = incomingBody, headers = Map("authorization" -> token.prepare)) {
         status should equal(400)
-        assert(body == """{"version":"2.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token:Invalid Target Identities"}""")
+        assert(body == """{"version":"3.0.0","ok":false,"errorType":"TokenCreationError","errorMessage":"Error creating token:Invalid Target Identities"}""")
       }
 
     }

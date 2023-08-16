@@ -59,7 +59,7 @@ class DefaultTokenService @Inject() (
       _ <- earlyResponseIf(!groupsCheck)(InvalidClaimException("Invalid Groups Create", "Groups couldn't be validated"))
 
       tokenClaim = tokenPurposedClaim.toTokenClaim(ENV)
-      tokeCreationData <- create(accessToken, tokenClaim, 'purposed_claim)
+      tokeCreationData <- create(accessToken, tokenClaim, Symbol("purposed_claim"))
 
     } yield {
       tokeCreationData
@@ -129,19 +129,19 @@ class DefaultTokenService @Inject() (
 
       thingCreate <- createClaim(Scope.Thing_Create, Some(bootstrapRequest.identity))
         .map(_.copy(expiration = Some(60 * 15)))
-        .flatMap(create(_, 'purposed_claim))
+        .flatMap(create(_, Symbol("purposed_claim")))
 
       thingAnchor <- createClaim(Scope.UPP_Anchor, Some(bootstrapRequest.identity))
         .map(_.copy(expiration = None))
-        .flatMap(create(_, 'purposed_claim))
+        .flatMap(create(_, Symbol("purposed_claim")))
 
       thingVerify <- createClaim(Scope.UPP_Verify, None)
         .map(_.copy(expiration = None))
-        .flatMap(create(_, 'purposed_claim))
+        .flatMap(create(_, Symbol("purposed_claim")))
 
       thingDataStore <- createClaim(Scope.Thing_StoreData, Some(bootstrapRequest.identity))
         .map(_.copy(expiration = None))
-        .flatMap(create(_, 'purposed_claim))
+        .flatMap(create(_, Symbol("purposed_claim")))
 
       _ = logger.debug("bootstrap_tokens_created create:{} anchor:{} verify:{} data:{}", thingCreate.token, thingAnchor.token, thingVerify.token, thingDataStore)
 

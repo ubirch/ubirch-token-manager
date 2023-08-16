@@ -46,9 +46,9 @@ object KeyGetterTest {
 
   def main(args: Array[String]): Unit = {
 
-    val config = new ConfigProvider get ()
-    val e = new ExecutionProvider(config) get ()
-    implicit val scheduler = new SchedulerProvider(e) get ()
+    val config = new ConfigProvider().get()
+    val e = new ExecutionProvider(config).get()
+    implicit val scheduler = new SchedulerProvider(e).get()
 
     val lifecycle = new DefaultLifecycle()
     val client = new DefaultHttpClient(lifecycle)
